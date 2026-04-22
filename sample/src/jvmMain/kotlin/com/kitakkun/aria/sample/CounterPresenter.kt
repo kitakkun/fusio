@@ -5,13 +5,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.kitakkun.aria.Aria
 import com.kitakkun.aria.PresenterScope
 import com.kitakkun.aria.on
-import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
-fun PresenterScope<CounterEvent, CounterEffect>.counter(): Aria<CounterState, CounterEffect> {
+fun PresenterScope<CounterEvent, CounterEffect>.counter(): CounterState {
     var value by remember { mutableIntStateOf(0) }
 
     on<CounterEvent.Increment> {
@@ -19,8 +17,5 @@ fun PresenterScope<CounterEvent, CounterEffect>.counter(): Aria<CounterState, Co
         emitEffect(CounterEffect.CounterChanged(value))
     }
 
-    return Aria(
-        state = CounterState(value = value),
-        effectFlow = emptyFlow(),
-    )
+    return CounterState(value = value)
 }

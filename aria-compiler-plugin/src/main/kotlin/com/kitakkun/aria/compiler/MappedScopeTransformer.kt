@@ -71,16 +71,6 @@ class MappedScopeTransformer(
             .getter!!.symbol
     }
 
-    private val ariaClass: IrClassSymbol by lazy {
-        finder.findClass(AriaClassIds.ARIA)!!
-    }
-
-    private val ariaStateGetter: IrSimpleFunctionSymbol by lazy {
-        ariaClass.owner.properties
-            .first { it.name == Name.identifier("state") }
-            .getter!!.symbol
-    }
-
     private val mapEventsFn: IrSimpleFunctionSymbol by lazy {
         finder.findFunctions(AriaClassIds.MAP_EVENTS).single()
     }
@@ -191,20 +181,14 @@ class MappedScopeTransformer(
                 }
             }
 
-            // val childResult = lambda.invoke(childScope)
+            // lambda.invoke(childScope) — the lambda now returns ChildState directly,
+            // so no further extraction is needed.
             val functionClass = lambdaExpr.type.classOrNull!!
             val invokeFun = functionClass.owner.functions
                 .single { it.name == Name.identifier("invoke") }
-            val ariaInstanceType = ariaClass.typeWith(childStateType, childEffectType)
-            val childResultCall = irCall(invokeFun.symbol, ariaInstanceType).also { ic ->
+            +irCall(invokeFun.symbol, childStateType).also { ic ->
                 ic.arguments[0] = lambdaExpr
                 ic.arguments[1] = irGet(childScopeVar)
-            }
-            val childResultVar = irTemporary(childResultCall, nameHint = "ariaChildResult")
-
-            // childResult.state
-            +irCall(ariaStateGetter, childStateType).also {
-                it.arguments[0] = irGet(childResultVar)
             }
         }
     }

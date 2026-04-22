@@ -22,7 +22,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -41,10 +40,10 @@ sealed interface ParentEvent {
 sealed interface ParentEffect
 
 @Composable
-fun PresenterScope<ChildEvent, ChildEffect>.counter(): Aria<Int, ChildEffect> {
+fun PresenterScope<ChildEvent, ChildEffect>.counter(): Int {
     var count by remember { mutableIntStateOf(0) }
     on<ChildEvent.Ping> { count += 1 }
-    return Aria(count, emptyFlow())
+    return count
 }
 
 @Composable

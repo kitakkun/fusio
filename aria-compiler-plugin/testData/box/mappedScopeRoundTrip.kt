@@ -24,7 +24,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -49,13 +48,13 @@ sealed interface ParentEffect {
 data class ScreenState(val child: ChildState)
 
 @Composable
-fun PresenterScope<ChildEvent, ChildEffect>.child(): Aria<ChildState, ChildEffect> {
+fun PresenterScope<ChildEvent, ChildEffect>.child(): ChildState {
     var toggled by remember { mutableStateOf(false) }
     on<ChildEvent.Toggle> { event ->
         toggled = !toggled
         emitEffect(ChildEffect.Reply("toggled=${event.id}"))
     }
-    return Aria(ChildState(toggled), emptyFlow())
+    return ChildState(toggled)
 }
 
 @Composable

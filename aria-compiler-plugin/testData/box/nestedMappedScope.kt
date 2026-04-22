@@ -14,7 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
-import com.kitakkun.aria.Aria
+import com.kitakkun.aria.Aria // top-level buildPresenter return type
 import com.kitakkun.aria.MapFrom
 import com.kitakkun.aria.MapTo
 import com.kitakkun.aria.PresenterScope
@@ -25,7 +25,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -62,19 +61,19 @@ data class MidState(val leaf: Int)
 data class ScreenState(val mid: MidState)
 
 @Composable
-fun PresenterScope<LeafEvent, LeafEffect>.leaf(): Aria<Int, LeafEffect> {
+fun PresenterScope<LeafEvent, LeafEffect>.leaf(): Int {
     var count by remember { mutableIntStateOf(0) }
     on<LeafEvent.Bump> {
         count += 1
         emitEffect(LeafEffect.Bumped(count))
     }
-    return Aria(count, emptyFlow())
+    return count
 }
 
 @Composable
-fun PresenterScope<MidEvent, MidEffect>.mid(): Aria<MidState, MidEffect> {
+fun PresenterScope<MidEvent, MidEffect>.mid(): MidState {
     val leafCount = mappedScope { leaf() }
-    return Aria(MidState(leafCount), emptyFlow())
+    return MidState(leafCount)
 }
 
 @Composable
