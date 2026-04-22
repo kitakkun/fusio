@@ -16,7 +16,8 @@ Persistent notes that survive across sessions live in `~/.claude/projects/-Users
 |---|---|
 | `aria-annotations` | `@MapTo`, `@MapFrom` (pure KMP) |
 | `aria-runtime` | `Aria`, `PresenterScope`, `buildPresenter`, `on<>`, `mappedScope` (inline stub), `mapEvents`, `forwardEffects` |
-| `aria-compiler-plugin` | FIR checkers + IR `MappedScopeTransformer` |
+| `aria-compiler-plugin` | FIR checkers + IR `MappedScopeTransformer`; shades `aria-compiler-compat` and every `kXXX` impl into a single jar |
+| `aria-compiler-compat/` | `CompatContext` interface + `CompatContextResolver` (ServiceLoader); `kXXX/` subprojects hold per-Kotlin-version impls |
 | `aria-gradle-plugin` | Auto-injects `-Xcompiler-plugin-order` so Aria runs before Compose |
 | `sample/` | Composite-build, headless Compose runner smoke test |
 | `build-logic/` | `aria.publish` convention plugin |
@@ -42,9 +43,12 @@ cd sample && ../gradlew runJvm                   # end-to-end smoke
 
 ## Multi-Kotlin-version support
 
-Two compiler-plugin variants live in the repo:
+Single shaded `aria-compiler-plugin` jar covers every supported Kotlin version. Per-Kotlin-version logic lives in `aria-compiler-compat/`:
 
-- `aria-compiler-plugin/` — Kotlin 2.3.20 (default)
-- `aria-compiler-plugin-k24/` — Kotlin 2.4.0-Beta2 (shares source via `srcDir`, with its own `compat/` override)
+- `aria-compiler-compat/` — `CompatContext` interface + `CompatContextResolver` (ServiceLoader)
+- `aria-compiler-compat/k2320/` — Kotlin 2.3.x impl
+- `aria-compiler-compat/k240_beta2/` — Kotlin 2.4.0-Beta2 impl (delegates to k2320 except `kclassArg`, which lost its `session` parameter in 2.4)
 
-The Gradle plugin (`AriaGradlePlugin.getPluginArtifact()`) picks the right artifact based on the user's Kotlin version. When adding Kotlin 2.5 support later: create `aria-compiler-plugin-k25/` mirroring k24's layout, add a `kclassArg` compat implementation if needed, extend `artifactIdFor()` in `AriaGradlePlugin`. See `docs/08-multi-compiler-version-plan.md` for the full outline.
+Shadow plugin in `aria-compiler-plugin/build.gradle.kts` bundles all three jars and merges their `META-INF/services/…/CompatContext$Factory` files. `CompatContextResolver.resolve()` picks the matching factory via `KotlinCompilerVersion.VERSION` at plugin init.
+
+Adding Kotlin 2.5 support: create `aria-compiler-compat/k250/` mirroring `k240_beta2/`, declare its `supportedRange`, add it to the `shaded` configuration in `aria-compiler-plugin/build.gradle.kts`. See `docs/08-multi-compiler-version-plan.md` for the full outline.

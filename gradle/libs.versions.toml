@@ -1,9 +1,9 @@
 [versions]
-# Primary Kotlin version — used everywhere that isn't a compiler-plugin variant.
-# The k23 / k24 compiler-plugin modules pin their own Kotlin version against
-# which they compile the plugin bytecode; those are `kotlin-k23` / `kotlin-k24`.
+# Primary Kotlin version — used everywhere except the aria-compiler-compat/k**
+# subprojects, which each pin their own kotlin-compiler-embeddable to compile
+# the version-specific CompatContext impl. `kotlin-k24` below is that pin for
+# the 2.4.0-Beta2 variant.
 kotlin = "2.3.20"
-kotlin-k23 = "2.3.20"
 kotlin-k24 = "2.4.0-Beta2"
 compose-multiplatform = "1.10.3"
 coroutines = "1.10.2"

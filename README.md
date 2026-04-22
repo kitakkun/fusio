@@ -124,12 +124,12 @@ Aria's IR transformer must run **before** the Compose compiler plugin, because C
 
 ### Kotlin version compatibility
 
-| Your Kotlin | Compiler-plugin artifact |
-|-------------|--------------------------|
-| 2.3.x       | `aria-compiler-plugin` (default) |
-| 2.4.0-Beta+ | `aria-compiler-plugin-k24` |
+| Your Kotlin | Supported |
+|-------------|-----------|
+| 2.3.x       | ✅ |
+| 2.4.0-Beta2+ | ✅ |
 
-The Gradle plugin detects your Kotlin version at apply time and resolves the matching artifact for you — no manual dependency declaration needed. `aria-runtime` and `aria-annotations` are version-agnostic and shared across all variants.
+A single `aria-compiler-plugin` jar ships with a per-Kotlin-version compatibility layer inside it (via a shaded `aria-compiler-compat` + `kXXX` submodule pattern inspired by [ZacSweers/Metro](https://github.com/ZacSweers/metro)). At compile time the plugin inspects the running Kotlin compiler and `ServiceLoader`-resolves the matching impl, so there's nothing to configure per Kotlin version.
 
 ## License
 
