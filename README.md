@@ -133,4 +133,6 @@ The Gradle plugin detects your Kotlin version at apply time and resolves the mat
 
 ## License
 
-TBD.
+Aria is licensed under the [Apache License, Version 2.0](LICENSE).
+
+The design of the compiler-compat layer is inspired by [ZacSweers/Metro](https://github.com/ZacSweers/metro) (also Apache 2.0). See [NOTICE](NOTICE) for details.
