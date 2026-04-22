@@ -5,6 +5,10 @@ pluginManagement {
         mavenCentral()
         google()
     }
+    // Composite build that provides the shared convention plugins
+    // (aria.publish, ...). Module build files reference them via
+    // `plugins { id("aria.publish") }`.
+    includeBuild("build-logic")
 }
 
 @Suppress("UnstableApiUsage")

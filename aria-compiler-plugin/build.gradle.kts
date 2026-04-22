@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     `java-test-fixtures`
     idea
+    id("aria.publish")
 }
 
 kotlin {
