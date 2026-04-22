@@ -24,7 +24,7 @@ AriaIrGenerationExtension
 Entry point for IR code generation. Implements `IrGenerationExtension`.
 
 ```kotlin
-package com.github.kitakkun.aria.compiler
+package com.kitakkun.aria.compiler
 
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
@@ -42,7 +42,7 @@ class AriaIrGenerationExtension : IrGenerationExtension {
 Core transformer that intercepts `mappedScope` calls and replaces them with generated bridging code.
 
 ```kotlin
-package com.github.kitakkun.aria.compiler
+package com.kitakkun.aria.compiler
 
 import org.jetbrains.kotlin.backend.common.IrElementTransformerVoidWithContext
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
@@ -59,11 +59,11 @@ class MappedScopeTransformer(
 
     companion object {
         val MAPPED_SCOPE_CALLABLE_ID = CallableId(
-            FqName("com.github.kitakkun.aria"),
+            FqName("com.kitakkun.aria"),
             Name.identifier("mappedScope"),
         )
-        val PRESENTER_SCOPE_CLASS_ID = ClassId.fromString("com/github/kitakkun/aria/PresenterScope")
-        val ARIA_CLASS_ID = ClassId.fromString("com/github/kitakkun/aria/Aria")
+        val PRESENTER_SCOPE_CLASS_ID = ClassId.fromString("com/kitakkun/aria/PresenterScope")
+        val ARIA_CLASS_ID = ClassId.fromString("com/kitakkun/aria/Aria")
     }
 
     override fun visitCall(expression: IrCall): IrExpression {
@@ -78,7 +78,7 @@ class MappedScopeTransformer(
     private fun isMappedScopeCall(call: IrCall): Boolean {
         val callee = call.symbol.owner
         return callee.name == Name.identifier("mappedScope")
-            && callee.parent.let { /* verify it's in com.github.kitakkun.aria package */ }
+            && callee.parent.let { /* verify it's in com.kitakkun.aria package */ }
     }
 }
 ```
@@ -295,7 +295,7 @@ The IR transformer MUST run **before** the Compose compiler plugin. This is crit
 **Ordering mechanism:**
 - Plugin execution order follows `-Xplugin` argument order in the Kotlin compiler
 - The Aria Gradle plugin should be applied before the Compose plugin
-- Alternatively, use `-Xcompiler-plugin-order=com.github.kitakkun.aria,org.jetbrains.compose.compiler` (Kotlin 2.1+)
+- Alternatively, use `-Xcompiler-plugin-order=com.kitakkun.aria,org.jetbrains.compose.compiler` (Kotlin 2.1+)
 
 ## Key Kotlin Compiler IR APIs Used
 

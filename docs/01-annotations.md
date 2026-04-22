@@ -11,7 +11,7 @@ Pure Kotlin module with zero dependencies. Defines annotations used by the compi
 Maps a parent Event sealed subtype to a child Event type. Used on sealed interface members.
 
 ```kotlin
-package com.github.kitakkun.aria
+package com.kitakkun.aria
 
 import kotlin.reflect.KClass
 

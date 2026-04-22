@@ -11,7 +11,7 @@ Gradle plugin that registers the Aria Compiler Plugin and automatically adds run
 Implements `KotlinCompilerPluginSupportPlugin` to integrate with the Kotlin Gradle Plugin.
 
 ```kotlin
-package com.github.kitakkun.aria.gradle
+package com.kitakkun.aria.gradle
 
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
@@ -25,11 +25,11 @@ class AriaGradlePlugin : KotlinCompilerPluginSupportPlugin {
         // No extension needed for now
     }
 
-    override fun getCompilerPluginId(): String = "com.github.kitakkun.aria"
+    override fun getCompilerPluginId(): String = "com.kitakkun.aria"
 
     override fun getPluginArtifact(): SubpluginArtifact =
         SubpluginArtifact(
-            groupId = "com.github.kitakkun.aria",
+            groupId = "com.kitakkun.aria",
             artifactId = "aria-compiler-plugin",
             version = VERSION,
         )
@@ -44,7 +44,7 @@ class AriaGradlePlugin : KotlinCompilerPluginSupportPlugin {
         // Auto-add runtime dependencies
         project.dependencies.add(
             kotlinCompilation.defaultSourceSet.implementationConfigurationName,
-            "com.github.kitakkun.aria:aria-runtime:$VERSION",
+            "com.kitakkun.aria:aria-runtime:$VERSION",
         )
         // aria-annotations is transitively included via aria-runtime's api dependency
 
@@ -58,7 +58,7 @@ class AriaGradlePlugin : KotlinCompilerPluginSupportPlugin {
 Receives options from Gradle and passes them to the compiler plugin via `CompilerConfiguration`.
 
 ```kotlin
-package com.github.kitakkun.aria.compiler
+package com.kitakkun.aria.compiler
 
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOption
@@ -68,7 +68,7 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 
 @OptIn(ExperimentalCompilerApi::class)
 class AriaCommandLineProcessor : CommandLineProcessor {
-    override val pluginId: String = "com.github.kitakkun.aria"
+    override val pluginId: String = "com.kitakkun.aria"
 
     override val pluginOptions: Collection<CliOption> = listOf(
         CliOption("enabled", "<true|false>", "Enable Aria compiler plugin", required = false),
@@ -91,7 +91,7 @@ class AriaCommandLineProcessor : CommandLineProcessor {
 Entry point for the compiler plugin. Registers both FIR and IR extensions.
 
 ```kotlin
-package com.github.kitakkun.aria.compiler
+package com.kitakkun.aria.compiler
 
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
@@ -101,7 +101,7 @@ import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 
 @OptIn(ExperimentalCompilerApi::class)
 class AriaCompilerPluginRegistrar : CompilerPluginRegistrar() {
-    override val pluginId: String = "com.github.kitakkun.aria"
+    override val pluginId: String = "com.kitakkun.aria"
     override val supportsK2: Boolean = true
 
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
@@ -120,17 +120,17 @@ class AriaCompilerPluginRegistrar : CompilerPluginRegistrar() {
 
 ### META-INF/services/org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 ```
-com.github.kitakkun.aria.compiler.AriaCompilerPluginRegistrar
+com.kitakkun.aria.compiler.AriaCompilerPluginRegistrar
 ```
 
 ### META-INF/services/org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 ```
-com.github.kitakkun.aria.compiler.AriaCommandLineProcessor
+com.kitakkun.aria.compiler.AriaCommandLineProcessor
 ```
 
-### META-INF/gradle-plugins/com.github.kitakkun.aria.properties
+### META-INF/gradle-plugins/com.kitakkun.aria.properties
 ```
-implementation-class=com.github.kitakkun.aria.gradle.AriaGradlePlugin
+implementation-class=com.kitakkun.aria.gradle.AriaGradlePlugin
 ```
 
 ## Build Configuration
@@ -149,8 +149,8 @@ dependencies {
 gradlePlugin {
     plugins {
         create("aria") {
-            id = "com.github.kitakkun.aria"
-            implementationClass = "com.github.kitakkun.aria.gradle.AriaGradlePlugin"
+            id = "com.kitakkun.aria"
+            implementationClass = "com.kitakkun.aria.gradle.AriaGradlePlugin"
         }
     }
 }
@@ -164,7 +164,7 @@ The Aria Gradle plugin should be applied **before** the Compose plugin in the us
 
 ```kotlin
 plugins {
-    id("com.github.kitakkun.aria")  // Aria first
+    id("com.kitakkun.aria")  // Aria first
     id("org.jetbrains.compose")      // Compose second
 }
 ```

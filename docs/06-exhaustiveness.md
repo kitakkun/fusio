@@ -79,7 +79,7 @@ Check at the `mappedScope<ChildEvent, ChildEffect> { ... }` call, where both par
 ### AriaExhaustivenessChecker
 
 ```kotlin
-package com.github.kitakkun.aria.compiler
+package com.kitakkun.aria.compiler
 
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.diagnostics.reportOn
@@ -94,8 +94,8 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 
 object AriaExhaustivenessChecker : FirClassChecker(MppCheckerKind.Common) {
-    private val MAP_TO_CLASS_ID = ClassId.fromString("com/github/kitakkun/aria/MapTo")
-    private val MAP_FROM_CLASS_ID = ClassId.fromString("com/github/kitakkun/aria/MapFrom")
+    private val MAP_TO_CLASS_ID = ClassId.fromString("com/kitakkun/aria/MapTo")
+    private val MAP_FROM_CLASS_ID = ClassId.fromString("com/kitakkun/aria/MapFrom")
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(declaration: FirClass) {

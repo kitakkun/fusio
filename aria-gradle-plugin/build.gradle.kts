@@ -10,8 +10,8 @@ dependencies {
 gradlePlugin {
     plugins {
         create("aria") {
-            id = "com.github.kitakkun.aria"
-            implementationClass = "com.github.kitakkun.aria.gradle.AriaGradlePlugin"
+            id = "com.kitakkun.aria"
+            implementationClass = "com.kitakkun.aria.gradle.AriaGradlePlugin"
         }
     }
 }

@@ -11,7 +11,7 @@ Runtime API that users interact with directly. Depends on Compose Runtime and Ko
 The core return type of both screen-level and sub-level Presenters. Library name = core type.
 
 ```kotlin
-package com.github.kitakkun.aria
+package com.kitakkun.aria
 
 import kotlinx.coroutines.flow.Flow
 
@@ -26,7 +26,7 @@ data class Aria<State, Effect>(
 Scope that manages Event/Effect plumbing internally. `eventFlow` is never exposed to users.
 
 ```kotlin
-package com.github.kitakkun.aria
+package com.kitakkun.aria
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -102,7 +102,7 @@ fun <ChildEvent, ChildEffect, ChildState> PresenterScope<*, *>.mappedScope(
 ): ChildState {
     error(
         "mappedScope requires the Aria Compiler Plugin. " +
-        "Make sure 'com.github.kitakkun.aria' Gradle plugin is applied."
+        "Make sure 'com.kitakkun.aria' Gradle plugin is applied."
     )
 }
 ```

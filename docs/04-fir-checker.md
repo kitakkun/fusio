@@ -20,7 +20,7 @@ AriaFirExtensionRegistrar
 Diagnostic factory definitions using Kotlin's `KtDiagnosticsContainer` DSL.
 
 ```kotlin
-package com.github.kitakkun.aria.compiler
+package com.kitakkun.aria.compiler
 
 import org.jetbrains.kotlin.diagnostics.*
 import com.intellij.psi.PsiElement
@@ -57,7 +57,7 @@ object AriaErrors : KtDiagnosticsContainer() {
 Human-readable message templates for each diagnostic. Without this, diagnostics would have no display text.
 
 ```kotlin
-package com.github.kitakkun.aria.compiler
+package com.kitakkun.aria.compiler
 
 import org.jetbrains.kotlin.diagnostics.KtDiagnosticFactoryToRendererMap
 import org.jetbrains.kotlin.diagnostics.rendering.BaseDiagnosticRendererFactory
@@ -90,7 +90,7 @@ object AriaErrorMessages : BaseDiagnosticRendererFactory() {
 Registers FIR extensions using the `+` operator DSL.
 
 ```kotlin
-package com.github.kitakkun.aria.compiler
+package com.kitakkun.aria.compiler
 
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 
@@ -112,7 +112,7 @@ class AriaFirExtensionRegistrar : FirExtensionRegistrar() {
 Provides the set of checkers to the FIR pipeline.
 
 ```kotlin
-package com.github.kitakkun.aria.compiler
+package com.kitakkun.aria.compiler
 
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.DeclarationCheckers
@@ -142,7 +142,7 @@ class AriaFirCheckersExtension(session: FirSession) : FirAdditionalCheckersExten
 Validates `@MapTo` annotations on sealed interface members.
 
 ```kotlin
-package com.github.kitakkun.aria.compiler
+package com.kitakkun.aria.compiler
 
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.diagnostics.reportOn
@@ -161,8 +161,8 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 
 object AriaMapToChecker : FirClassChecker(MppCheckerKind.Common) {
-    // ClassId for com.github.kitakkun.aria.MapTo
-    private val MAP_TO_CLASS_ID = ClassId.fromString("com/github/kitakkun/aria/MapTo")
+    // ClassId for com.kitakkun.aria.MapTo
+    private val MAP_TO_CLASS_ID = ClassId.fromString("com/kitakkun/aria/MapTo")
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(declaration: FirClass) {
@@ -268,7 +268,7 @@ Mirror of `AriaMapToChecker` for `@MapFrom` annotations. Validates the reverse m
 
 ```kotlin
 object AriaMapFromChecker : FirClassChecker(MppCheckerKind.Common) {
-    private val MAP_FROM_CLASS_ID = ClassId.fromString("com/github/kitakkun/aria/MapFrom")
+    private val MAP_FROM_CLASS_ID = ClassId.fromString("com/kitakkun/aria/MapFrom")
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(declaration: FirClass) {

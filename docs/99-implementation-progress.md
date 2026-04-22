@@ -13,7 +13,7 @@ via `FunctionN.invoke()`, and extracts `.state` from the returned Aria.
 1. **Plugin ordering is essential**: Compose plugin injects `$composer`/`$changed` params
    into @Composable lambdas. Aria must run BEFORE Compose. Use:
    ```
-   -Xcompiler-plugin-order=com.github.kitakkun.aria>androidx.compose.compiler.plugins.kotlin
+   -Xcompiler-plugin-order=com.kitakkun.aria>androidx.compose.compiler.plugins.kotlin
    ```
    Format is `pluginA>pluginB` (A runs before B), NOT comma-separated.
 
@@ -47,18 +47,18 @@ aria/
 ├── gradle.properties
 ├── gradlew / gradle/               (Gradle 8.14 wrapper)
 ├── aria-annotations/               ✅ builds
-│   └── src/commonMain/kotlin/com/github/kitakkun/aria/
+│   └── src/commonMain/kotlin/com/kitakkun/aria/
 │       ├── MapTo.kt
 │       └── MapFrom.kt
 ├── aria-runtime/                   ✅ builds
-│   └── src/commonMain/kotlin/com/github/kitakkun/aria/
+│   └── src/commonMain/kotlin/com/kitakkun/aria/
 │       ├── Aria.kt                 (data class Aria<State, Effect>)
 │       ├── PresenterScope.kt       (eventFlow, emitEffect, internalEffectFlow)
 │       ├── BuildPresenter.kt       (@Composable buildPresenter)
 │       ├── On.kt                   (inline reified on<E>)
 │       └── MappedScope.kt          (stub, throws error if plugin not applied)
 ├── aria-compiler-plugin/           🔧 fixing build errors
-│   └── src/main/kotlin/com/github/kitakkun/aria/compiler/
+│   └── src/main/kotlin/com/kitakkun/aria/compiler/
 │       ├── AriaClassIds.kt         (ClassId/CallableId constants)
 │       ├── AriaConfigurationKeys.kt
 │       ├── AriaCommandLineProcessor.kt
@@ -188,7 +188,7 @@ Unhandled intrinsic in ExpressionCodegen: FUN LOCAL_FUNCTION_FOR_LAMBDA
 1. **Invoke via `FunctionN.invoke()`**: Instead of `irCall(lambdaFunction.symbol)`, construct `irCall(kotlin.Function1.invoke)` with the lambda expression as the receiver. This goes through the standard lambda invocation path.
 
 2. **Plugin ordering**: Make Aria's IR transformer run BEFORE Compose's. Options:
-   - `-Xcompiler-plugin-order=com.github.kitakkun.aria,androidx.compose.compiler.plugins.kotlin`
+   - `-Xcompiler-plugin-order=com.kitakkun.aria,androidx.compose.compiler.plugins.kotlin`
    - Register IR extension with higher priority (check if Kotlin API supports this)
    - Structure Gradle plugin application order in `applyToCompilation`
 
@@ -196,6 +196,6 @@ Unhandled intrinsic in ExpressionCodegen: FUN LOCAL_FUNCTION_FOR_LAMBDA
 
 ### Key files for next session
 
-- `/Users/kitakkun/Documents/GitHub/aria/aria-compiler-plugin/src/main/kotlin/com/github/kitakkun/aria/compiler/MappedScopeTransformer.kt` — current impl
+- `/Users/kitakkun/Documents/GitHub/aria/aria-compiler-plugin/src/main/kotlin/com/kitakkun/aria/compiler/MappedScopeTransformer.kt` — current impl
 - Error reproduction: `cd sample && ../gradlew compileKotlinJvm --stacktrace`
 - FIR checkers all build; only IR Transformer has this crash
