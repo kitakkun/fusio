@@ -40,10 +40,19 @@ idea {
 }
 
 dependencies {
+    // Version-sensitive compiler API calls go through CompatContext from this
+    // module; a ServiceLoader-registered implementation from an aria-compiler-
+    // compat/k** subproject provides the actual bytecode at runtime.
+    implementation(project(":aria-compiler-compat"))
+
     // Production: kotlin-compiler-embeddable has IntelliJ classes shaded under
     // `org.jetbrains.kotlin.com.intellij.*`, matching what the Kotlin Gradle
     // plugin loads our plugin jar against at user-project compile time.
     compileOnly(libs.kotlin.compiler.embeddable)
+
+    // Tests run the compiler in-process, so the matching CompatContext impl
+    // must be on the test classpath for ServiceLoader to find it.
+    testRuntimeOnly(project(":aria-compiler-compat:k2320"))
 
     // Tests: the internal test framework is compiled against non-embeddable
     // kotlin-compiler (i.e. references unshaded `com.intellij.*` classes), so

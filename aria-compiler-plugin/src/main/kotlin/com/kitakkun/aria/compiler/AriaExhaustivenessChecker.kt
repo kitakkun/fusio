@@ -1,5 +1,6 @@
 package com.kitakkun.aria.compiler
 
+import com.kitakkun.aria.compiler.compat.CompatContext
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.diagnostics.KtDiagnosticFactory2
 import org.jetbrains.kotlin.diagnostics.reportOn
@@ -8,7 +9,6 @@ import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
-import com.kitakkun.aria.compiler.compat.kclassArg
 import org.jetbrains.kotlin.fir.declarations.getAnnotationByClassId
 import org.jetbrains.kotlin.fir.declarations.getSealedClassInheritors
 import org.jetbrains.kotlin.fir.declarations.utils.isSealed
@@ -23,7 +23,9 @@ import org.jetbrains.kotlin.name.Name
  * MISSING_EFFECT_MAPPINGS otherwise — so a child subtype added later without
  * a corresponding parent mapping surfaces as a compile error, not a silent drop.
  */
-object AriaExhaustivenessChecker : FirClassChecker(MppCheckerKind.Common) {
+class AriaExhaustivenessChecker(compat: CompatContext) :
+    FirClassChecker(MppCheckerKind.Common),
+    CompatContext by compat {
     context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(declaration: FirClass) {
         if (declaration !is FirRegularClass) return

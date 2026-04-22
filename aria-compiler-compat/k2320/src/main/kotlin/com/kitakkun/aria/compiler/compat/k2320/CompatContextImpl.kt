@@ -7,8 +7,8 @@ import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.declarations.getKClassArgument
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
-import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
+import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.name.Name
 
@@ -26,11 +26,11 @@ class CompatContextImpl : CompatContext {
     override fun FirAnnotation.kclassArg(name: Name, session: FirSession): ConeKotlinType? =
         getKClassArgument(name, session)
 
-    override fun IrCall.setArg(index: Int, expr: IrExpression) {
+    override fun IrFunctionAccessExpression.setArg(index: Int, expr: IrExpression) {
         arguments[index] = expr
     }
 
-    override fun IrCall.setTypeArg(index: Int, type: IrType) {
+    override fun IrFunctionAccessExpression.setTypeArg(index: Int, type: IrType) {
         typeArguments[index] = type
     }
 

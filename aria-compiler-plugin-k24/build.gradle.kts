@@ -37,5 +37,9 @@ sourceSets {
 }
 
 dependencies {
+    // Shared with aria-compiler-plugin: production calls CompatContext from
+    // the compat host module.
+    implementation(project(":aria-compiler-compat"))
+
     compileOnly(libs.kotlin.compiler.embeddable.k24)
 }

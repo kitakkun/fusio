@@ -1,5 +1,6 @@
 package com.kitakkun.aria.compiler
 
+import com.kitakkun.aria.compiler.compat.CompatContext
 import org.jetbrains.kotlin.backend.common.IrElementTransformerVoidWithContext
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
@@ -72,7 +73,8 @@ import org.jetbrains.kotlin.name.Name
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 class MappedScopeTransformer(
     private val pluginContext: IrPluginContext,
-) : IrElementTransformerVoidWithContext() {
+    compat: CompatContext,
+) : IrElementTransformerVoidWithContext(), CompatContext by compat {
 
     private val finder by lazy { pluginContext.finderForBuiltins() }
 
@@ -149,7 +151,7 @@ class MappedScopeTransformer(
         parentDecl: IrDeclarationParent,
     ): IrVariable {
         val parentEventFlowCall = irCall(presenterScopeEventFlowGetter).also {
-            it.arguments[0] = irGet(parentScopeVar)
+            it.setArg(0, irGet(parentScopeVar))
         }
 
         val childEventFlowExpr: IrExpression = parentEventType
@@ -163,10 +165,10 @@ class MappedScopeTransformer(
                 )
                 if (mapper != null) {
                     irCall(mapEventsFn).also { mc ->
-                        mc.typeArguments[0] = pEvent
-                        mc.typeArguments[1] = childEventType
-                        mc.arguments[0] = parentEventFlowCall
-                        mc.arguments[1] = mapper
+                        mc.setTypeArg(0, pEvent)
+                        mc.setTypeArg(1, childEventType)
+                        mc.setArg(0, parentEventFlowCall)
+                        mc.setArg(1, mapper)
                     }
                 } else null
             }
@@ -176,9 +178,9 @@ class MappedScopeTransformer(
 
         val childScopeType = presenterScopeClass.typeWith(childEventType, childEffectType)
         val childScopeCall = irCall(presenterScopeConstructor, childScopeType).also {
-            it.typeArguments[0] = childEventType
-            it.typeArguments[1] = childEffectType
-            it.arguments[0] = irGet(childEventFlowVar)
+            it.setTypeArg(0, childEventType)
+            it.setTypeArg(1, childEffectType)
+            it.setArg(0, irGet(childEventFlowVar))
         }
         return irTemporary(childScopeCall, nameHint = "ariaChildScope")
     }
@@ -212,11 +214,11 @@ class MappedScopeTransformer(
         ) ?: return
 
         +irCall(forwardEffectsFn).also { fc ->
-            fc.typeArguments[0] = childEffectType
-            fc.typeArguments[1] = parentEffectType
-            fc.arguments[0] = irGet(childScopeVar)
-            fc.arguments[1] = irGet(parentScopeVar)
-            fc.arguments[2] = mapper
+            fc.setTypeArg(0, childEffectType)
+            fc.setTypeArg(1, parentEffectType)
+            fc.setArg(0, irGet(childScopeVar))
+            fc.setArg(1, irGet(parentScopeVar))
+            fc.setArg(2, mapper)
         }
     }
 
@@ -236,8 +238,8 @@ class MappedScopeTransformer(
         val functionClass = lambdaExpr.type.classOrNull!!
         val invokeFun = functionClass.owner.functions.single { it.name == Name.identifier("invoke") }
         return irCall(invokeFun.symbol, childStateType).also { ic ->
-            ic.arguments[0] = lambdaExpr
-            ic.arguments[1] = irGet(childScopeVar)
+            ic.setArg(0, lambdaExpr)
+            ic.setArg(1, irGet(childScopeVar))
         }
     }
 
@@ -356,11 +358,11 @@ class MappedScopeTransformer(
         val ctorArgs = primaryCtor.parameters.map { p ->
             val prop = fromProps[p.name.asString()] ?: return null
             val getter = prop.getter ?: return null
-            irCall(getter.symbol).also { g -> g.arguments[0] = irGet(param) }
+            irCall(getter.symbol).also { g -> g.setArg(0, irGet(param)) }
         }
 
         return irCall(primaryCtor.symbol, toClass.defaultType).also { c ->
-            for ((i, a) in ctorArgs.withIndex()) c.arguments[i] = a
+            for ((i, a) in ctorArgs.withIndex()) c.setArg(i, a)
         }
     }
 

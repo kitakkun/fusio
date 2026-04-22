@@ -3,8 +3,8 @@ package com.kitakkun.aria.compiler.compat
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
-import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
+import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.name.Name
 
@@ -33,7 +33,8 @@ interface CompatContext {
     fun FirAnnotation.kclassArg(name: Name, session: FirSession): ConeKotlinType?
 
     /**
-     * Writes the value argument at [index] on an [IrCall].
+     * Writes the value argument at [index] on any IR function-access expression
+     * (regular calls, constructor calls, delegating calls, enum entry calls).
      *
      * - Kotlin 2.3.x+: `call.arguments[index] = expr`
      * - Kotlin 2.1–2.2: `call.putValueArgument(index, expr)` (dispatch/extension
@@ -41,15 +42,15 @@ interface CompatContext {
      *
      * Going through this helper keeps call sites independent of the transition.
      */
-    fun IrCall.setArg(index: Int, expr: IrExpression)
+    fun IrFunctionAccessExpression.setArg(index: Int, expr: IrExpression)
 
     /**
-     * Writes the type argument at [index] on an [IrCall].
+     * Writes the type argument at [index] on any IR function-access expression.
      *
      * - Kotlin 2.3.x+: `call.typeArguments[index] = type`
      * - Kotlin 2.1–2.2: `call.putTypeArgument(index, type)`
      */
-    fun IrCall.setTypeArg(index: Int, type: IrType)
+    fun IrFunctionAccessExpression.setTypeArg(index: Int, type: IrType)
 
     /**
      * Registered per subproject via META-INF/services. [CompatContextResolver]

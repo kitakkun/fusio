@@ -1,5 +1,6 @@
 package com.kitakkun.aria.compiler
 
+import com.kitakkun.aria.compiler.compat.CompatContext
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.diagnostics.reportOn
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
@@ -7,12 +8,13 @@ import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
-import com.kitakkun.aria.compiler.compat.kclassArg
 import org.jetbrains.kotlin.fir.declarations.getAnnotationByClassId
 import org.jetbrains.kotlin.fir.types.classId
 import org.jetbrains.kotlin.name.Name
 
-object AriaMapToChecker : FirClassChecker(MppCheckerKind.Common) {
+class AriaMapToChecker(compat: CompatContext) :
+    FirClassChecker(MppCheckerKind.Common),
+    CompatContext by compat {
     context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(declaration: FirClass) {
         if (declaration !is FirRegularClass) return
