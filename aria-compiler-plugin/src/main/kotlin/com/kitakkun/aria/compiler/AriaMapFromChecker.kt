@@ -35,6 +35,16 @@ object AriaMapFromChecker : FirClassChecker(MppCheckerKind.Common) {
             return
         }
 
-        // Property validation — to be expanded later
+        // For @MapFrom, `declaration` is the parent effect subtype we construct
+        // and the annotation's `source` is the child effect subtype whose data we copy.
+        // So the direction flips vs. @MapTo: source=child effect, target=parent effect.
+        validatePropertyCompatibility(
+            source = sourceClass,
+            target = declaration,
+            session = context.session,
+            reporter = reporter,
+            context = context,
+            sourceElement = declaration.source,
+        )
     }
 }

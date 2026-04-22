@@ -35,6 +35,15 @@ object AriaMapToChecker : FirClassChecker(MppCheckerKind.Common) {
             return
         }
 
-        // Property validation — to be expanded later
+        // For @MapTo, `declaration` is the parent event subtype (source of the copy)
+        // and the annotation's `target` is the child event subtype we build.
+        validatePropertyCompatibility(
+            source = declaration,
+            target = targetClass,
+            session = context.session,
+            reporter = reporter,
+            context = context,
+            sourceElement = declaration.source,
+        )
     }
 }
