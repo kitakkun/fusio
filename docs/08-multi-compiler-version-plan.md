@@ -18,6 +18,89 @@ Published artifacts (via `publishToMavenLocal`):
 - **Box tests for k24**: `kotlin-compiler-internal-test-framework` pins a single Kotlin version, so each variant needs its own test module; the current box-test lane exercises only k23
 - **Version-detection fallback**: reflection reads `package.implementationVersion`; brittle against re-jarring. Consider `KotlinPluginWrapperKt.getKotlinPluginVersion(project)` once we can take that API dep
 
+## Stress-test probe: Kotlin 2.0.21
+
+Before Phase 2 planning, we probed backwards to Kotlin 2.0.21 (the last 2.0.x) to see how far the shared-source + compat-facade pattern stretches. **Conclusion: it breaks.** The findings below inform why a dedicated compiler-compat layer (separate from the current per-variant `compat/` folders) is worth building next.
+
+### What broke when compiling the current shared source against 2.0.21
+
+Categorised by how hard each break is to work around.
+
+#### Level 1 — function-signature drift (compat function works)
+
+| Break | 2.3.20 shape | 2.0.21 shape |
+|-------|--------------|--------------|
+| `IrCall.arguments[i]` | list access (since 2.2) | `call.putValueArgument(i, expr)`, `call.extensionReceiver = expr`, `call.dispatchReceiver = expr` |
+| `IrCall.typeArguments[i]` | list access | `call.putTypeArgument(i, type)` |
+| `IrPluginContext.finderForBuiltins()` | returns DeclarationFinder | `pluginContext.referenceClass(classId)`, `referenceFunctions(callableId)`, `referenceConstructors(classId)` |
+| `getKClassArgument(name, session)` | name+session required | session-less overload |
+
+All of these could hide behind compat extension functions of the form `fun IrCall.setArgument(i, expr)`.
+
+#### Level 2 — types that don't exist yet
+
+| Missing class / annotation | Where used | Implication |
+|---------------------------|------------|-------------|
+| `KtDiagnosticsContainer` | `AriaErrors` extends it | 2.0's diagnostic API was entirely different (pre-`KtDiagnosticFactoryToRendererMap` factory DSL). The whole `AriaErrors` file is unworkable as-is. |
+| `DirectDeclarationsAccess` annotation | `@OptIn(DirectDeclarationsAccess::class)` in `AriaFirCheckerUtils` | Pre-existing opt-in wasn't there; remove annotation for 2.0 |
+| Factory function `by KtDiagnosticFactoryToRendererMap("name") { ... }` | `AriaErrors` / `AriaErrorMessages` | Different builder shape in 2.0 |
+
+Compat functions can't save this — you can't compat-away a missing receiver type.
+
+#### Level 3 — base-class shape changed
+
+| Break | Why |
+|-------|-----|
+| `abstract val pluginId` on `CompilerPluginRegistrar` | Not declared in 2.0's `CompilerPluginRegistrar` |
+| `registerDiagnosticContainers(...)` on `ExtensionRegistrarContext` | Not available in 2.0's `FirExtensionRegistrar` |
+
+The `override` keyword binds to something that doesn't exist. Compile fails at the class level.
+
+#### Level 4 — override signature change (the real killer)
+
+In 2.2+ checker `check()` uses context parameters:
+
+```kotlin
+context(context: CheckerContext, reporter: DiagnosticReporter)
+override fun check(declaration: FirClass) { ... }
+```
+
+In 2.0 it's a plain method:
+
+```kotlin
+override fun check(declaration: FirClass, context: CheckerContext, reporter: DiagnosticReporter) { ... }
+```
+
+**The shape of the override is different.** No compat function can bridge this — the method signature itself must differ between versions. Every checker class has to be forked per variant.
+
+### Breakage scope estimate
+
+Of our ~500 LoC in `aria-compiler-plugin/src/main/kotlin/`:
+
+- `AriaErrors.kt` (31 lines) — full rewrite for 2.0 (Level 2)
+- `AriaMapToChecker.kt` / `AriaMapFromChecker.kt` / `AriaExhaustivenessChecker.kt` (~200 lines combined) — fork for check() signature (Level 4)
+- `AriaCompilerPluginRegistrar.kt` / `AriaFirExtensionRegistrar.kt` / `AriaFirCheckersExtension.kt` (~50 lines) — adjust for Level 3 changes
+- `AriaFirCheckerUtils.kt` (30 lines) — compat-fixable if we strip `DirectDeclarationsAccess`
+- `MappedScopeTransformer.kt` (375 lines) — many Level 1 breaks but fixable with wider compat layer
+
+So **~300 of 500 lines need per-version content** for a 2.0 variant. The current layout with a single `compat/` file per variant can't carry this — we'd need file-level forks and a wider compat surface.
+
+### What the probe tells us about the design
+
+1. **The current compat-facade pattern covers Level 1 cleanly, nothing above.** That's why 2.3 ↔ 2.4 was a 20-line fix and 2.3 ↔ 2.0 is effectively a rewrite.
+
+2. **Override-signature changes (Level 4) are non-bridgeable** by any facade. They require whole-class forks.
+
+3. **There is a soft boundary around context-parameter checker adoption (Kotlin 2.2)** below which every FIR checker must be duplicated.
+
+4. **Realistic support window** is probably "last 1-2 minors that all sit above the Level 4 boundary." For the current codebase: 2.3 and 2.4 (both use context-parameter checkers). 2.2 might be reachable with a wider compat layer; 2.1 and below are out without a full fork.
+
+5. **Dedicated compat module needed if we want more.** A separate `aria-compiler-compat/` sub-layer that each variant module depends on — housing `IrCall.setArgument(i)`, `IrPluginContext.findClassSymbol(classId)`, and similar — would at least halve the per-variant surface area. Plan that in Phase 2.
+
+### Action for now
+
+k20 probe is not merged. Neither the `aria-compiler-plugin-k20/` module nor the `kotlin-k20` catalog entry remained — this document is the paper trail. When someone re-attempts older-version support, start here.
+
 ## Problem
 
 Aria currently pins Kotlin 2.3.20 end-to-end:
