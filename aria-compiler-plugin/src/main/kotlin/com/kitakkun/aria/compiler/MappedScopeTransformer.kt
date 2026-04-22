@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.ir.builders.irBlockBody
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irElseBranch
 import org.jetbrains.kotlin.ir.builders.irGet
+import org.jetbrains.kotlin.ir.builders.irGetObject
 import org.jetbrains.kotlin.ir.builders.irIs
 import org.jetbrains.kotlin.ir.builders.irNull
 import org.jetbrains.kotlin.ir.builders.irReturn
@@ -40,6 +41,7 @@ import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
+import org.jetbrains.kotlin.ir.util.isObject
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.name.ClassId
@@ -276,33 +278,40 @@ class MappedScopeTransformer(
                 val branches = mutableListOf<org.jetbrains.kotlin.ir.expressions.IrBranch>()
                 for (m in mappings) {
                     val toClass = m.toSubtypeClass.owner
-                    val primaryCtor = toClass.constructors.firstOrNull { it.isPrimary }
-                        ?: toClass.constructors.firstOrNull()
-                        ?: continue
                     if (toClass.typeParameters.isNotEmpty()) continue
-
                     val fromSubClass = m.fromSubtypeClass.owner
-                    val fromProps = fromSubClass.properties.associateBy { it.name.asString() }
 
-                    val ctorArgs = primaryCtor.parameters.map { p ->
-                        val prop = fromProps[p.name.asString()] ?: return@map null
-                        val getter = prop.getter ?: return@map null
-                        innerBuilder.irCall(getter.symbol).also { g ->
-                            g.arguments[0] = innerBuilder.irGet(param)
+                    // For `object` / `data object` targets there is no user-accessible
+                    // constructor — the singleton is the canonical instance.
+                    val result: IrExpression = if (toClass.isObject) {
+                        innerBuilder.irGetObject(m.toSubtypeClass)
+                    } else {
+                        val primaryCtor = toClass.constructors.firstOrNull { it.isPrimary }
+                            ?: toClass.constructors.firstOrNull()
+                            ?: continue
+
+                        val fromProps = fromSubClass.properties.associateBy { it.name.asString() }
+                        val ctorArgs = primaryCtor.parameters.map { p ->
+                            val prop = fromProps[p.name.asString()] ?: return@map null
+                            val getter = prop.getter ?: return@map null
+                            innerBuilder.irCall(getter.symbol).also { g ->
+                                g.arguments[0] = innerBuilder.irGet(param)
+                            }
+                        }
+                        if (ctorArgs.any { it == null }) continue
+
+                        innerBuilder.irCall(primaryCtor.symbol, toClass.defaultType).also { c ->
+                            for ((i, a) in ctorArgs.withIndex()) {
+                                c.arguments[i] = a
+                            }
                         }
                     }
-                    if (ctorArgs.any { it == null }) continue
 
-                    val ctorCall = innerBuilder.irCall(primaryCtor.symbol, toClass.defaultType).also { c ->
-                        for ((i, a) in ctorArgs.withIndex()) {
-                            c.arguments[i] = a
-                        }
-                    }
                     branches += IrBranchImpl(
                         startOffset = UNDEFINED_OFFSET,
                         endOffset = UNDEFINED_OFFSET,
                         condition = innerBuilder.irIs(innerBuilder.irGet(param), fromSubClass.defaultType),
-                        result = ctorCall,
+                        result = result,
                     )
                 }
                 branches += innerBuilder.irElseBranch(innerBuilder.irNull(nullableToType))

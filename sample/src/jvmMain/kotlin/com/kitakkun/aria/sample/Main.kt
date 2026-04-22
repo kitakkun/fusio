@@ -32,14 +32,12 @@ fun main(): Unit = runBlocking {
     composition.setContent {
         val aria = myScreenPresenter(eventFlow)
         currentState.value = aria.state
-        // Collect effects into our test list
         androidx.compose.runtime.LaunchedEffect(aria.effectFlow) {
             aria.effectFlow.collect { collectedEffects.add(it) }
         }
     }
 
     suspend fun pump(label: String) {
-        // Let suspended event handlers run, apply snapshot changes, then recompose.
         repeat(3) {
             delay(10)
             Snapshot.sendApplyNotifications()
@@ -56,6 +54,13 @@ fun main(): Unit = runBlocking {
 
     eventFlow.emit(MyScreenEvent.ToggleFavorite("item-1"))
     pump("after ToggleFavorite")
+
+    // Nested mappedScope: parent -> favorite -> counter
+    eventFlow.emit(MyScreenEvent.IncrementCounter)
+    pump("after IncrementCounter #1")
+
+    eventFlow.emit(MyScreenEvent.IncrementCounter)
+    pump("after IncrementCounter #2")
 
     composition.dispose()
     recomposer.close()
