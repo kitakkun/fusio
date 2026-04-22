@@ -1,22 +1,52 @@
 # Step 8: Multi-Kotlin-compiler-version support
 
-Status: **Phase 1 landed** (Kotlin 2.3.20 + 2.4.0-Beta2 both build); CI matrix and per-variant box tests pending.
+Status: **Phase 2 landed** (single shaded jar, Metro-style compiler-compat layer, Kotlin 2.3.20 + 2.4.0-Beta2 both work end-to-end). Phase 1's sibling-variant-module scheme is retired. The as-built state below supersedes the Phase 1 and Phase 2-plan sections further down — those are kept for historical context and future-version bring-up.
 
-## What landed
+## Phase 2 as-built (current state)
 
-- `aria-compiler-plugin-k24/` sibling module sharing production source via `srcDir("../aria-compiler-plugin/src/main/kotlin")`, compiled against kotlin-compiler-embeddable 2.4.0-Beta2
-- `aria-compiler-plugin/src/main-k23/kotlin/compat/` and `aria-compiler-plugin-k24/src/main/kotlin/compat/` — per-version implementations of `FirAnnotation.kclassArg(name, session)`. Only one API break surfaced: `getKClassArgument` dropped its session parameter in 2.4
-- `AriaGradlePlugin.getPluginArtifact()` now selects `aria-compiler-plugin` for Kotlin 2.3.x and `aria-compiler-plugin-k24` for Kotlin 2.4.x, detected via the Kotlin Gradle plugin jar's Implementation-Version
+### Module layout
 
-Published artifacts (via `publishToMavenLocal`):
-- `com.kitakkun.aria:aria-compiler-plugin:<aria-version>` — k23 default
-- `com.kitakkun.aria:aria-compiler-plugin-k24:<aria-version>`
+```
+aria-compiler-plugin/             FIR checkers + IR MappedScopeTransformer
+  build.gradle.kts                shadow plugin shades the compat modules in
+aria-compiler-compat/             host module
+  src/.../CompatContext.kt        interface + Version/VersionRange + Factory
+  src/.../CompatContextResolver.kt ServiceLoader-based runtime selection
+  k2320/
+    CompatContextImpl.kt          Kotlin 2.3.x impl (kclassArg with session,
+                                  list-access IrCall writes)
+    META-INF/services/…Factory    registers Factory for ServiceLoader
+  k240_beta2/
+    CompatContextImpl.kt          Kotlin 2.4.x impl (delegates to k2320,
+                                  overrides kclassArg to call the session-
+                                  less 2.4 signature)
+    META-INF/services/…Factory    registers Factory for ServiceLoader
+```
 
-## Still to land (Phase 1 tail)
+### How it works
 
-- **CI matrix**: run `:aria-compiler-plugin-k24:compileKotlin` alongside k23 build so drift surfaces on PR
-- **Box tests for k24**: `kotlin-compiler-internal-test-framework` pins a single Kotlin version, so each variant needs its own test module; the current box-test lane exercises only k23
-- **Version-detection fallback**: reflection reads `package.implementationVersion`; brittle against re-jarring. Consider `KotlinPluginWrapperKt.getKotlinPluginVersion(project)` once we can take that API dep
+- `CompatContext` declares every API the plugin needs whose signature shifts between Kotlin versions (currently `kclassArg`, `setArg`, `setTypeArg`).
+- Each k** subproject compiles against its pinned `kotlin-compiler-embeddable` version and registers a `CompatContext.Factory` with a `supportedRange: VersionRange`.
+- `aria-compiler-plugin/build.gradle.kts` uses the `com.gradleup.shadow` plugin to bundle the three compat jars into a single artifact. A dedicated non-transitive `shaded` configuration keeps kotlin-stdlib and other transitive deps out of the final jar (~65 KB, 29 classes). `mergeServiceFiles()` stitches each subproject's `META-INF/services/.../CompatContext$Factory` into one.
+- At compiler runtime, `CompatContextResolver.resolve()` reads `KotlinCompilerVersion.VERSION`, loads every `Factory` via `ServiceLoader`, and instantiates the first whose `supportedRange` contains the running version.
+- `AriaIrGenerationExtension` and `AriaFirCheckersExtension` call `CompatContextResolver.resolve()` eagerly at construction, so a classpath missing a matching impl fails with a clear error before any analysis runs.
+- Checkers and `MappedScopeTransformer` delegate to the resolved context via Kotlin interface delegation (`: CompatContext by compat`), so call sites inside the plugin read like `annotation.kclassArg(...)` / `call.setArg(...)` with no version-sensitive API touched directly.
+
+### Published artifact
+
+- `com.kitakkun.aria:aria-compiler-plugin:<aria-version>` — single shaded jar
+- `aria-compiler-compat` and its k** subprojects are NOT published separately; they're shaded in.
+- `AriaGradlePlugin.getPluginArtifact()` returns a single coordinate; the Kotlin version dispatch happens at compiler runtime inside the jar, not at Gradle-apply time.
+
+### Composite-build compatibility
+
+The sample (`sample/`) consumes `:aria-compiler-plugin` through Gradle's composite-build mechanism, which resolves via the project's `runtimeElements`/`apiElements` configurations rather than the published Maven artifact. `aria-compiler-plugin/build.gradle.kts` explicitly swaps those configurations' outgoing artifact from the plain `jar` task output to `shadowJar`, so composite consumers see the same shaded jar that mavenLocal does.
+
+### Still to land (Phase 2 tail)
+
+- **Box tests against Kotlin 2.4.0-Beta2**: `kotlin-compiler-internal-test-framework` is published per-Kotlin-version and currently pinned to 2.3.20 in `libs.versions.toml`. Running the existing testData under 2.4 needs either (a) a second test task with a 2.4-pinned classpath (framework + stdlib + compose compiler plugin all at 2.4.0-Beta2), or (b) CI matrix that re-runs `./gradlew :aria-compiler-plugin:test` with catalog overrides per Kotlin version. Blocking question: does `kotlin-compose-compiler-plugin:2.4.0-Beta2` exist as a published artifact? testData exercises Compose, so that's on the critical path.
+- **CI workflow**: GitHub Actions or similar — run the full build (shadowJar + sample) against a Kotlin 2.3.20 JVM and a Kotlin 2.4.0-Beta2 JVM.
+- **Shaded jar class-loading probe on 2.4**: right now we have indirect evidence that k240_beta2 works (it compiles against the 2.4 compiler-embeddable, and the delegation-with-override pattern keeps link-failing methods out of the k2320 delegate's path). A direct runtime smoke test under an actual 2.4 compiler would close the remaining uncertainty.
 
 ## Stress-test probe: Kotlin 2.0.21
 
