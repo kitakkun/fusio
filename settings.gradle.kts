@@ -28,5 +28,6 @@ include(":aria-compiler-plugin")
 include(":aria-compiler-plugin-k24")
 include(":aria-compiler-compat")
 include(":aria-compiler-compat:k2320")
+include(":aria-compiler-compat:k240_beta2")
 include(":aria-gradle-plugin")
 // sample is a separate composite build — see sample/settings.gradle.kts
