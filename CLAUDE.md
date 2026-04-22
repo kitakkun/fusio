@@ -40,6 +40,11 @@ cd sample && ../gradlew runJvm                   # end-to-end smoke
 - IR transformer registers BEFORE Compose (insertion order in `ExtensionStorage`).
 - When touching compiler-plugin internals, read `reference_aria_gotchas.md` in memory first.
 
-## Current focus
+## Multi-Kotlin-version support
 
-Multi-compiler-version support scaffolding — pending; this project currently pins Kotlin 2.3.20. Design to be drafted.
+Two compiler-plugin variants live in the repo:
+
+- `aria-compiler-plugin/` — Kotlin 2.3.20 (default)
+- `aria-compiler-plugin-k24/` — Kotlin 2.4.0-Beta2 (shares source via `srcDir`, with its own `compat/` override)
+
+The Gradle plugin (`AriaGradlePlugin.getPluginArtifact()`) picks the right artifact based on the user's Kotlin version. When adding Kotlin 2.5 support later: create `aria-compiler-plugin-k25/` mirroring k24's layout, add a `kclassArg` compat implementation if needed, extend `artifactIdFor()` in `AriaGradlePlugin`. See `docs/08-multi-compiler-version-plan.md` for the full outline.

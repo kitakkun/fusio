@@ -1,6 +1,22 @@
-# Step 8: Multi-Kotlin-compiler-version support (Design)
+# Step 8: Multi-Kotlin-compiler-version support
 
-Status: **design doc, not yet implemented**
+Status: **Phase 1 landed** (Kotlin 2.3.20 + 2.4.0-Beta2 both build); CI matrix and per-variant box tests pending.
+
+## What landed
+
+- `aria-compiler-plugin-k24/` sibling module sharing production source via `srcDir("../aria-compiler-plugin/src/main/kotlin")`, compiled against kotlin-compiler-embeddable 2.4.0-Beta2
+- `aria-compiler-plugin/src/main-k23/kotlin/compat/` and `aria-compiler-plugin-k24/src/main/kotlin/compat/` — per-version implementations of `FirAnnotation.kclassArg(name, session)`. Only one API break surfaced: `getKClassArgument` dropped its session parameter in 2.4
+- `AriaGradlePlugin.getPluginArtifact()` now selects `aria-compiler-plugin` for Kotlin 2.3.x and `aria-compiler-plugin-k24` for Kotlin 2.4.x, detected via the Kotlin Gradle plugin jar's Implementation-Version
+
+Published artifacts (via `publishToMavenLocal`):
+- `com.kitakkun.aria:aria-compiler-plugin:<aria-version>` — k23 default
+- `com.kitakkun.aria:aria-compiler-plugin-k24:<aria-version>`
+
+## Still to land (Phase 1 tail)
+
+- **CI matrix**: run `:aria-compiler-plugin-k24:compileKotlin` alongside k23 build so drift surfaces on PR
+- **Box tests for k24**: `kotlin-compiler-internal-test-framework` pins a single Kotlin version, so each variant needs its own test module; the current box-test lane exercises only k23
+- **Version-detection fallback**: reflection reads `package.implementationVersion`; brittle against re-jarring. Consider `KotlinPluginWrapperKt.getKotlinPluginVersion(project)` once we can take that API dep
 
 ## Problem
 

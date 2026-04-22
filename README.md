@@ -122,6 +122,15 @@ cd sample
 
 Aria's IR transformer must run **before** the Compose compiler plugin, because Compose injects `$composer`/`$changed` parameters into `@Composable` lambdas that Aria needs to rewrite first. The Aria Gradle plugin sets this automatically by injecting `-Xcompiler-plugin-order=com.kitakkun.aria>androidx.compose.compiler.plugins.kotlin` into every Kotlin compilation, so applying the plugin is enough — no extra configuration required.
 
+### Kotlin version compatibility
+
+| Your Kotlin | Compiler-plugin artifact |
+|-------------|--------------------------|
+| 2.3.x       | `aria-compiler-plugin` (default) |
+| 2.4.0-Beta+ | `aria-compiler-plugin-k24` |
+
+The Gradle plugin detects your Kotlin version at apply time and resolves the matching artifact for you — no manual dependency declaration needed. `aria-runtime` and `aria-annotations` are version-agnostic and shared across all variants.
+
 ## License
 
 TBD.
