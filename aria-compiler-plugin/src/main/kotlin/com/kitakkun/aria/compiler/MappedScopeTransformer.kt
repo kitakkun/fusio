@@ -4,6 +4,9 @@ import org.jetbrains.kotlin.backend.common.IrElementTransformerVoidWithContext
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
+import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
+import org.jetbrains.kotlin.ir.builders.IrBlockBuilder
+import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.declarations.addValueParameter
 import org.jetbrains.kotlin.ir.builders.declarations.buildFun
 import org.jetbrains.kotlin.ir.builders.irBlock
@@ -20,6 +23,7 @@ import org.jetbrains.kotlin.ir.builders.irWhen
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
+import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrClassReference
 import org.jetbrains.kotlin.ir.expressions.IrExpression
@@ -45,11 +49,26 @@ import org.jetbrains.kotlin.ir.util.isObject
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.name.ClassId
-import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
-private const val UNDEFINED_OFFSET: Int = -1
-
+/**
+ * Rewrites every `mappedScope<CE, CEff, CS> { block }` call site into inline
+ * IR that plumbs events in and effects out between the parent [PresenterScope]
+ * and the child one that [block] runs against.
+ *
+ * Generated shape (pseudocode):
+ * ```
+ * run {
+ *   val childEventFlow = parentScope.eventFlow.mapEvents { @MapTo-based when }
+ *   val childScope = PresenterScope<CE, CEff>(childEventFlow)
+ *   forwardEffects(childScope, parentScope) { @MapFrom-based when }  // optional
+ *   block.invoke(childScope)  // returns ChildState directly
+ * }
+ * ```
+ *
+ * The two when-lambdas are synthesised by [buildMapperLambda] from the
+ * `@MapTo` / `@MapFrom` annotations on the parent event/effect sealed subtypes.
+ */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 class MappedScopeTransformer(
     private val pluginContext: IrPluginContext,
@@ -60,36 +79,25 @@ class MappedScopeTransformer(
     private val presenterScopeClass: IrClassSymbol by lazy {
         finder.findClass(AriaClassIds.PRESENTER_SCOPE)!!
     }
-
     private val presenterScopeConstructor: IrConstructorSymbol by lazy {
         finder.findConstructors(AriaClassIds.PRESENTER_SCOPE).single()
     }
-
     private val presenterScopeEventFlowGetter: IrSimpleFunctionSymbol by lazy {
         presenterScopeClass.owner.properties
             .first { it.name == Name.identifier("eventFlow") }
             .getter!!.symbol
     }
-
     private val mapEventsFn: IrSimpleFunctionSymbol by lazy {
         finder.findFunctions(AriaClassIds.MAP_EVENTS).single()
     }
-
     private val forwardEffectsFn: IrSimpleFunctionSymbol by lazy {
         finder.findFunctions(AriaClassIds.FORWARD_EFFECTS).single()
     }
 
     override fun visitCall(expression: IrCall): IrExpression {
         val callee = expression.symbol.owner
-        if (callee.name != Name.identifier("mappedScope")) {
-            return super.visitCall(expression)
-        }
-
-        val parentFqName = callee.parent.kotlinFqName
-        if (parentFqName != FqName("com.kitakkun.aria")) {
-            return super.visitCall(expression)
-        }
-
+        if (callee.name != MAPPED_SCOPE_NAME) return super.visitCall(expression)
+        if (callee.parent.kotlinFqName != AriaClassIds.ARIA_PACKAGE) return super.visitCall(expression)
         return transformMappedScope(expression)
     }
 
@@ -101,8 +109,9 @@ class MappedScopeTransformer(
         val parentScopeExpr = call.arguments[0]!!
         val lambdaExpr = call.arguments[1]!! as IrFunctionExpression
 
-        // Extract ParentEvent / ParentEffect types from the concrete type of the
-        // extension receiver. parentScopeExpr.type should be PresenterScope<ParentEvent, ParentEffect>.
+        // mappedScope is declared on PresenterScope<*, *>, so its extension receiver's
+        // declared type is star-projected. But the concrete type at the call site
+        // carries the real ParentEvent/ParentEffect arguments — we read them here.
         val parentScopeType = parentScopeExpr.type as? IrSimpleType
         val parentEventType: IrType? = parentScopeType?.arguments?.getOrNull(0)?.typeOrNull
         val parentEffectType: IrType? = parentScopeType?.arguments?.getOrNull(1)?.typeOrNull
@@ -113,101 +122,139 @@ class MappedScopeTransformer(
 
         return builder.irBlock(resultType = childStateType) {
             val parentScopeVar = irTemporary(parentScopeExpr, nameHint = "ariaParentScope")
+            val childScopeVar = buildChildScope(
+                parentScopeVar = parentScopeVar,
+                parentEventType = parentEventType,
+                childEventType = childEventType,
+                childEffectType = childEffectType,
+                parentDecl = parentDecl,
+            )
+            emitEffectForwarding(
+                parentScopeVar = parentScopeVar,
+                childScopeVar = childScopeVar,
+                parentEffectType = parentEffectType,
+                childEffectType = childEffectType,
+                parentDecl = parentDecl,
+            )
+            +invokeLambda(lambdaExpr, childScopeVar, childStateType)
+        }
+    }
 
-            // parentScope.eventFlow
-            val parentEventFlowCall = irCall(presenterScopeEventFlowGetter).also {
-                it.arguments[0] = irGet(parentScopeVar)
-            }
+    /** Builds and declares `val childScope = PresenterScope<CE, CEff>(mappedEventFlow)`. */
+    private fun IrBlockBuilder.buildChildScope(
+        parentScopeVar: IrVariable,
+        parentEventType: IrType?,
+        childEventType: IrType,
+        childEffectType: IrType,
+        parentDecl: IrDeclarationParent,
+    ): IrVariable {
+        val parentEventFlowCall = irCall(presenterScopeEventFlowGetter).also {
+            it.arguments[0] = irGet(parentScopeVar)
+        }
 
-            // Optionally wrap with mapEvents(mapper) if @MapTo mappings exist.
-            val childEventFlowExpr: IrExpression = if (parentEventType != null) {
-                val mapperLambda = buildMapperLambda(
-                    fromType = parentEventType,
+        val childEventFlowExpr: IrExpression = parentEventType
+            ?.let { pEvent ->
+                val mapper = buildMapperLambda(
+                    fromType = pEvent,
                     toType = childEventType,
                     parent = parentDecl,
                     annotationClassId = AriaClassIds.MAP_TO,
-                    fromClass = parentEventType.classOrNull?.owner,
-                    targetExtractor = { ann -> ann.arguments.firstOrNull() as? IrClassReference },
+                    fromClass = pEvent.classOrNull?.owner,
                 )
-                if (mapperLambda != null) {
+                if (mapper != null) {
                     irCall(mapEventsFn).also { mc ->
-                        mc.typeArguments[0] = parentEventType
+                        mc.typeArguments[0] = pEvent
                         mc.typeArguments[1] = childEventType
-                        mc.arguments[0] = parentEventFlowCall  // extension receiver
-                        mc.arguments[1] = mapperLambda
+                        mc.arguments[0] = parentEventFlowCall
+                        mc.arguments[1] = mapper
                     }
-                } else {
-                    parentEventFlowCall
-                }
-            } else {
-                parentEventFlowCall
+                } else null
             }
-            val childEventFlowVar = irTemporary(childEventFlowExpr, nameHint = "ariaChildEventFlow")
+            ?: parentEventFlowCall
 
-            // val childScope = PresenterScope<ChildEvent, ChildEffect>(childEventFlow)
-            val childScopeType = presenterScopeClass.typeWith(childEventType, childEffectType)
-            val childScopeCall = irCall(presenterScopeConstructor, childScopeType).also {
-                it.typeArguments[0] = childEventType
-                it.typeArguments[1] = childEffectType
-                it.arguments[0] = irGet(childEventFlowVar)
-            }
-            val childScopeVar = irTemporary(childScopeCall, nameHint = "ariaChildScope")
+        val childEventFlowVar = irTemporary(childEventFlowExpr, nameHint = "ariaChildEventFlow")
 
-            // Optionally wire up effect forwarding via @MapFrom mappings.
-            // Must be inserted BEFORE invoking the lambda so the LaunchedEffect is
-            // registered in the same composition as the child presenter's body.
-            if (parentEffectType != null) {
-                val effectMapperLambda = buildMapperLambda(
-                    fromType = childEffectType,
-                    toType = parentEffectType,
-                    parent = parentDecl,
-                    annotationClassId = AriaClassIds.MAP_FROM,
-                    // For @MapFrom, the annotation lives on the PARENT effect subtypes
-                    // and its argument is the CHILD effect subtype. But our generic
-                    // builder walks sealed subclasses of `fromClass` (child). Here we
-                    // swap: walk parent effect sealed subclasses instead.
-                    fromClass = parentEffectType.classOrNull?.owner,
-                    targetExtractor = { ann -> ann.arguments.firstOrNull() as? IrClassReference },
-                    reverseDirection = true,
-                )
-                if (effectMapperLambda != null) {
-                    +irCall(forwardEffectsFn).also { fc ->
-                        fc.typeArguments[0] = childEffectType
-                        fc.typeArguments[1] = parentEffectType
-                        fc.arguments[0] = irGet(childScopeVar)
-                        fc.arguments[1] = irGet(parentScopeVar)
-                        fc.arguments[2] = effectMapperLambda
-                    }
-                }
-            }
+        val childScopeType = presenterScopeClass.typeWith(childEventType, childEffectType)
+        val childScopeCall = irCall(presenterScopeConstructor, childScopeType).also {
+            it.typeArguments[0] = childEventType
+            it.typeArguments[1] = childEffectType
+            it.arguments[0] = irGet(childEventFlowVar)
+        }
+        return irTemporary(childScopeCall, nameHint = "ariaChildScope")
+    }
 
-            // lambda.invoke(childScope) — the lambda now returns ChildState directly,
-            // so no further extraction is needed.
-            val functionClass = lambdaExpr.type.classOrNull!!
-            val invokeFun = functionClass.owner.functions
-                .single { it.name == Name.identifier("invoke") }
-            +irCall(invokeFun.symbol, childStateType).also { ic ->
-                ic.arguments[0] = lambdaExpr
-                ic.arguments[1] = irGet(childScopeVar)
-            }
+    /**
+     * Inserts `forwardEffects(childScope, parentScope) { @MapFrom when }` when the
+     * parent effect type resolves and at least one `@MapFrom` mapping is found.
+     * Must run BEFORE the lambda is invoked so LaunchedEffect is registered in the
+     * same composition scope as the child presenter body.
+     */
+    private fun IrBlockBuilder.emitEffectForwarding(
+        parentScopeVar: IrVariable,
+        childScopeVar: IrVariable,
+        parentEffectType: IrType?,
+        childEffectType: IrType,
+        parentDecl: IrDeclarationParent,
+    ) {
+        if (parentEffectType == null) return
+
+        // @MapFrom sits on the PARENT effect subtypes and the annotation's argument
+        // is the CHILD effect subtype. buildMapperLambda walks sealed subclasses of
+        // `fromClass`, so we pass the parent class and set reverseDirection=true to
+        // flip the from/to roles in each Mapping.
+        val mapper = buildMapperLambda(
+            fromType = childEffectType,
+            toType = parentEffectType,
+            parent = parentDecl,
+            annotationClassId = AriaClassIds.MAP_FROM,
+            fromClass = parentEffectType.classOrNull?.owner,
+            reverseDirection = true,
+        ) ?: return
+
+        +irCall(forwardEffectsFn).also { fc ->
+            fc.typeArguments[0] = childEffectType
+            fc.typeArguments[1] = parentEffectType
+            fc.arguments[0] = irGet(childScopeVar)
+            fc.arguments[1] = irGet(parentScopeVar)
+            fc.arguments[2] = mapper
         }
     }
 
     /**
-     * Generic builder for a mapping lambda `(From) -> To?`.
+     * Calls the user's lambda via [Function1.invoke] rather than calling the
+     * lambda function symbol directly. Direct invocation crashes JVM codegen
+     * because the backend can't inline raw lambda bodies into an arbitrary call
+     * site; going through the FunctionN interface uses the standard lambda-
+     * invocation convention and composes cleanly with what Compose does to
+     * @Composable lambdas.
+     */
+    private fun IrBlockBuilder.invokeLambda(
+        lambdaExpr: IrFunctionExpression,
+        childScopeVar: IrVariable,
+        childStateType: IrType,
+    ): IrExpression {
+        val functionClass = lambdaExpr.type.classOrNull!!
+        val invokeFun = functionClass.owner.functions.single { it.name == Name.identifier("invoke") }
+        return irCall(invokeFun.symbol, childStateType).also { ic ->
+            ic.arguments[0] = lambdaExpr
+            ic.arguments[1] = irGet(childScopeVar)
+        }
+    }
+
+    /**
+     * Builds an `IrFunctionExpression` of type `(From) -> To?` whose body is a
+     * `when` expression dispatching over the sealed subclasses of [fromClass].
      *
-     * Walks the sealed subclasses of [fromClass] looking for [annotationClassId]
-     * annotations. Each annotation's first argument (KClass reference) is the
-     * "other side" of the mapping. Property values are copied from the source
-     * instance into the target constructor by parameter name.
+     * For each annotated subclass (by [annotationClassId]), the annotation's
+     * first argument (a `KClass<*>` reference) names the "other side" of the
+     * mapping. In the normal direction (e.g. `@MapTo`), the annotated subclass
+     * IS the from-subtype and the annotation argument IS the to-subtype. In
+     * [reverseDirection] mode (e.g. `@MapFrom`), the roles flip: the annotated
+     * subclass is the to-subtype and the annotation argument is the from-subtype.
      *
-     * For @MapTo (events): annotation sits on parent subtypes, target is child.
-     *   → fromClass=parentEventClass, toType=childEventType, reverseDirection=false
-     *     (builder treats the annotated class itself as the from-subtype, target as to-subtype)
-     *
-     * For @MapFrom (effects): annotation sits on parent subtypes, source is child.
-     *   → fromClass=parentEffectClass (but we want source=child), reverseDirection=true
-     *     (builder treats the annotated class as the to-subtype, target as from-subtype)
+     * Target constructor args are copied from the from-subtype's matching
+     * same-named properties. FIR checkers should already have guaranteed the
+     * name/type match; here we silently skip any that fail to line up.
      */
     private fun buildMapperLambda(
         fromType: IrType,
@@ -215,39 +262,15 @@ class MappedScopeTransformer(
         parent: IrDeclarationParent,
         annotationClassId: ClassId,
         fromClass: IrClass?,
-        targetExtractor: (org.jetbrains.kotlin.ir.expressions.IrConstructorCall) -> IrClassReference?,
         reverseDirection: Boolean = false,
     ): IrFunctionExpression? {
         if (fromClass == null) return null
 
-        data class Mapping(
-            val fromSubtypeClass: IrClassSymbol,
-            val toSubtypeClass: IrClassSymbol,
-        )
-
-        val mappings = mutableListOf<Mapping>()
-
-        // In the normal direction, the annotation lives on [fromClass] sealed subtypes.
-        // In the reverse direction (e.g. @MapFrom on parent Effect subtypes), the
-        // annotation lives on a different sealed class — we pass THAT as [fromClass]
-        // via the caller, then invert the fromSubtype / toSubtype roles here.
-        for (annotatedSubSymbol in fromClass.sealedSubclasses) {
-            val annotatedSub = annotatedSubSymbol.owner
-            val ann = annotatedSub.annotations.firstOrNull {
-                (it.symbol.owner.parent as? IrClass)?.classId == annotationClassId
-            } ?: continue
-            val kclassRef = targetExtractor(ann) ?: continue
-            val otherSymbol = kclassRef.classType.classOrNull ?: continue
-
-            val fromSub = if (reverseDirection) otherSymbol else annotatedSubSymbol
-            val toSub = if (reverseDirection) annotatedSubSymbol else otherSymbol
-            mappings += Mapping(fromSub, toSub)
-        }
+        val mappings = collectMappings(fromClass, annotationClassId, reverseDirection)
         if (mappings.isEmpty()) return null
 
         val nullableToType = toType.makeNullable()
-        val function1Class = pluginContext.irBuiltIns.functionN(1)
-        val functionType = function1Class.typeWith(fromType, nullableToType)
+        val functionType = pluginContext.irBuiltIns.functionN(1).typeWith(fromType, nullableToType)
 
         val lambdaFun = pluginContext.irFactory.buildFun {
             origin = IrDeclarationOrigin.LOCAL_FUNCTION_FOR_LAMBDA
@@ -257,49 +280,8 @@ class MappedScopeTransformer(
         }.apply {
             this.parent = parent
             val param = addValueParameter("it", fromType)
-            val innerBuilder = DeclarationIrBuilder(pluginContext, symbol)
-            body = innerBuilder.irBlockBody {
-                val branches = mutableListOf<org.jetbrains.kotlin.ir.expressions.IrBranch>()
-                for (m in mappings) {
-                    val toClass = m.toSubtypeClass.owner
-                    if (toClass.typeParameters.isNotEmpty()) continue
-                    val fromSubClass = m.fromSubtypeClass.owner
-
-                    // For `object` / `data object` targets there is no user-accessible
-                    // constructor — the singleton is the canonical instance.
-                    val result: IrExpression = if (toClass.isObject) {
-                        innerBuilder.irGetObject(m.toSubtypeClass)
-                    } else {
-                        val primaryCtor = toClass.constructors.firstOrNull { it.isPrimary }
-                            ?: toClass.constructors.firstOrNull()
-                            ?: continue
-
-                        val fromProps = fromSubClass.properties.associateBy { it.name.asString() }
-                        val ctorArgs = primaryCtor.parameters.map { p ->
-                            val prop = fromProps[p.name.asString()] ?: return@map null
-                            val getter = prop.getter ?: return@map null
-                            innerBuilder.irCall(getter.symbol).also { g ->
-                                g.arguments[0] = innerBuilder.irGet(param)
-                            }
-                        }
-                        if (ctorArgs.any { it == null }) continue
-
-                        innerBuilder.irCall(primaryCtor.symbol, toClass.defaultType).also { c ->
-                            for ((i, a) in ctorArgs.withIndex()) {
-                                c.arguments[i] = a
-                            }
-                        }
-                    }
-
-                    branches += IrBranchImpl(
-                        startOffset = UNDEFINED_OFFSET,
-                        endOffset = UNDEFINED_OFFSET,
-                        condition = innerBuilder.irIs(innerBuilder.irGet(param), fromSubClass.defaultType),
-                        result = result,
-                    )
-                }
-                branches += innerBuilder.irElseBranch(innerBuilder.irNull(nullableToType))
-                +irReturn(innerBuilder.irWhen(nullableToType, branches))
+            body = DeclarationIrBuilder(pluginContext, symbol).irBlockBody {
+                +irReturn(buildWhen(param, mappings, nullableToType))
             }
         }
 
@@ -310,5 +292,84 @@ class MappedScopeTransformer(
             function = lambdaFun,
             origin = IrStatementOrigin.LAMBDA,
         )
+    }
+
+    private fun collectMappings(
+        fromClass: IrClass,
+        annotationClassId: ClassId,
+        reverseDirection: Boolean,
+    ): List<Mapping> = buildList {
+        for (annotatedSubSymbol in fromClass.sealedSubclasses) {
+            val annotation = annotatedSubSymbol.owner.annotations.firstOrNull {
+                (it.symbol.owner.parent as? IrClass)?.classId == annotationClassId
+            } ?: continue
+            val kclassRef = annotation.arguments.firstOrNull() as? IrClassReference ?: continue
+            val otherSymbol = kclassRef.classType.classOrNull ?: continue
+
+            val (fromSub, toSub) = if (reverseDirection) otherSymbol to annotatedSubSymbol
+                                   else annotatedSubSymbol to otherSymbol
+            add(Mapping(fromSub, toSub))
+        }
+    }
+
+    private fun IrBuilderWithScope.buildWhen(
+        param: org.jetbrains.kotlin.ir.declarations.IrValueParameter,
+        mappings: List<Mapping>,
+        nullableToType: IrType,
+    ): IrExpression {
+        val branches = mutableListOf<org.jetbrains.kotlin.ir.expressions.IrBranch>()
+        for (m in mappings) {
+            val result = buildMappingResult(param, m) ?: continue
+            branches += IrBranchImpl(
+                startOffset = UNDEFINED_OFFSET,
+                endOffset = UNDEFINED_OFFSET,
+                condition = irIs(irGet(param), m.fromSubtypeClass.owner.defaultType),
+                result = result,
+            )
+        }
+        branches += irElseBranch(irNull(nullableToType))
+        return irWhen(nullableToType, branches)
+    }
+
+    /**
+     * Constructs the to-subtype instance:
+     * - `object` / `data object` → `IrGetObjectValue` (singleton)
+     * - ordinary class → call primary constructor with args copied from
+     *   same-named getters on the from-subtype cast of `it`.
+     * Returns null (and the caller skips the branch) when we can't line up args
+     * — the FIR checker should already have flagged that case at compile time.
+     */
+    private fun IrBuilderWithScope.buildMappingResult(
+        param: org.jetbrains.kotlin.ir.declarations.IrValueParameter,
+        m: Mapping,
+    ): IrExpression? {
+        val toClass = m.toSubtypeClass.owner
+        if (toClass.typeParameters.isNotEmpty()) return null
+
+        if (toClass.isObject) return irGetObject(m.toSubtypeClass)
+
+        val primaryCtor = toClass.constructors.firstOrNull { it.isPrimary }
+            ?: toClass.constructors.firstOrNull()
+            ?: return null
+
+        val fromProps = m.fromSubtypeClass.owner.properties.associateBy { it.name.asString() }
+        val ctorArgs = primaryCtor.parameters.map { p ->
+            val prop = fromProps[p.name.asString()] ?: return null
+            val getter = prop.getter ?: return null
+            irCall(getter.symbol).also { g -> g.arguments[0] = irGet(param) }
+        }
+
+        return irCall(primaryCtor.symbol, toClass.defaultType).also { c ->
+            for ((i, a) in ctorArgs.withIndex()) c.arguments[i] = a
+        }
+    }
+
+    private data class Mapping(
+        val fromSubtypeClass: IrClassSymbol,
+        val toSubtypeClass: IrClassSymbol,
+    )
+
+    private companion object {
+        val MAPPED_SCOPE_NAME: Name = AriaClassIds.MAPPED_SCOPE.callableName
     }
 }

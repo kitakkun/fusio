@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 object AriaClassIds {
-    private val ARIA_PACKAGE = FqName("com.kitakkun.aria")
+    val ARIA_PACKAGE: FqName = FqName("com.kitakkun.aria")
 
     val MAP_TO = ClassId(ARIA_PACKAGE, Name.identifier("MapTo"))
     val MAP_FROM = ClassId(ARIA_PACKAGE, Name.identifier("MapFrom"))
