@@ -26,11 +26,16 @@ fun main(): Unit = runBlocking {
     runnerScope.launch { recomposer.runRecomposeAndApplyChanges() }
 
     val currentState = mutableStateOf<MyScreenUiState?>(null)
+    val collectedEffects = mutableListOf<MyScreenEffect>()
 
     val composition = Composition(AriaHeadlessApplier(), recomposer)
     composition.setContent {
         val aria = myScreenPresenter(eventFlow)
         currentState.value = aria.state
+        // Collect effects into our test list
+        androidx.compose.runtime.LaunchedEffect(aria.effectFlow) {
+            aria.effectFlow.collect { collectedEffects.add(it) }
+        }
     }
 
     suspend fun pump(label: String) {
@@ -40,7 +45,8 @@ fun main(): Unit = runBlocking {
             Snapshot.sendApplyNotifications()
             clock.sendFrame(System.nanoTime())
         }
-        println("[$label] state = ${currentState.value}")
+        println("[$label] state   = ${currentState.value}")
+        println("[$label] effects = $collectedEffects")
     }
 
     pump("initial")
@@ -48,9 +54,6 @@ fun main(): Unit = runBlocking {
     eventFlow.emit(MyScreenEvent.Search("hello"))
     pump("after Search")
 
-    // This event will NOT be mapped to FavoriteEvent.Toggle until @MapTo IR
-    // generation is implemented. For now it is silently dropped by the child
-    // scope's on<FavoriteEvent.Toggle> filter.
     eventFlow.emit(MyScreenEvent.ToggleFavorite("item-1"))
     pump("after ToggleFavorite")
 

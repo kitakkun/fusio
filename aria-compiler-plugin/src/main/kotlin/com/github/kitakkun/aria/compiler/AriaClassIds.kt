@@ -17,4 +17,5 @@ object AriaClassIds {
     val BUILD_PRESENTER = CallableId(ARIA_PACKAGE, Name.identifier("buildPresenter"))
     val EMIT_EFFECT = CallableId(PRESENTER_SCOPE, Name.identifier("emitEffect"))
     val MAP_EVENTS = CallableId(ARIA_PACKAGE, Name.identifier("mapEvents"))
+    val FORWARD_EFFECTS = CallableId(ARIA_PACKAGE, Name.identifier("forwardEffects"))
 }

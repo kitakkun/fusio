@@ -16,11 +16,11 @@ import org.jetbrains.kotlin.ir.builders.irNull
 import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.builders.irWhen
+import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrClassReference
-import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrFunctionExpression
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
@@ -41,11 +41,12 @@ import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.kotlinFqName
-import org.jetbrains.kotlin.ir.util.parentAsClass
 import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
+
+private const val UNDEFINED_OFFSET: Int = -1
 
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 class MappedScopeTransformer(
@@ -82,6 +83,10 @@ class MappedScopeTransformer(
         finder.findFunctions(AriaClassIds.MAP_EVENTS).single()
     }
 
+    private val forwardEffectsFn: IrSimpleFunctionSymbol by lazy {
+        finder.findFunctions(AriaClassIds.FORWARD_EFFECTS).single()
+    }
+
     override fun visitCall(expression: IrCall): IrExpression {
         val callee = expression.symbol.owner
         if (callee.name != Name.identifier("mappedScope")) {
@@ -104,13 +109,15 @@ class MappedScopeTransformer(
         val parentScopeExpr = call.arguments[0]!!
         val lambdaExpr = call.arguments[1]!! as IrFunctionExpression
 
-        // Extract ParentEvent type from the concrete type of the extension receiver.
-        // parentScopeExpr.type should be PresenterScope<ParentEvent, ParentEffect>.
+        // Extract ParentEvent / ParentEffect types from the concrete type of the
+        // extension receiver. parentScopeExpr.type should be PresenterScope<ParentEvent, ParentEffect>.
         val parentScopeType = parentScopeExpr.type as? IrSimpleType
         val parentEventType: IrType? = parentScopeType?.arguments?.getOrNull(0)?.typeOrNull
+        val parentEffectType: IrType? = parentScopeType?.arguments?.getOrNull(1)?.typeOrNull
 
         val currentSymbol = currentScope!!.scope.scopeOwnerSymbol
         val builder = DeclarationIrBuilder(pluginContext, currentSymbol, call.startOffset, call.endOffset)
+        val parentDecl = currentDeclarationParent!!
 
         return builder.irBlock(resultType = childStateType) {
             val parentScopeVar = irTemporary(parentScopeExpr, nameHint = "ariaParentScope")
@@ -120,23 +127,22 @@ class MappedScopeTransformer(
                 it.arguments[0] = irGet(parentScopeVar)
             }
 
-            // Try to build an event-mapping pipeline: parentScope.eventFlow.mapEvents { ... }
-            // If we can't resolve the parent event type or find any @MapTo mappings, fall
-            // back to passing the flow through unchanged (the child scope's on<> handlers
-            // simply won't match anything).
+            // Optionally wrap with mapEvents(mapper) if @MapTo mappings exist.
             val childEventFlowExpr: IrExpression = if (parentEventType != null) {
-                val mapperLambda = buildEventMapperLambda(
-                    parentEventType = parentEventType,
-                    childEventType = childEventType,
-                    parent = currentDeclarationParent!!,
+                val mapperLambda = buildMapperLambda(
+                    fromType = parentEventType,
+                    toType = childEventType,
+                    parent = parentDecl,
+                    annotationClassId = AriaClassIds.MAP_TO,
+                    fromClass = parentEventType.classOrNull?.owner,
+                    targetExtractor = { ann -> ann.arguments.firstOrNull() as? IrClassReference },
                 )
                 if (mapperLambda != null) {
-                    val flowOfChild = pluginContext.irBuiltIns.anyType // placeholder — we'll let Flow<ChildEvent> be inferred structurally
                     irCall(mapEventsFn).also { mc ->
                         mc.typeArguments[0] = parentEventType
                         mc.typeArguments[1] = childEventType
                         mc.arguments[0] = parentEventFlowCall  // extension receiver
-                        mc.arguments[1] = mapperLambda          // mapper arg
+                        mc.arguments[1] = mapperLambda
                     }
                 } else {
                     parentEventFlowCall
@@ -154,6 +160,34 @@ class MappedScopeTransformer(
                 it.arguments[0] = irGet(childEventFlowVar)
             }
             val childScopeVar = irTemporary(childScopeCall, nameHint = "ariaChildScope")
+
+            // Optionally wire up effect forwarding via @MapFrom mappings.
+            // Must be inserted BEFORE invoking the lambda so the LaunchedEffect is
+            // registered in the same composition as the child presenter's body.
+            if (parentEffectType != null) {
+                val effectMapperLambda = buildMapperLambda(
+                    fromType = childEffectType,
+                    toType = parentEffectType,
+                    parent = parentDecl,
+                    annotationClassId = AriaClassIds.MAP_FROM,
+                    // For @MapFrom, the annotation lives on the PARENT effect subtypes
+                    // and its argument is the CHILD effect subtype. But our generic
+                    // builder walks sealed subclasses of `fromClass` (child). Here we
+                    // swap: walk parent effect sealed subclasses instead.
+                    fromClass = parentEffectType.classOrNull?.owner,
+                    targetExtractor = { ann -> ann.arguments.firstOrNull() as? IrClassReference },
+                    reverseDirection = true,
+                )
+                if (effectMapperLambda != null) {
+                    +irCall(forwardEffectsFn).also { fc ->
+                        fc.typeArguments[0] = childEffectType
+                        fc.typeArguments[1] = parentEffectType
+                        fc.arguments[0] = irGet(childScopeVar)
+                        fc.arguments[1] = irGet(parentScopeVar)
+                        fc.arguments[2] = effectMapperLambda
+                    }
+                }
+            }
 
             // val childResult = lambda.invoke(childScope)
             val functionClass = lambdaExpr.type.classOrNull!!
@@ -174,98 +208,105 @@ class MappedScopeTransformer(
     }
 
     /**
-     * Build an IrFunctionExpression of type Function1<ParentEvent, ChildEvent?> whose body
-     * is a when-expression dispatching on the @MapTo annotations found on the sealed
-     * subtypes of [parentEventType].
+     * Generic builder for a mapping lambda `(From) -> To?`.
      *
-     * Returns null if no @MapTo annotations are found.
+     * Walks the sealed subclasses of [fromClass] looking for [annotationClassId]
+     * annotations. Each annotation's first argument (KClass reference) is the
+     * "other side" of the mapping. Property values are copied from the source
+     * instance into the target constructor by parameter name.
+     *
+     * For @MapTo (events): annotation sits on parent subtypes, target is child.
+     *   → fromClass=parentEventClass, toType=childEventType, reverseDirection=false
+     *     (builder treats the annotated class itself as the from-subtype, target as to-subtype)
+     *
+     * For @MapFrom (effects): annotation sits on parent subtypes, source is child.
+     *   → fromClass=parentEffectClass (but we want source=child), reverseDirection=true
+     *     (builder treats the annotated class as the to-subtype, target as from-subtype)
      */
-    private fun buildEventMapperLambda(
-        parentEventType: IrType,
-        childEventType: IrType,
+    private fun buildMapperLambda(
+        fromType: IrType,
+        toType: IrType,
         parent: IrDeclarationParent,
+        annotationClassId: ClassId,
+        fromClass: IrClass?,
+        targetExtractor: (org.jetbrains.kotlin.ir.expressions.IrConstructorCall) -> IrClassReference?,
+        reverseDirection: Boolean = false,
     ): IrFunctionExpression? {
-        val parentEventClass = parentEventType.classOrNull?.owner ?: return null
+        if (fromClass == null) return null
 
         data class Mapping(
-            val parentSubtypeClass: IrClassSymbol,
-            val childSubtypeClass: IrClassSymbol,
+            val fromSubtypeClass: IrClassSymbol,
+            val toSubtypeClass: IrClassSymbol,
         )
 
-        val childEventClassId = childEventType.classOrNull?.owner?.classId
-        val mappings = parentEventClass.sealedSubclasses.mapNotNull { parentSubSymbol ->
-            val parentSub = parentSubSymbol.owner
-            val ann = parentSub.annotations.firstOrNull {
-                it.symbol.owner.parentAsClassIdOrNull == AriaClassIds.MAP_TO
-            } ?: return@mapNotNull null
-            val targetArg = ann.arguments.firstOrNull() as? IrClassReference ?: return@mapNotNull null
-            val targetSymbol = targetArg.classType.classOrNull ?: return@mapNotNull null
-            // Only include mappings whose target belongs to the child event sealed hierarchy
-            val targetClass = targetSymbol.owner
-            val belongsToChildHierarchy = childEventClassId == null ||
-                targetClass.classId == childEventClassId ||
-                targetClass.superTypes.any { it.classOrNull?.owner?.classId == childEventClassId }
-            if (!belongsToChildHierarchy) return@mapNotNull null
-            Mapping(parentSubSymbol, targetSymbol)
+        val mappings = mutableListOf<Mapping>()
+
+        // In the normal direction, the annotation lives on [fromClass] sealed subtypes.
+        // In the reverse direction (e.g. @MapFrom on parent Effect subtypes), the
+        // annotation lives on a different sealed class — we pass THAT as [fromClass]
+        // via the caller, then invert the fromSubtype / toSubtype roles here.
+        for (annotatedSubSymbol in fromClass.sealedSubclasses) {
+            val annotatedSub = annotatedSubSymbol.owner
+            val ann = annotatedSub.annotations.firstOrNull {
+                (it.symbol.owner.parent as? IrClass)?.classId == annotationClassId
+            } ?: continue
+            val kclassRef = targetExtractor(ann) ?: continue
+            val otherSymbol = kclassRef.classType.classOrNull ?: continue
+
+            val fromSub = if (reverseDirection) otherSymbol else annotatedSubSymbol
+            val toSub = if (reverseDirection) annotatedSubSymbol else otherSymbol
+            mappings += Mapping(fromSub, toSub)
         }
         if (mappings.isEmpty()) return null
 
-        val nullableChildType = childEventType.makeNullable()
+        val nullableToType = toType.makeNullable()
         val function1Class = pluginContext.irBuiltIns.functionN(1)
-        val functionType = function1Class.typeWith(parentEventType, nullableChildType)
+        val functionType = function1Class.typeWith(fromType, nullableToType)
 
         val lambdaFun = pluginContext.irFactory.buildFun {
             origin = IrDeclarationOrigin.LOCAL_FUNCTION_FOR_LAMBDA
             name = Name.special("<anonymous>")
             visibility = DescriptorVisibilities.LOCAL
-            returnType = nullableChildType
+            returnType = nullableToType
         }.apply {
             this.parent = parent
-            val param = addValueParameter("it", parentEventType)
+            val param = addValueParameter("it", fromType)
             val innerBuilder = DeclarationIrBuilder(pluginContext, symbol)
             body = innerBuilder.irBlockBody {
                 val branches = mutableListOf<org.jetbrains.kotlin.ir.expressions.IrBranch>()
                 for (m in mappings) {
-                    // Find the default (no-arg or primary) constructor to call.
-                    val targetClass = m.childSubtypeClass.owner
-                    val primaryCtor = targetClass.constructors.firstOrNull { it.isPrimary }
-                        ?: targetClass.constructors.firstOrNull()
+                    val toClass = m.toSubtypeClass.owner
+                    val primaryCtor = toClass.constructors.firstOrNull { it.isPrimary }
+                        ?: toClass.constructors.firstOrNull()
                         ?: continue
-                    // Build constructor call. For now, copy matching properties by name
-                    // from the parent subtype instance to the child subtype constructor.
-                    val parentSub = m.parentSubtypeClass.owner
-                    val parentProps = parentSub.properties.associateBy { it.name.asString() }
+                    if (toClass.typeParameters.isNotEmpty()) continue
+
+                    val fromSubClass = m.fromSubtypeClass.owner
+                    val fromProps = fromSubClass.properties.associateBy { it.name.asString() }
+
                     val ctorArgs = primaryCtor.parameters.map { p ->
-                        val parentProp = parentProps[p.name.asString()]
-                        if (parentProp?.getter != null) {
-                            innerBuilder.irCall(parentProp.getter!!.symbol).also { g ->
-                                g.arguments[0] = innerBuilder.irGet(param)
-                                    // we need to cast the parameter to the parent subtype first
-                            }
-                        } else {
-                            null
+                        val prop = fromProps[p.name.asString()] ?: return@map null
+                        val getter = prop.getter ?: return@map null
+                        innerBuilder.irCall(getter.symbol).also { g ->
+                            g.arguments[0] = innerBuilder.irGet(param)
                         }
                     }
-                    // If any arg is null, we can't build this mapping safely; skip.
                     if (ctorArgs.any { it == null }) continue
 
-                    val ctorCall = innerBuilder.irCall(primaryCtor.symbol, targetClass.defaultTypeWithArgsOrNull() ?: continue).also { c ->
+                    val ctorCall = innerBuilder.irCall(primaryCtor.symbol, toClass.defaultType).also { c ->
                         for ((i, a) in ctorArgs.withIndex()) {
                             c.arguments[i] = a
                         }
                     }
-                    branches.add(
-                        IrBranchImpl(
-                            startOffset = UNDEFINED_OFFSET,
-                            endOffset = UNDEFINED_OFFSET,
-                            condition = innerBuilder.irIs(innerBuilder.irGet(param), m.parentSubtypeClass.owner.defaultType),
-                            result = ctorCall,
-                        )
+                    branches += IrBranchImpl(
+                        startOffset = UNDEFINED_OFFSET,
+                        endOffset = UNDEFINED_OFFSET,
+                        condition = innerBuilder.irIs(innerBuilder.irGet(param), fromSubClass.defaultType),
+                        result = ctorCall,
                     )
                 }
-                // else -> null
-                branches.add(innerBuilder.irElseBranch(innerBuilder.irNull(nullableChildType)))
-                +irReturn(innerBuilder.irWhen(nullableChildType, branches))
+                branches += innerBuilder.irElseBranch(innerBuilder.irNull(nullableToType))
+                +irReturn(innerBuilder.irWhen(nullableToType, branches))
             }
         }
 
@@ -277,14 +318,4 @@ class MappedScopeTransformer(
             origin = IrStatementOrigin.LAMBDA,
         )
     }
-
-    // Utility: parent class id from a constructor-call target (used on IrConstructorCall.symbol).
-    private val org.jetbrains.kotlin.ir.declarations.IrConstructor.parentAsClassIdOrNull: ClassId?
-        get() = (this.parent as? org.jetbrains.kotlin.ir.declarations.IrClass)?.classId
-
-    private fun org.jetbrains.kotlin.ir.declarations.IrClass.defaultTypeWithArgsOrNull(): IrType? {
-        return if (typeParameters.isEmpty()) this.defaultType else null
-    }
 }
-
-private const val UNDEFINED_OFFSET: Int = -1
