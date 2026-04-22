@@ -14,6 +14,13 @@ kotlin {
 }
 
 sourceSets {
+    main {
+        // Shared production sources live under src/main/kotlin; the k23-specific
+        // compat shims for APIs that shift between Kotlin minors live under
+        // src/main-k23/kotlin. aria-compiler-plugin-k24 mirrors this with its
+        // own src/main/kotlin/compat/ directory.
+        kotlin.srcDir("src/main-k23/kotlin")
+    }
     test {
         java.setSrcDirs(listOf("src/test/kotlin", "test-gen"))
         resources.setSrcDirs(listOf("testData"))

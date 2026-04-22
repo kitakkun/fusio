@@ -8,8 +8,8 @@ import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
+import com.kitakkun.aria.compiler.compat.kclassArg
 import org.jetbrains.kotlin.fir.declarations.getAnnotationByClassId
-import org.jetbrains.kotlin.fir.declarations.getKClassArgument
 import org.jetbrains.kotlin.fir.declarations.getSealedClassInheritors
 import org.jetbrains.kotlin.fir.declarations.utils.isSealed
 import org.jetbrains.kotlin.fir.types.classId
@@ -48,7 +48,7 @@ object AriaExhaustivenessChecker : FirClassChecker(MppCheckerKind.Common) {
         val coveredByChildSealed = mutableMapOf<ClassId, MutableSet<ClassId>>()
         for (inheritor in inheritors) {
             val annotation = inheritor.getAnnotationByClassId(direction.annotationClassId, context.session) ?: continue
-            val otherType = annotation.getKClassArgument(direction.argumentName, context.session) ?: continue
+            val otherType = annotation.kclassArg(direction.argumentName, context.session) ?: continue
             val otherClassId = otherType.classId ?: continue
             val otherClass = resolveClassById(otherClassId, context.session) ?: continue
             val childSealedParent = findSealedParent(otherClass, context.session) ?: continue

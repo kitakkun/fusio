@@ -1,5 +1,10 @@
 [versions]
+# Primary Kotlin version — used everywhere that isn't a compiler-plugin variant.
+# The k23 / k24 compiler-plugin modules pin their own Kotlin version against
+# which they compile the plugin bytecode; those are `kotlin-k23` / `kotlin-k24`.
 kotlin = "2.3.20"
+kotlin-k23 = "2.3.20"
+kotlin-k24 = "2.4.0-Beta2"
 compose-multiplatform = "1.10.3"
 coroutines = "1.10.2"
 junit-jupiter = "5.11.3"
@@ -7,6 +12,7 @@ aria = "0.1.0-SNAPSHOT"
 
 [libraries]
 kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
+kotlin-compiler-embeddable-k24 = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-k24" }
 kotlin-compiler = { module = "org.jetbrains.kotlin:kotlin-compiler", version.ref = "kotlin" }
 kotlin-compiler-internal-test-framework = { module = "org.jetbrains.kotlin:kotlin-compiler-internal-test-framework", version.ref = "kotlin" }
 kotlin-compose-compiler-plugin = { module = "org.jetbrains.kotlin:kotlin-compose-compiler-plugin", version.ref = "kotlin" }

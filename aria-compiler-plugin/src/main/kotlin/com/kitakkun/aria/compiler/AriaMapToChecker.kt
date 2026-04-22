@@ -7,8 +7,8 @@ import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
+import com.kitakkun.aria.compiler.compat.kclassArg
 import org.jetbrains.kotlin.fir.declarations.getAnnotationByClassId
-import org.jetbrains.kotlin.fir.declarations.getKClassArgument
 import org.jetbrains.kotlin.fir.types.classId
 import org.jetbrains.kotlin.name.Name
 
@@ -19,7 +19,7 @@ object AriaMapToChecker : FirClassChecker(MppCheckerKind.Common) {
 
         val mapToAnnotation = declaration.getAnnotationByClassId(AriaClassIds.MAP_TO, context.session) ?: return
 
-        val targetType = mapToAnnotation.getKClassArgument(Name.identifier("target"), context.session)
+        val targetType = mapToAnnotation.kclassArg(Name.identifier("target"), context.session)
             ?: run {
                 reporter.reportOn(declaration.source, AriaErrors.MAP_TO_INVALID_TARGET, "Missing target argument", context)
                 return

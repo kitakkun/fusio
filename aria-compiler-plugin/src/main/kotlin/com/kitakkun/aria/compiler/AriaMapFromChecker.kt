@@ -7,8 +7,8 @@ import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
+import com.kitakkun.aria.compiler.compat.kclassArg
 import org.jetbrains.kotlin.fir.declarations.getAnnotationByClassId
-import org.jetbrains.kotlin.fir.declarations.getKClassArgument
 import org.jetbrains.kotlin.fir.types.classId
 import org.jetbrains.kotlin.name.Name
 
@@ -19,7 +19,7 @@ object AriaMapFromChecker : FirClassChecker(MppCheckerKind.Common) {
 
         val mapFromAnnotation = declaration.getAnnotationByClassId(AriaClassIds.MAP_FROM, context.session) ?: return
 
-        val sourceType = mapFromAnnotation.getKClassArgument(Name.identifier("source"), context.session)
+        val sourceType = mapFromAnnotation.kclassArg(Name.identifier("source"), context.session)
             ?: run {
                 reporter.reportOn(declaration.source, AriaErrors.MAP_FROM_INVALID_SOURCE, "Missing source argument", context)
                 return
