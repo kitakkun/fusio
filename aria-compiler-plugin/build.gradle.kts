@@ -1,5 +1,8 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.shadow)
     `java-test-fixtures`
     idea
     id("aria.publish")
@@ -39,19 +42,34 @@ idea {
     }
 }
 
+// Dedicated non-transitive configuration wired into shadowJar: only the
+// compat jars themselves go into the shaded artifact. Transitive kotlin-stdlib
+// and friends would otherwise bloat the jar with ~1k irrelevant classes.
+val shaded: Configuration by configurations.creating {
+    isTransitive = false
+}
+
 dependencies {
-    // Version-sensitive compiler API calls go through CompatContext from this
-    // module; a ServiceLoader-registered implementation from an aria-compiler-
-    // compat/k** subproject provides the actual bytecode at runtime.
-    implementation(project(":aria-compiler-compat"))
+    // Main plugin code compiles against CompatContext / CompatContextResolver
+    // from the host module. At runtime the shaded jar provides both — hence
+    // compileOnly, not implementation.
+    compileOnly(project(":aria-compiler-compat"))
+
+    // These three jars get bundled into shadowJar. The k** subprojects
+    // register themselves via META-INF/services and are only referenced by
+    // ServiceLoader, so compileOnly isn't needed for them — only shaded.
+    shaded(project(":aria-compiler-compat"))
+    shaded(project(":aria-compiler-compat:k2320"))
+    shaded(project(":aria-compiler-compat:k240_beta2"))
 
     // Production: kotlin-compiler-embeddable has IntelliJ classes shaded under
     // `org.jetbrains.kotlin.com.intellij.*`, matching what the Kotlin Gradle
     // plugin loads our plugin jar against at user-project compile time.
     compileOnly(libs.kotlin.compiler.embeddable)
 
-    // Tests run the compiler in-process, so the matching CompatContext impl
-    // must be on the test classpath for ServiceLoader to find it.
+    // Tests run the compiler in-process, so CompatContext types and at least
+    // one k** impl need to be on the test classpath directly.
+    testImplementation(project(":aria-compiler-compat"))
     testRuntimeOnly(project(":aria-compiler-compat:k2320"))
 
     // Tests: the internal test framework is compiled against non-embeddable
@@ -113,6 +131,11 @@ tasks.test {
 }
 
 val generateTests by tasks.registering(JavaExec::class) {
+    // testFixtures.runtimeClasspath transitively references the project's
+    // primary jar, which is now the shadowJar output. Declare the dep
+    // explicitly so Gradle can schedule the tasks correctly.
+    dependsOn(tasks.named("shadowJar"))
+
     inputs.dir(layout.projectDirectory.dir("testData"))
         .withPropertyName("testData")
         .withPathSensitivity(PathSensitivity.RELATIVE)
@@ -134,4 +157,50 @@ fun Test.setLibraryProperty(propName: String, jarName: String) {
         ?.absolutePath
         ?: return
     systemProperty(propName, path)
+}
+
+// --- Shading ---
+// End users install a single `com.kitakkun.aria:aria-compiler-plugin` jar;
+// every aria-compiler-compat subproject's classes live inside it. ServiceLoader
+// at compiler runtime picks the matching k** impl via the merged
+// META-INF/services entries.
+//
+// We replace the ordinary `jar` with the shaded one by clearing shadowJar's
+// classifier and routing Maven publishing through the shaded artifact. Kotlin's
+// own plugin-selection logic only cares about the single GAV, so this is
+// transparent to downstream users.
+
+tasks.named<ShadowJar>("shadowJar") {
+    // Take the primary artifact slot so end users resolve the shaded jar by
+    // its plain GAV, not via a classifier.
+    archiveClassifier.set("")
+    // Only the compat jars go in (via the dedicated `shaded` configuration);
+    // stdlib and any other transitive runtime deps are already present in
+    // kotlin-compiler-embeddable at the user's build time.
+    configurations = listOf(shaded)
+    // ServiceLoader needs every CompatContext.Factory entry from every k**
+    // subproject present in the final jar; without this the last-wins default
+    // would silently drop all but one version's registration.
+    mergeServiceFiles()
+}
+
+// The unshaded jar keeps building but under a classifier so the shaded output
+// can own the default coordinate. Not published — just kept for Gradle's
+// internal task graph and anyone who wants to inspect the pre-shade classes.
+tasks.named<Jar>("jar") {
+    archiveClassifier.set("original")
+}
+
+// Register a publication driven by the `shadow` component (shaded jar + POM
+// with external runtime deps). Eagerly — not in afterEvaluate — so the
+// aria.publish convention sees a non-empty publications list and skips
+// creating its own `maven` publication from the raw `java` component
+// (which would otherwise collide with ours and include the test-fixtures jar).
+publishing {
+    publications {
+        create<MavenPublication>("shadow") {
+            from(components["shadow"])
+            artifactId = project.name
+        }
+    }
 }

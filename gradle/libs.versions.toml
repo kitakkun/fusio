@@ -8,6 +8,9 @@ kotlin-k24 = "2.4.0-Beta2"
 compose-multiplatform = "1.10.3"
 coroutines = "1.10.2"
 junit-jupiter = "5.11.3"
+# gradleup/shadow — 8.3.x is the current stable line that works with Gradle 8.
+# Bumped when Gradle 9 lands. See aria-compiler-plugin for usage.
+shadow = "8.3.5"
 aria = "0.1.0-SNAPSHOT"
 
 [libraries]
@@ -34,3 +37,4 @@ kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref 
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
