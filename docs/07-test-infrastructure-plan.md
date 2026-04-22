@@ -211,23 +211,27 @@ fun main() = generateTestGroupSuiteWithJUnit5 {
 
 ## Test fixtures to port on day 1
 
-| testData file | What it locks in |
-|---------------|------------------|
-| `diagnostics/mapToPropertyNameMismatch.kt` | PROPERTY_MISMATCH when parent subtype property name differs from target constructor param |
-| `diagnostics/mapToPropertyTypeMismatch.kt` | PROPERTY_MISMATCH when name matches but type not assignable |
-| `diagnostics/mapToInvalidTarget.kt` | MAP_TO_INVALID_TARGET for unresolved class reference |
-| `diagnostics/missingEventMappings.kt` | MISSING_EVENT_MAPPINGS when parent sealed omits a child subtype |
-| `diagnostics/missingEffectMappings.kt` | MISSING_EFFECT_MAPPINGS symmetric case |
-| `box/mappedScopeRoundTrip.kt` | Driving a parent event → child handler → parent effect returns OK |
-| `box/nestedMappedScope.kt` | Three-level (screen / favorite / counter) nesting from the sample |
-| `box/dataObjectSubtype.kt` | `data object` target uses `irGetObject`, not a constructor call |
+| testData file | What it locks in | Status |
+|---------------|------------------|--------|
+| `diagnostics/mapToPropertyNameMismatch.kt` | PROPERTY_MISMATCH when parent subtype property name differs from target constructor param | ✅ landed |
+| `diagnostics/mapToPropertyTypeMismatch.kt` | PROPERTY_MISMATCH when name matches but type not assignable | ✅ landed |
+| `diagnostics/mapFromPropertyNameMismatch.kt` | PROPERTY_MISMATCH with direction flipped for @MapFrom | ✅ landed (bonus) |
+| `diagnostics/mapToInvalidTarget.kt` | MAP_TO_INVALID_TARGET for unresolved class reference | ⚠️ not triggerable in practice — Kotlin frontend reports UNRESOLVED_REFERENCE on the KClass argument before our checker runs, so the `targetClass == null` branch in AriaMapToChecker never fires in realistic code. Leaving the diagnostic defined as a defensive fallback for typealias / serialization edge cases. |
+| `diagnostics/missingEventMappings.kt` | MISSING_EVENT_MAPPINGS when parent sealed omits a child subtype | ✅ landed |
+| `diagnostics/missingEffectMappings.kt` | MISSING_EFFECT_MAPPINGS symmetric case | ✅ landed |
+| `box/mappedScopeRoundTrip.kt` | Driving a parent event → child handler → parent effect returns OK | ✅ landed |
+| `box/nestedMappedScope.kt` | Three-level (screen / mid / leaf) nesting from the sample | ✅ landed |
+| `box/dataObjectSubtype.kt` | `data object` target uses `irGetObject`, not a constructor call | ✅ landed |
+| `box/ariaDataClass.kt` | Runtime Aria<S, E> data-class shape is stable | ✅ landed (bonus) |
+| `box/composableCompiles.kt` | Compose plugin is live in the test harness | ✅ landed (bonus) |
+| `box/validMapToCompiles.kt` | Valid @MapTo usage emits bytecode without regressions | ✅ landed (bonus) |
 
 These replace most of what the sample manually demonstrates today and can run headless in CI in ~seconds instead of the current ~30s+ Gradle sample loop.
 
 ## Risks / unknowns
 
 - **Kotlin 2.x internal test API churn**: the framework is marked "internal" and the DSL has moved (e.g. `configureDiagnosticTest`, `baseFirDiagnosticTestConfiguration`) between 2.0 / 2.1 / 2.2 / 2.3. Template currently targets a recent stable; pinning to Kotlin 2.3.20 should work but verify against the template's own `kotlin` version.
-- **Compose plugin ordering in tests**: our plugin runs before Compose in the sample via `-Xcompiler-plugin-order`. Box tests that compose mappedScope with actual `@Composable` calls need to either (a) register the Compose plugin in the test too, or (b) keep testData box cases non-Composable by using a stub mappedScope runtime. Plan: (b) first — use non-Composable runtime shims in testData so we exercise only the IR transformation without involving the Compose plugin.
+- **Compose plugin ordering in tests** (RESOLVED): AriaExtensionRegistrarConfigurator now constructs `ComposePluginRegistrar` and calls its `registerExtensions` after Aria's. `IrGenerationExtension.registerExtension` dispatches in insertion order, so registering Aria first reproduces the production `-Xcompiler-plugin-order=com.kitakkun.aria>androidx.compose.compiler...` constraint. No CLI flag required in tests.
 - **Generated `test-gen/` files**: keeping them committed vs. pure-generated is a trade-off. Commit them for now (template does) so IDEs resolve test classes without a build first.
 - **Performance**: first run of the internal framework pulls in `kotlin-compiler`, `intellijCore`, JDK discovery — expect ~15s cold startup per `./gradlew :aria-compiler-plugin:test` invocation. Subsequent incremental runs are fast.
 

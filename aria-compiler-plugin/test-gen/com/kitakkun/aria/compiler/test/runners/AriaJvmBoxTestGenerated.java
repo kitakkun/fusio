@@ -33,9 +33,21 @@ public class AriaJvmBoxTestGenerated extends AbstractAriaJvmBoxTest {
   }
 
   @Test
+  @TestMetadata("dataObjectSubtype.kt")
+  public void testDataObjectSubtype() {
+    runTest("aria-compiler-plugin/testData/box/dataObjectSubtype.kt");
+  }
+
+  @Test
   @TestMetadata("mappedScopeRoundTrip.kt")
   public void testMappedScopeRoundTrip() {
     runTest("aria-compiler-plugin/testData/box/mappedScopeRoundTrip.kt");
+  }
+
+  @Test
+  @TestMetadata("nestedMappedScope.kt")
+  public void testNestedMappedScope() {
+    runTest("aria-compiler-plugin/testData/box/nestedMappedScope.kt");
   }
 
   @Test
