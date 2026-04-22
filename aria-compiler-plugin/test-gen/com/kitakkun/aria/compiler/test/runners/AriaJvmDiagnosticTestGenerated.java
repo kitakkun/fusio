@@ -21,8 +21,32 @@ public class AriaJvmDiagnosticTestGenerated extends AbstractAriaJvmDiagnosticTes
   }
 
   @Test
+  @TestMetadata("mapFromPropertyNameMismatch.kt")
+  public void testMapFromPropertyNameMismatch() {
+    runTest("aria-compiler-plugin/testData/diagnostics/mapFromPropertyNameMismatch.kt");
+  }
+
+  @Test
   @TestMetadata("mapToPropertyNameMismatch.kt")
   public void testMapToPropertyNameMismatch() {
     runTest("aria-compiler-plugin/testData/diagnostics/mapToPropertyNameMismatch.kt");
+  }
+
+  @Test
+  @TestMetadata("mapToPropertyTypeMismatch.kt")
+  public void testMapToPropertyTypeMismatch() {
+    runTest("aria-compiler-plugin/testData/diagnostics/mapToPropertyTypeMismatch.kt");
+  }
+
+  @Test
+  @TestMetadata("missingEffectMappings.kt")
+  public void testMissingEffectMappings() {
+    runTest("aria-compiler-plugin/testData/diagnostics/missingEffectMappings.kt");
+  }
+
+  @Test
+  @TestMetadata("missingEventMappings.kt")
+  public void testMissingEventMappings() {
+    runTest("aria-compiler-plugin/testData/diagnostics/missingEventMappings.kt");
   }
 }
