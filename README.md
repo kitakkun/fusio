@@ -120,17 +120,7 @@ cd sample
 
 ### Plugin ordering
 
-Aria's IR transformer must run **before** the Compose compiler plugin, because Compose injects `$composer`/`$changed` parameters into `@Composable` lambdas that Aria needs to rewrite first. The sample configures this explicitly:
-
-```kotlin
-kotlin {
-    compilerOptions {
-        freeCompilerArgs.add(
-            "-Xcompiler-plugin-order=com.kitakkun.aria>androidx.compose.compiler.plugins.kotlin"
-        )
-    }
-}
-```
+Aria's IR transformer must run **before** the Compose compiler plugin, because Compose injects `$composer`/`$changed` parameters into `@Composable` lambdas that Aria needs to rewrite first. The Aria Gradle plugin sets this automatically by injecting `-Xcompiler-plugin-order=com.kitakkun.aria>androidx.compose.compiler.plugins.kotlin` into every Kotlin compilation, so applying the plugin is enough — no extra configuration required.
 
 ## License
 
