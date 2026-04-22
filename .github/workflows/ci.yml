@@ -6,9 +6,15 @@ on:
   pull_request:
     branches: [ main ]
 
+# Only one CI run per branch at a time; superseded runs get cancelled so a
+# rapid-fire push doesn't pile up workers.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
-    name: Build and test
+  library:
+    name: Library build + tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,25 +27,56 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          # Cache downloaded deps, wrapper distribution, and local build cache.
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
-      - name: Build library modules
-        run: ./gradlew build
-
-      - name: Run runtime unit tests
-        run: ./gradlew :aria-runtime:jvmTest
-
-      - name: Run compiler-plugin diagnostic tests
-        run: ./gradlew :aria-compiler-plugin:test
-
-      - name: Smoke-test sample (composite build)
-        working-directory: sample
-        run: ../gradlew runJvm
+      # `build` runs assemble + check on every module, and check pulls in test.
+      # That already exercises:
+      #   - :aria-runtime:jvmTest (runtime unit tests)
+      #   - :aria-compiler-plugin:test (diagnostics + box via internal test framework)
+      # Splitting into separate gradle invocations buys nothing because Gradle
+      # task graph would re-run the same work.
+      - name: Build and test libraries
+        run: ./gradlew build --parallel
 
       - name: Upload test reports on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports
+          name: library-test-reports
           path: |
             **/build/reports/tests/**
             **/build/test-results/**
+
+  sample:
+    name: Sample smoke test (composite build)
+    needs: library
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      # Sample is a separate composite build that pulls the plugin via
+      # includeBuild("../"), so it must build after the library job seeds
+      # the Gradle cache.
+      - name: Run sample
+        working-directory: sample
+        run: ../gradlew runJvm
+
+      - name: Upload sample logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample-logs
+          path: sample/build/reports/**
