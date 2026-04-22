@@ -1,6 +1,7 @@
 package com.kitakkun.aria.compiler
 
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
+import org.jetbrains.kotlin.diagnostics.KtDiagnosticFactory2
 import org.jetbrains.kotlin.diagnostics.reportOn
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
@@ -15,91 +16,76 @@ import org.jetbrains.kotlin.fir.types.classId
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 
+/**
+ * For each sealed parent Event/Effect type that declares any `@MapTo` /
+ * `@MapFrom` mappings on its subtypes, checks that every subtype of the
+ * referenced child sealed type is covered. Fires MISSING_EVENT_MAPPINGS /
+ * MISSING_EFFECT_MAPPINGS otherwise — so a child subtype added later without
+ * a corresponding parent mapping surfaces as a compile error, not a silent drop.
+ */
 object AriaExhaustivenessChecker : FirClassChecker(MppCheckerKind.Common) {
     context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(declaration: FirClass) {
         if (declaration !is FirRegularClass) return
         if (!declaration.isSealed) return
 
-        checkEventExhaustiveness(declaration, context, reporter)
-        checkEffectExhaustiveness(declaration, context, reporter)
+        checkExhaustiveness(declaration, ExhaustivenessDirection.EVENT)
+        checkExhaustiveness(declaration, ExhaustivenessDirection.EFFECT)
     }
 
-    private fun checkEventExhaustiveness(
+    context(context: CheckerContext, reporter: DiagnosticReporter)
+    private fun checkExhaustiveness(
         sealedClass: FirRegularClass,
-        context: CheckerContext,
-        reporter: DiagnosticReporter,
+        direction: ExhaustivenessDirection,
     ) {
-        val inheritorIds = sealedClass.getSealedClassInheritors(context.session)
-        val inheritors = inheritorIds.mapNotNull { resolveClassById(it, context.session) }
+        val inheritors = sealedClass.getSealedClassInheritors(context.session)
+            .mapNotNull { resolveClassById(it, context.session) }
 
-        val mapToTargets = mutableMapOf<ClassId, MutableSet<ClassId>>()
-
+        // Collect the set of child subtypes that this parent sealed interface
+        // covers, grouped by the child sealed type they belong to. Parents may
+        // map into multiple different child hierarchies; each is validated
+        // independently.
+        val coveredByChildSealed = mutableMapOf<ClassId, MutableSet<ClassId>>()
         for (inheritor in inheritors) {
-            val mapToAnnotation = inheritor.getAnnotationByClassId(AriaClassIds.MAP_TO, context.session) ?: continue
-            val targetType = mapToAnnotation.getKClassArgument(Name.identifier("target"), context.session) ?: continue
-            val targetClassId = targetType.classId ?: continue
-            val targetClass = resolveClassById(targetClassId, context.session) ?: continue
-            val childSealedParent = findSealedParent(targetClass, context.session) ?: continue
+            val annotation = inheritor.getAnnotationByClassId(direction.annotationClassId, context.session) ?: continue
+            val otherType = annotation.getKClassArgument(direction.argumentName, context.session) ?: continue
+            val otherClassId = otherType.classId ?: continue
+            val otherClass = resolveClassById(otherClassId, context.session) ?: continue
+            val childSealedParent = findSealedParent(otherClass, context.session) ?: continue
 
-            mapToTargets
+            coveredByChildSealed
                 .getOrPut(childSealedParent.symbol.classId) { mutableSetOf() }
-                .add(targetClassId)
+                .add(otherClassId)
         }
 
-        for ((childSealedId, coveredSubtypes) in mapToTargets) {
+        for ((childSealedId, covered) in coveredByChildSealed) {
             val childSealed = resolveClassById(childSealedId, context.session) ?: continue
             val allChildSubtypes = childSealed.getSealedClassInheritors(context.session).toSet()
-            val missingSubtypes = allChildSubtypes - coveredSubtypes
-            if (missingSubtypes.isNotEmpty()) {
-                val missingNames = missingSubtypes.joinToString(", ") { it.shortClassName.asString() }
+            val missing = allChildSubtypes - covered
+            if (missing.isNotEmpty()) {
                 reporter.reportOn(
                     sealedClass.source,
-                    AriaErrors.MISSING_EVENT_MAPPINGS,
+                    direction.errorFactory,
                     childSealed.name.asString(),
-                    missingNames,
+                    missing.joinToString(", ") { it.shortClassName.asString() },
                     context,
                 )
             }
         }
     }
 
-    private fun checkEffectExhaustiveness(
-        sealedClass: FirRegularClass,
-        context: CheckerContext,
-        reporter: DiagnosticReporter,
+    /**
+     * The two checks are structurally identical — walk sealed subtypes of the
+     * parent, collect the child subtypes they map to/from, diff against the
+     * child sealed hierarchy, report. Only these three values differ, so we
+     * parameterise with them rather than duplicating the whole loop.
+     */
+    private enum class ExhaustivenessDirection(
+        val annotationClassId: ClassId,
+        val argumentName: Name,
+        val errorFactory: KtDiagnosticFactory2<String, String>,
     ) {
-        val inheritorIds = sealedClass.getSealedClassInheritors(context.session)
-        val inheritors = inheritorIds.mapNotNull { resolveClassById(it, context.session) }
-
-        val mapFromSources = mutableMapOf<ClassId, MutableSet<ClassId>>()
-
-        for (inheritor in inheritors) {
-            val mapFromAnnotation = inheritor.getAnnotationByClassId(AriaClassIds.MAP_FROM, context.session) ?: continue
-            val sourceType = mapFromAnnotation.getKClassArgument(Name.identifier("source"), context.session) ?: continue
-            val sourceClassId = sourceType.classId ?: continue
-            val sourceClass = resolveClassById(sourceClassId, context.session) ?: continue
-            val childSealedParent = findSealedParent(sourceClass, context.session) ?: continue
-
-            mapFromSources
-                .getOrPut(childSealedParent.symbol.classId) { mutableSetOf() }
-                .add(sourceClassId)
-        }
-
-        for ((childSealedId, coveredSubtypes) in mapFromSources) {
-            val childSealed = resolveClassById(childSealedId, context.session) ?: continue
-            val allChildSubtypes = childSealed.getSealedClassInheritors(context.session).toSet()
-            val missingSubtypes = allChildSubtypes - coveredSubtypes
-            if (missingSubtypes.isNotEmpty()) {
-                val missingNames = missingSubtypes.joinToString(", ") { it.shortClassName.asString() }
-                reporter.reportOn(
-                    sealedClass.source,
-                    AriaErrors.MISSING_EFFECT_MAPPINGS,
-                    childSealed.name.asString(),
-                    missingNames,
-                    context,
-                )
-            }
-        }
+        EVENT(AriaClassIds.MAP_TO, Name.identifier("target"), AriaErrors.MISSING_EVENT_MAPPINGS),
+        EFFECT(AriaClassIds.MAP_FROM, Name.identifier("source"), AriaErrors.MISSING_EFFECT_MAPPINGS),
     }
 }
