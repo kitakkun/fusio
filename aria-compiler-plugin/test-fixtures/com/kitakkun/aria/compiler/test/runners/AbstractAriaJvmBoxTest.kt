@@ -1,6 +1,7 @@
 package com.kitakkun.aria.compiler.test.runners
 
 import com.kitakkun.aria.compiler.test.services.configureAriaPlugin
+import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.test.builders.TestConfigurationBuilder
 import org.jetbrains.kotlin.test.directives.CodegenTestDirectives
 import org.jetbrains.kotlin.test.directives.JvmEnvironmentConfigurationDirectives
@@ -26,6 +27,10 @@ open class AbstractAriaJvmBoxTest : AbstractFirLightTreeBlackBoxCodegenTest() {
         with(builder) {
             defaultDirectives {
                 +JvmEnvironmentConfigurationDirectives.FULL_JDK
+                // compose-runtime and kotlinx-coroutines on the test classpath are
+                // built against modern JDK bytecode; bump to 21 so their inline
+                // functions can be inlined into the testData source.
+                JvmEnvironmentConfigurationDirectives.JVM_TARGET with JvmTarget.JVM_21
                 // Don't load R8 from the classpath — we only care about JVM bytecode here.
                 +CodegenTestDirectives.IGNORE_DEXING
             }

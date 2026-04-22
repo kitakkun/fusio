@@ -27,6 +27,18 @@ public class AriaJvmBoxTestGenerated extends AbstractAriaJvmBoxTest {
   }
 
   @Test
+  @TestMetadata("composableCompiles.kt")
+  public void testComposableCompiles() {
+    runTest("aria-compiler-plugin/testData/box/composableCompiles.kt");
+  }
+
+  @Test
+  @TestMetadata("mappedScopeRoundTrip.kt")
+  public void testMappedScopeRoundTrip() {
+    runTest("aria-compiler-plugin/testData/box/mappedScopeRoundTrip.kt");
+  }
+
+  @Test
   @TestMetadata("validMapToCompiles.kt")
   public void testValidMapToCompiles() {
     runTest("aria-compiler-plugin/testData/box/validMapToCompiles.kt");

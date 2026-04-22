@@ -36,6 +36,10 @@ dependencies {
     testFixturesApi(libs.kotlin.compiler.internal.test.framework)
     testFixturesApi(libs.kotlin.test.junit5)
     testFixturesApi(libs.kotlin.reflect)
+    // Compose compiler plugin — registered explicitly in AriaExtensionRegistrarConfigurator
+    // so @Composable usage in testData (mappedScope round-trip) actually gets Compose
+    // IR treatment.
+    testFixturesApi(libs.kotlin.compose.compiler.plugin)
     testFixturesRuntimeOnly(libs.junit.jupiter.engine)
 
     testImplementation(testFixtures(project))
@@ -52,6 +56,8 @@ dependencies {
     testArtifacts(libs.kotlin.annotations.jvm)
     testArtifacts(project(":aria-annotations"))
     testArtifacts(project(":aria-runtime"))
+    testArtifacts(libs.compose.runtime)
+    testArtifacts(libs.kotlinx.coroutines.core)
 }
 
 tasks.test {
