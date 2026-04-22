@@ -1,5 +1,6 @@
 package com.kitakkun.aria.compiler.test.runners
 
+import com.kitakkun.aria.compiler.test.services.AriaHeadlessRunnerSourceProvider
 import com.kitakkun.aria.compiler.test.services.configureAriaPlugin
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.test.builders.TestConfigurationBuilder
@@ -35,6 +36,7 @@ open class AbstractAriaJvmBoxTest : AbstractFirLightTreeBlackBoxCodegenTest() {
                 +CodegenTestDirectives.IGNORE_DEXING
             }
             configureAriaPlugin()
+            useAdditionalSourceProviders(::AriaHeadlessRunnerSourceProvider)
         }
     }
 }
