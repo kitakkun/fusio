@@ -9,7 +9,14 @@ group = "com.github.kitakkun.aria.sample"
 version = "0.1.0-SNAPSHOT"
 
 kotlin {
-    jvm()
+    jvm {
+        @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
+        binaries {
+            executable {
+                mainClass.set("com.github.kitakkun.aria.sample.MainKt")
+            }
+        }
+    }
 
     compilerOptions {
         // Run Aria plugin BEFORE Compose plugin.

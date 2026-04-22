@@ -16,4 +16,5 @@ object AriaClassIds {
     val MAPPED_SCOPE = CallableId(ARIA_PACKAGE, Name.identifier("mappedScope"))
     val BUILD_PRESENTER = CallableId(ARIA_PACKAGE, Name.identifier("buildPresenter"))
     val EMIT_EFFECT = CallableId(PRESENTER_SCOPE, Name.identifier("emitEffect"))
+    val MAP_EVENTS = CallableId(ARIA_PACKAGE, Name.identifier("mapEvents"))
 }
