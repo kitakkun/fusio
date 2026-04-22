@@ -7,10 +7,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.github.kitakkun.aria.Aria
 import com.github.kitakkun.aria.buildPresenter
+import com.github.kitakkun.aria.mappedScope
 import com.github.kitakkun.aria.on
 import kotlinx.coroutines.flow.Flow
 
-// Screen-level Presenter
+// Screen-level Presenter using mappedScope
 @Composable
 fun myScreenPresenter(
     eventFlow: Flow<MyScreenEvent>,
@@ -22,13 +23,12 @@ fun myScreenPresenter(
         searchQuery = event.query
     }
 
-    // NOTE: mappedScope would be used here once IR transformer is implemented:
-    // val favoriteState = mappedScope { favorite() }
-    // For now, use the sub-presenter directly (without event/effect bridging):
-    // val favoriteResult = favorite()  // requires matching PresenterScope type
+    // Delegate to sub-presenter via mappedScope — compiler plugin will
+    // generate the PresenterScope creation and invocation
+    val favoriteState = mappedScope { favorite() }
 
     MyScreenUiState(
-        favoriteState = FavoriteState(),
+        favoriteState = favoriteState,
         searchQuery = searchQuery,
     )
 }

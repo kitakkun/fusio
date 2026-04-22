@@ -127,16 +127,50 @@ The `getAnnotationByClassId` extension on `FirAnnotationContainer` needs `sessio
 ### MappedScopeTransformer: deprecated API
 `irBlock`, `irTemporary`, `irCall` etc. on `DeclarationIrBuilder` show "This compiler API is deprecated and will be removed soon" in Kotlin 2.3.20. Need to find the replacement builder API or suppress with `@Suppress("DEPRECATION")` temporarily.
 
-## Next Steps (IR Transformer Implementation)
+## IR Transformer Progress
 
-All modules build. The IR transformer currently passes through `mappedScope` calls without transformation (stub throws at runtime). Next:
+### Basic Transformation — COMPILES but CRASHES at bytecode gen
 
-1. Implement `MappedScopeTransformer.transformMappedScope()` — generate IR to:
-   - Create child `PresenterScope` with `remember { }`
-   - Build event mapping `when` expression from `@MapTo` annotations
-   - Build effect forwarding `LaunchedEffect` from `@MapFrom` annotations
-   - Return `childResult.state`
-2. Key challenge: constructing `@Composable` lambdas in IR (for `remember`, `LaunchedEffect`, `DisposableEffect`)
-3. Key challenge: resolving parent Event/Effect types from star-projected `PresenterScope<*, *>`
-4. Test with sample — verify `mappedScope { favorite() }` compiles and runs
-5. Add property validation to FIR checkers (currently skeletal)
+`MappedScopeTransformer.transformMappedScope()` currently generates:
+```
+{
+  val parentScope = <extensionReceiver>
+  val childEventFlow = parentScope.eventFlow  // TODO: add @MapTo mapping
+  val childScope = PresenterScope<CE, CEff>(childEventFlow)
+  val childResult = <lambda>.invoke(childScope)
+  childResult.state
+}
+```
+
+The code uses the new IR API (Kotlin 2.3.20):
+- `call.typeArguments[i]` instead of `getTypeArgument(i)`
+- `call.arguments[i]` instead of `getValueArgument(i)` / `extensionReceiver`
+- Requires `@OptIn(UnsafeDuringIrConstructionAPI::class)` for `dispatchReceiver`-like access
+
+### BLOCKING ISSUE: Lambda invocation
+
+Current implementation calls `irCall(lambdaFunction.symbol)` directly, which fails at JVM bytecode generation:
+```
+Unhandled intrinsic in ExpressionCodegen: FUN LOCAL_FUNCTION_FOR_LAMBDA
+  ($this$mappedScope:..., $composer:Composer?, $changed:Int)
+  returnType:Aria<...>
+```
+
+**Root cause**: The Compose compiler plugin runs BEFORE our IR transformer and has already injected `$composer`/`$changed` parameters into the lambda. Calling the raw function symbol bypasses the JVM lambda invocation mechanism.
+
+### Solutions to explore next session
+
+1. **Invoke via `FunctionN.invoke()`**: Instead of `irCall(lambdaFunction.symbol)`, construct `irCall(kotlin.Function1.invoke)` with the lambda expression as the receiver. This goes through the standard lambda invocation path.
+
+2. **Plugin ordering**: Make Aria's IR transformer run BEFORE Compose's. Options:
+   - `-Xcompiler-plugin-order=com.github.kitakkun.aria,androidx.compose.compiler.plugins.kotlin`
+   - Register IR extension with higher priority (check if Kotlin API supports this)
+   - Structure Gradle plugin application order in `applyToCompilation`
+
+3. **Use reference to extension function instead of inlining**: Change `mappedScope` runtime to be a regular function that the transformer calls, passing the lambda as a normal argument.
+
+### Key files for next session
+
+- `/Users/kitakkun/Documents/GitHub/aria/aria-compiler-plugin/src/main/kotlin/com/github/kitakkun/aria/compiler/MappedScopeTransformer.kt` — current impl
+- Error reproduction: `cd sample && ../gradlew compileKotlinJvm --stacktrace`
+- FIR checkers all build; only IR Transformer has this crash
