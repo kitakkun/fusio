@@ -101,6 +101,144 @@ So **~300 of 500 lines need per-version content** for a 2.0 variant. The current
 
 k20 probe is not merged. Neither the `aria-compiler-plugin-k20/` module nor the `kotlin-k20` catalog entry remained — this document is the paper trail. When someone re-attempts older-version support, start here.
 
+## Phase 2 plan: Metro-style `compiler-compat` layer
+
+**Status: designed, not implemented.** Phase 1 (sibling variant modules, Gradle-side artifact selection) is landed and working. Phase 2 swaps that for a single-artifact design inspired by ZacSweers/Metro's compiler-compat module.
+
+### What Metro does (the pattern we're borrowing)
+
+- **Single `CompatContext` interface** owns every version-sensitive API call. The main compiler plugin code only calls methods on `CompatContext`; it never touches a version-shifting Kotlin compiler API directly.
+- **One `CompatContextImpl` per supported Kotlin version**, each sitting in its own Gradle subproject built against its own `kotlin-compiler-embeddable` pin:
+  - `compiler-compat/k2220/` (Kotlin 2.2.20)
+  - `compiler-compat/k230/` (Kotlin 2.3.0)
+  - `compiler-compat/k2320/` (Kotlin 2.3.20)
+  - `compiler-compat/k240_beta2/` (Kotlin 2.4.0-Beta2)
+  - etc.
+- **Delegation chain** reduces duplication: `k2320`'s impl declares `class CompatContextImpl : CompatContext by k230.CompatContextImpl()` and only overrides the methods whose behaviour changed between 2.3.0 and 2.3.20. Minor-to-minor diffs are often two or three methods.
+- **ServiceLoader + `CompatContext.Factory`**: each version module registers a `META-INF/services/.../CompatContext$Factory` pointing at its own Factory implementation. At compiler runtime the plugin uses `ServiceLoader` to find the factory whose declared Kotlin-version range matches the running compiler and instantiates the matching `CompatContextImpl`.
+- **All compat subprojects are shaded into the main plugin jar**, so end users install a single artifact. The ServiceLoader picks the right impl at runtime; impls whose Kotlin-compiler classes aren't on the classpath simply aren't instantiated (lazy class resolution keeps the dead impls silent).
+- **Template script** (`generate-compat-module.sh`) scaffolds a new version's module skeleton, and `fetch-all-ide-kotlin-versions.py` enumerates IDE-bundled Kotlin builds so IntelliJ/Android-Studio-canary users are covered.
+
+### How this maps onto Aria
+
+Aria's version-sensitive touchpoints (from the audit earlier in this doc) are:
+
+- `IrCall.arguments[i]` / `typeArguments[i]` writes (Level 1)
+- `IrPluginContext.finderForBuiltins()` vs `referenceClass(classId)` (Level 1)
+- `FirAnnotation.getKClassArgument(name[, session])` (Level 1 — already covered by current compat)
+- `KtDiagnosticsContainer` / `KtDiagnosticFactoryToRendererMap` factory shape (Level 2/3)
+- `CompilerPluginRegistrar.pluginId`, `registerDiagnosticContainers` (Level 3)
+- `context(CheckerContext, DiagnosticReporter)` checker signature (Level 4 — not bridgeable)
+
+Level 1-3 go behind `CompatContext`. Level 4 (checker class shape) can't — **pre-2.2 support still requires full class forks even under Metro's pattern**, so our realistic support window stays "2.2+ with context-parameter checkers." That matches Metro's own lowest pin (2.2.20).
+
+### Target module layout
+
+```
+aria-compiler-compat/                               top-level host (shaded into main)
+├── build.gradle.kts                                compileOnly(kotlin-compiler), publishes CompatContext interface
+├── README.md                                       the pattern; mirror of Metro's docs
+├── src/main/kotlin/com/kitakkun/aria/compiler/compat/
+│   ├── CompatContext.kt                            interface CompatContext + Factory
+│   └── CompatContextResolver.kt                    ServiceLoader-based lookup
+├── k2320/
+│   ├── build.gradle.kts                            compileOnly(kotlin-compiler-embeddable:2.3.20)
+│   ├── src/main/kotlin/.../compat/k2320/CompatContextImpl.kt
+│   └── src/main/resources/META-INF/services/.../CompatContext$Factory
+├── k240_beta2/
+│   ├── build.gradle.kts                            compileOnly(kotlin-compiler-embeddable:2.4.0-Beta2)
+│   ├── src/main/kotlin/.../compat/k240_beta2/CompatContextImpl.kt
+│   └── src/main/resources/META-INF/services/.../CompatContext$Factory
+└── scripts/
+    └── generate-compat-module.sh                   (future, when ≥3 variants)
+
+aria-compiler-plugin/                               primary plugin (single artifact now)
+├── build.gradle.kts                                uses shadow plugin; shades aria-compiler-compat + its k** subprojects
+├── src/main/kotlin/com/kitakkun/aria/compiler/
+│   ├── AriaClassIds.kt                             unchanged
+│   ├── AriaErrors.kt                               unchanged (2.2+ only)
+│   ├── AriaFirCheckerUtils.kt                      changes `symbol.fir` path to go through CompatContext
+│   ├── AriaMapToChecker.kt                         calls CompatContext.kclassArg(...)
+│   ├── AriaMapFromChecker.kt                       same
+│   ├── AriaExhaustivenessChecker.kt                same
+│   ├── AriaIrGenerationExtension.kt                resolves CompatContext from ServiceLoader at .generate()
+│   └── MappedScopeTransformer.kt                   uses CompatContext for every IrCall.arguments / typeArguments / finderForBuiltins touchpoint
+└── ...existing test-fixtures, test-gen, testData intact
+```
+
+Meanwhile:
+- `aria-compiler-plugin-k24/` module is **removed** — its purpose (building against 2.4) moves to `aria-compiler-compat/k240_beta2/`.
+- `aria-compiler-plugin/src/main-k23/` is **removed** — its purpose moves to `aria-compiler-compat/k2320/`.
+- `AriaGradlePlugin.getPluginArtifact()` is simplified to return a single `aria-compiler-plugin` coordinate. The per-Kotlin-version detection at Gradle time is replaced by runtime ServiceLoader resolution.
+
+### `CompatContext` surface (first pass)
+
+Based on what the current shared source actually needs:
+
+```kotlin
+package com.kitakkun.aria.compiler.compat
+
+import org.jetbrains.kotlin.fir.FirSession
+import org.jetbrains.kotlin.fir.expressions.FirAnnotation
+import org.jetbrains.kotlin.fir.types.ConeKotlinType
+import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.IrExpression
+import org.jetbrains.kotlin.name.Name
+
+interface CompatContext {
+    // FIR side
+    fun FirAnnotation.kclassArg(name: Name, session: FirSession): ConeKotlinType?
+
+    // IR side — writes (we don't need reads beyond arguments[i] in current code)
+    fun IrCall.setArg(index: Int, expr: IrExpression)
+    fun IrCall.setTypeArg(index: Int, type: org.jetbrains.kotlin.ir.types.IrType)
+
+    interface Factory {
+        /** Semantic version range this impl covers, e.g. "2.3.0 <= v < 2.4.0". */
+        val supportedRange: VersionRange
+        fun create(): CompatContext
+    }
+}
+```
+
+The IR-builder helpers in `MappedScopeTransformer` (`irBlock`, `irCall`, `irTemporary`, etc.) are stable across 2.2+; they stay as direct calls.
+
+### Version resolution
+
+`CompatContextResolver` loads all `CompatContext.Factory` instances via `ServiceLoader`, reads the running Kotlin compiler's version (via `KotlinCompilerVersion.VERSION` or similar stable constant), and picks the first factory whose `supportedRange` contains it. If none match, throw a clear error message at `AriaIrGenerationExtension.generate()` time pointing the user at the supported-Kotlin list in the README.
+
+### Implementation order (suggested)
+
+1. **Create the new `aria-compiler-compat/` module** with `CompatContext` interface, `CompatContextResolver`, and a k2320 impl that mirrors the current Kotlin 2.3.20 behaviour.
+2. **Port `MappedScopeTransformer` and the checkers** to call `CompatContext` for each Level-1/2 touchpoint. Keep `compat/FirAnnotationCompat.kt` working during the transition by delegating to `CompatContext`.
+3. **Add the k240_beta2 impl**, likely `by k2320.CompatContextImpl()` with the single `kclassArg` override.
+4. **Introduce the shadow plugin** on `aria-compiler-plugin`'s build, relocate `aria-compiler-compat:*` jars inside the main jar. Confirm `jar tf` on the result shows both `k2320/CompatContextImpl.class` and `k240_beta2/CompatContextImpl.class` without classpath conflicts.
+5. **Remove `aria-compiler-plugin-k24/` and `src/main-k23/`**. Delete `kotlin-k24` / `kotlin-compiler-embeddable-k24` catalog entries at the same time.
+6. **Simplify `AriaGradlePlugin.getPluginArtifact()`** back to a single artifact; drop the reflection-based version detection.
+7. **Smoke-test the sample** (still pinned to Kotlin 2.3.20 via its own build) — verifies ServiceLoader picks k2320.
+8. **Extend `:aria-compiler-plugin:test`** to run against both 2.3.20 and 2.4.0-Beta2 — ideally by varying the test framework's Kotlin version, but the Kotlin internal test framework pins one version per test JVM, so this likely becomes two test configurations or a matrix CI job.
+
+### Out of scope for Phase 2 (defer to Phase 3 if needed)
+
+- Android Studio / IntelliJ IDE-bundled Kotlin version aliases (Metro's `ide-mappings.txt` approach)
+- Dev-track version resolution (`2.3.20-dev-NNNN` branches)
+- Supporting Kotlin ≤ 2.1 (Level 4 context-parameter boundary)
+- `generate-compat-module.sh` automation — worth it at ≥3 variants, premature at 2
+
+### Risks and open questions
+
+1. **Shading strategy**: Gradle shadow plugin works, but the shaded jar needs to preserve the `META-INF/services/CompatContext$Factory` files from every sub-module. Standard behaviour is "last wins" — we need the shadow plugin's service-file merger explicitly enabled.
+2. **Kotlin-compiler-embeddable class loading**: all the shaded `CompatContextImpl` classes have references to Kotlin compiler classes at different versions. Only the running compiler's classes will actually be loadable; the other impls must NOT be triggered. This is ServiceLoader-safe as long as the Factory's `create()` is the ONLY thing that loads the impl class and all impl classes are independent (no cross-version refs). Needs testing.
+3. **Shaded jar publishing**: currently `aria-compiler-plugin` is published via `aria.publish` convention. After shading, its published artifact should still be a valid Gradle-consumable jar; the convention plugin may need a tweak.
+4. **Compose plugin version alignment is still external**: `aria-compiler-plugin` being version-agnostic doesn't help with Compose, which is still one jar per Kotlin version. The Gradle plugin should keep injecting `-Xcompiler-plugin-order=com.kitakkun.aria>androidx.compose.compiler.plugins.kotlin` regardless.
+5. **Breakages we haven't seen yet**: the audit was based on 2.3→2.4 + 2.3→2.0 probes. A Kotlin 2.5 or 2.6 might introduce a Level 2/3 break that the current `CompatContext` surface doesn't cover — planned growth of the interface over time, mirroring Metro's trajectory.
+
+### Starting point when resuming
+
+1. Re-read this section plus the audit (higher up in this doc).
+2. Clone Metro's `compiler-compat/` as reference: `github.com/ZacSweers/metro/tree/main/compiler-compat` — especially `CompatContext.kt`, any `k2320/CompatContextImpl.kt`, and the root `build.gradle.kts` showing the shading setup.
+3. Implementation order above — step 1 (new module + k2320 impl) is the smallest landable unit that validates the pattern before migrating the rest.
+
 ## Problem
 
 Aria currently pins Kotlin 2.3.20 end-to-end:
