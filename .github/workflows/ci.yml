@@ -28,6 +28,9 @@ jobs:
       - name: Run runtime unit tests
         run: ./gradlew :aria-runtime:jvmTest
 
+      - name: Run compiler-plugin diagnostic tests
+        run: ./gradlew :aria-compiler-plugin:test
+
       - name: Smoke-test sample (composite build)
         working-directory: sample
         run: ../gradlew runJvm

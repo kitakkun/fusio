@@ -1,20 +1,20 @@
 package com.kitakkun.aria.compiler
 
-import org.jetbrains.kotlin.com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.diagnostics.KtDiagnosticFactoryToRendererMap
 import org.jetbrains.kotlin.diagnostics.KtDiagnosticsContainer
 import org.jetbrains.kotlin.diagnostics.error1
 import org.jetbrains.kotlin.diagnostics.error2
 import org.jetbrains.kotlin.diagnostics.error3
 import org.jetbrains.kotlin.diagnostics.rendering.BaseDiagnosticRendererFactory
+import org.jetbrains.kotlin.psi.KtElement
 
 object AriaErrors : KtDiagnosticsContainer() {
-    val MAP_TO_INVALID_TARGET by error1<PsiElement, String>()
-    val MAP_FROM_INVALID_SOURCE by error1<PsiElement, String>()
-    val PROPERTY_MISMATCH by error3<PsiElement, String, String, String>()
-    val ANNOTATION_ON_NON_SEALED_SUBTYPE by error1<PsiElement, String>()
-    val MISSING_EVENT_MAPPINGS by error2<PsiElement, String, String>()
-    val MISSING_EFFECT_MAPPINGS by error2<PsiElement, String, String>()
+    val MAP_TO_INVALID_TARGET by error1<KtElement, String>()
+    val MAP_FROM_INVALID_SOURCE by error1<KtElement, String>()
+    val PROPERTY_MISMATCH by error3<KtElement, String, String, String>()
+    val ANNOTATION_ON_NON_SEALED_SUBTYPE by error1<KtElement, String>()
+    val MISSING_EVENT_MAPPINGS by error2<KtElement, String, String>()
+    val MISSING_EFFECT_MAPPINGS by error2<KtElement, String, String>()
 
     override fun getRendererFactory() = AriaErrorMessages
 }
