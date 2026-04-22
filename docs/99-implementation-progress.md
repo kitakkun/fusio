@@ -1,0 +1,142 @@
+# Implementation Progress
+
+Last updated: 2026-04-22
+
+## Module Status
+
+| Module | Status | Notes |
+|--------|--------|-------|
+| aria-annotations | DONE | @MapTo, @MapFrom — builds successfully |
+| aria-runtime | DONE | Aria, PresenterScope, buildPresenter, on<>, mappedScope stub — builds successfully |
+| aria-compiler-plugin | DONE | FIR checkers + IR transformer (stub) — builds successfully |
+| aria-gradle-plugin | DONE | KotlinCompilerPluginSupportPlugin — builds successfully |
+| sample | DONE | Composite build, compiles with FIR checker + annotations — builds successfully |
+
+## Project Structure
+
+```
+aria/
+├── gradle/libs.versions.toml      (Kotlin 2.3.20, Compose 1.10.3, Coroutines 1.10.2)
+├── settings.gradle.kts             (4 modules, sample is separate composite build)
+├── build.gradle.kts
+├── gradle.properties
+├── gradlew / gradle/               (Gradle 8.14 wrapper)
+├── aria-annotations/               ✅ builds
+│   └── src/commonMain/kotlin/com/github/kitakkun/aria/
+│       ├── MapTo.kt
+│       └── MapFrom.kt
+├── aria-runtime/                   ✅ builds
+│   └── src/commonMain/kotlin/com/github/kitakkun/aria/
+│       ├── Aria.kt                 (data class Aria<State, Effect>)
+│       ├── PresenterScope.kt       (eventFlow, emitEffect, internalEffectFlow)
+│       ├── BuildPresenter.kt       (@Composable buildPresenter)
+│       ├── On.kt                   (inline reified on<E>)
+│       └── MappedScope.kt          (stub, throws error if plugin not applied)
+├── aria-compiler-plugin/           🔧 fixing build errors
+│   └── src/main/kotlin/com/github/kitakkun/aria/compiler/
+│       ├── AriaClassIds.kt         (ClassId/CallableId constants)
+│       ├── AriaConfigurationKeys.kt
+│       ├── AriaCommandLineProcessor.kt
+│       ├── AriaCompilerPluginRegistrar.kt
+│       ├── AriaFirExtensionRegistrar.kt
+│       ├── AriaFirCheckersExtension.kt
+│       ├── AriaErrors.kt           (KtDiagnosticsContainer)
+│       ├── AriaFirCheckerUtils.kt  (resolveClassById, collectConstructorProperties, findSealedParent)
+│       ├── AriaMapToChecker.kt
+│       ├── AriaMapFromChecker.kt
+│       ├── AriaExhaustivenessChecker.kt
+│       ├── AriaIrGenerationExtension.kt
+│       └── MappedScopeTransformer.kt
+├── aria-gradle-plugin/             (build.gradle.kts only)
+└── sample/                         (build.gradle.kts only)
+```
+
+## Compiler Plugin Build Errors (Being Fixed)
+
+### 1. PsiElement import — FIXED
+`kotlin-compiler-embeddable` repackages IntelliJ classes:
+```
+✗ import com.intellij.psi.PsiElement
+✓ import org.jetbrains.kotlin.com.intellij.psi.PsiElement
+```
+
+### 2. Context parameters — FIXED
+The compiler plugin module needs `-Xcontext-parameters` because FIR checker `check()` method uses context parameters:
+```kotlin
+// build.gradle.kts
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xcontext-parameters")
+    }
+}
+```
+
+### 3. FirAnnotation API — NEEDS FIX
+There is NO `annotationClassId` property on `FirAnnotation`. Correct APIs:
+```kotlin
+// Match annotation by ClassId:
+import org.jetbrains.kotlin.fir.declarations.getAnnotationByClassId
+val annotation: FirAnnotation? = declaration.getAnnotationByClassId(AriaClassIds.MAP_TO, session)
+
+// Get ClassId from annotation:
+import org.jetbrains.kotlin.fir.declarations.toAnnotationClassId
+val classId: ClassId? = annotation.toAnnotationClassId(session)
+
+// Get KClass argument:
+import org.jetbrains.kotlin.fir.declarations.getKClassArgument
+val targetType: ConeKotlinType? = annotation.getKClassArgument(Name.identifier("target"))
+```
+
+### 4. reportOn signature — NEEDS FIX
+In Kotlin 2.3.20, `reportOn` with `context(DiagnosticContext)` uses context parameters.
+The checker's `check()` method already provides `context: CheckerContext` as a context parameter.
+For helper methods that don't have context parameters, pass `context` explicitly:
+```kotlin
+// Inside check() — context parameter is available implicitly
+reporter.reportOn(source, AriaErrors.SOME_ERROR, arg1)
+
+// In standalone helper — pass context explicitly  
+reporter.reportOn(source, AriaErrors.SOME_ERROR, arg1, context)
+```
+
+### 5. IR Transformer — finderForBuiltins()
+`IrPluginContext.finderForBuiltins()` is the IC-compatible API for resolving symbols.
+The deprecated `referenceClass()` / `referenceFunctions()` still work but should be avoided.
+
+## Key Design Decisions Made During Implementation
+
+1. **KMP structure**: aria-annotations and aria-runtime use `kotlin("multiplatform")` with JVM target. aria-compiler-plugin uses `kotlin("jvm")` since it only runs in the compiler.
+
+2. **`@PublishedApi internal`**: `PresenterScope.eventFlow` is `@PublishedApi internal` because the public inline function `on<E>` accesses it.
+
+3. **Simplified IR Transformer (v1)**: The initial `MappedScopeTransformer` passes the parent's `eventFlow` directly to the child `PresenterScope` without `@MapTo` event mapping. Full event/effect bridging with `when` expressions will be added incrementally.
+
+4. **Sample as composite build**: Since the Aria Gradle plugin isn't published to any repository, the sample module will use Gradle composite builds (`includeBuild`) to reference the local plugin.
+
+## Remaining Build Errors (as of latest build attempt)
+
+### AriaErrors: abstract member not implemented
+`KtDiagnosticsContainer` may have an abstract member. Check if `getRendererFactory()` needs implementing or if the class hierarchy changed in 2.3.20.
+
+### getAnnotationByClassId: missing session parameter
+The `getAnnotationByClassId` extension on `FirAnnotationContainer` needs `session` but some call sites may resolve to a different overload. Always pass `(classId, session)`.
+
+### AriaFirCheckerUtils: SymbolInternals opt-in needed
+`symbol.fir` requires `@OptIn(SymbolInternals::class)`. The `declarations` property also needs `@OptIn(DirectDeclarationsAccess::class)` — use `processAllDeclarations` instead.
+
+### MappedScopeTransformer: deprecated API
+`irBlock`, `irTemporary`, `irCall` etc. on `DeclarationIrBuilder` show "This compiler API is deprecated and will be removed soon" in Kotlin 2.3.20. Need to find the replacement builder API or suppress with `@Suppress("DEPRECATION")` temporarily.
+
+## Next Steps (IR Transformer Implementation)
+
+All modules build. The IR transformer currently passes through `mappedScope` calls without transformation (stub throws at runtime). Next:
+
+1. Implement `MappedScopeTransformer.transformMappedScope()` — generate IR to:
+   - Create child `PresenterScope` with `remember { }`
+   - Build event mapping `when` expression from `@MapTo` annotations
+   - Build effect forwarding `LaunchedEffect` from `@MapFrom` annotations
+   - Return `childResult.state`
+2. Key challenge: constructing `@Composable` lambdas in IR (for `remember`, `LaunchedEffect`, `DisposableEffect`)
+3. Key challenge: resolving parent Event/Effect types from star-projected `PresenterScope<*, *>`
+4. Test with sample — verify `mappedScope { favorite() }` compiles and runs
+5. Add property validation to FIR checkers (currently skeletal)

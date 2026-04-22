@@ -1,0 +1,22 @@
+# Gradle
+.gradle/
+build/
+
+# Kotlin
+.kotlin/
+*.iml
+
+# IntelliJ IDEA / Android Studio
+.idea/
+
+# macOS
+.DS_Store
+
+# Local config
+local.properties
+
+# Logs
+*.log
+
+# Claude Code local settings
+.claude/settings.local.json
