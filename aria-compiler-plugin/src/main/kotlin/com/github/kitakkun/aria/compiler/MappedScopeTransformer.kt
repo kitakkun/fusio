@@ -10,18 +10,18 @@ import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrFunctionExpression
-import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.typeWith
+import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
-@Suppress("DEPRECATION")
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 class MappedScopeTransformer(
     private val pluginContext: IrPluginContext,
@@ -75,18 +75,18 @@ class MappedScopeTransformer(
 
         // Arguments layout for extension function `PresenterScope<*, *>.mappedScope(block)`:
         //   arguments[0] = extension receiver (parent PresenterScope)
-        //   arguments[1] = block lambda
+        //   arguments[1] = block lambda (IrFunctionExpression)
         val parentScopeExpr = call.arguments[0]!!
         val lambdaExpr = call.arguments[1]!! as IrFunctionExpression
 
         val currentSymbol = currentScope!!.scope.scopeOwnerSymbol
         val builder = DeclarationIrBuilder(pluginContext, currentSymbol, call.startOffset, call.endOffset)
 
-        return builder.irBlock(resultType = childStateType, origin = IrStatementOrigin.DEFAULT_VALUE) {
+        return builder.irBlock(resultType = childStateType) {
             // val parentScope = <parentScopeExpr>
             val parentScopeVar = irTemporary(parentScopeExpr, nameHint = "ariaParentScope")
 
-            // val childEventFlow = parentScope.eventFlow (temporary: same flow, no mapping yet)
+            // val childEventFlow = parentScope.eventFlow (no event mapping yet)
             val eventFlowCall = irCall(presenterScopeEventFlowGetter).also {
                 it.arguments[0] = irGet(parentScopeVar)
             }
@@ -101,13 +101,17 @@ class MappedScopeTransformer(
             }
             val childScopeVar = irTemporary(childScopeCall, nameHint = "ariaChildScope")
 
-            // val childResult = childScope.<lambda>()
-            val lambdaFunction = lambdaExpr.function
+            // val childResult = lambda.invoke(childScope)
+            // Instead of calling the lambda function symbol directly (which fails after
+            // Compose plugin injects $composer/$changed), we call the FunctionN.invoke()
+            // method with the lambda instance as dispatchReceiver.
+            val functionClass = lambdaExpr.type.classOrNull!!
+            val invokeFun = functionClass.owner.functions
+                .single { it.name == Name.identifier("invoke") }
             val ariaInstanceType = ariaClass.typeWith(childStateType, childEffectType)
-            val childResultCall = irCall(lambdaFunction.symbol, ariaInstanceType).also {
-                // Extension receiver for the lambda: childScope
-                // For a block lambda (extension function type), arguments[0] is the extension receiver
-                it.arguments[0] = irGet(childScopeVar)
+            val childResultCall = irCall(invokeFun.symbol, ariaInstanceType).also { ic ->
+                ic.arguments[0] = lambdaExpr   // dispatch receiver = lambda instance
+                ic.arguments[1] = irGet(childScopeVar)  // first real arg = childScope
             }
             val childResultVar = irTemporary(childResultCall, nameHint = "ariaChildResult")
 

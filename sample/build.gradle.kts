@@ -11,6 +11,15 @@ version = "0.1.0-SNAPSHOT"
 kotlin {
     jvm()
 
+    compilerOptions {
+        // Run Aria plugin BEFORE Compose plugin.
+        // Otherwise Compose transforms @Composable lambdas (injecting $composer/$changed)
+        // before Aria can rewrite mappedScope calls, causing JVM codegen crashes.
+        freeCompilerArgs.add(
+            "-Xcompiler-plugin-order=com.github.kitakkun.aria>androidx.compose.compiler.plugins.kotlin"
+        )
+    }
+
     sourceSets {
         jvmMain {
             dependencies {

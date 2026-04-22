@@ -1,6 +1,31 @@
 # Implementation Progress
 
-Last updated: 2026-04-22
+Last updated: 2026-04-23
+
+## 🎉 MILESTONE: mappedScope IR transformation works end-to-end!
+
+Sample now compiles successfully with `mappedScope { favorite() }`. The IR transformer
+rewrites the call into block IR that creates a child PresenterScope, invokes the lambda
+via `FunctionN.invoke()`, and extracts `.state` from the returned Aria.
+
+### Key lessons learned
+
+1. **Plugin ordering is essential**: Compose plugin injects `$composer`/`$changed` params
+   into @Composable lambdas. Aria must run BEFORE Compose. Use:
+   ```
+   -Xcompiler-plugin-order=com.github.kitakkun.aria>androidx.compose.compiler.plugins.kotlin
+   ```
+   Format is `pluginA>pluginB` (A runs before B), NOT comma-separated.
+
+2. **Lambda invocation**: Call lambdas via `Function1.invoke()` with the lambda as
+   dispatch receiver. Direct `irCall(lambdaFunction.symbol)` triggers JVM codegen
+   crashes because JVM backend doesn't know how to invoke raw lambda bodies.
+
+3. **IR API migration (Kotlin 2.3.20)**:
+   - `call.arguments[i]` replaces `call.getValueArgument(i)` / `extensionReceiver`
+   - `call.typeArguments[i]` replaces `call.getTypeArgument(i)`
+   - Need `@OptIn(UnsafeDuringIrConstructionAPI::class)`
+
 
 ## Module Status
 
