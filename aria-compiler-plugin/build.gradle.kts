@@ -184,6 +184,22 @@ tasks.named<Jar>("jar") {
     archiveClassifier.set("original")
 }
 
+// Composite-build consumers (e.g. ../sample) resolve :aria-compiler-plugin
+// through the `runtimeElements` / `apiElements` configurations, whose default
+// outgoing artifact is the plain `jar` output. Since we've reclassified that
+// jar and the shaded output is what the Kotlin compiler actually needs at
+// runtime, swap the outgoing artifact for shadowJar on both configurations.
+configurations {
+    named("apiElements") {
+        outgoing.artifacts.clear()
+        outgoing.artifact(tasks.named("shadowJar"))
+    }
+    named("runtimeElements") {
+        outgoing.artifacts.clear()
+        outgoing.artifact(tasks.named("shadowJar"))
+    }
+}
+
 // Register a publication driven by the `shadow` component (shaded jar + POM
 // with external runtime deps). Eagerly — not in afterEvaluate — so the
 // aria.publish convention sees a non-empty publications list and skips
