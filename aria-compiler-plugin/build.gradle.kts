@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
     `java-test-fixtures`
+    idea
 }
 
 kotlin {
@@ -18,6 +19,15 @@ sourceSets {
     }
     testFixtures {
         java.setSrcDirs(listOf("test-fixtures"))
+    }
+}
+
+// Tell IntelliJ that test-gen is a generated test source root so it renders
+// with the generated-source colour and doesn't offer to refactor its contents.
+idea {
+    module {
+        generatedSourceDirs.add(layout.projectDirectory.dir("test-gen").asFile)
+        testSources.from(layout.projectDirectory.dir("test-gen"))
     }
 }
 
