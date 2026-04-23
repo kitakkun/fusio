@@ -41,33 +41,42 @@ Making "testable by default" a marketing position for Fusio means lifting that h
 
 ### Entry points
 
+Real presenters take more than just `Flow<E>` — a `TodoPresenter` will pull in a repository, a user id, a coroutine dispatcher, etc. Binding a function reference like `::todoPresenter` would lock the signature to `(Flow<E>) -> Presentation<S, Eff>` and force users to write synthetic shim wrappers. Instead, the framework supplies the `Flow<E>` (for top-level presenters) or the `PresenterScope<E, Eff>` receiver (for sub-presenters), and the caller provides a `@Composable` lambda that calls the real presenter with all of its own arguments.
+
 ```kotlin
 // fusio-test / commonMain
 
 /**
  * Runs [presenter] inside a headless Compose runtime driven by
- * [kotlinx.coroutines.test.runTest] (virtual time). [block] receives a
- * [PresenterScenario] to drive events, observe state, and await effects.
- * Composition, recomposer, and coroutine job are disposed before returning.
+ * [kotlinx.coroutines.test.runTest] (virtual time). [presenter] is a
+ * `@Composable` lambda receiving the scenario's `Flow<E>` — bind the
+ * rest of your real presenter's parameters inside it (fakes, ids, etc.).
+ * [scenario] receives a [PresenterScenario] to drive events, observe
+ * state, and await effects. Composition, recomposer, and coroutine job
+ * are disposed before returning.
  */
 public fun <E, S, Eff> testPresenter(
-    presenter: @Composable (Flow<E>) -> Presentation<S, Eff>,
     context: CoroutineContext = EmptyCoroutineContext,
-    block: suspend PresenterScenario<E, S, Eff>.() -> Unit,
+    presenter: @Composable (Flow<E>) -> Presentation<S, Eff>,
+    scenario: suspend PresenterScenario<E, S, Eff>.() -> Unit,
 )
 
 /**
  * Variant for sub-presenters that return [S] directly (the shape sub-
- * presenters carry before `fuse { }` wraps them). Internally wraps the
- * sub-presenter in [buildPresenter] so the rest of the scenario API is
+ * presenters carry before `fuse { }` wraps them). [subPresenter] is a
+ * `@Composable` lambda whose receiver is a fresh `PresenterScope<E, Eff>`;
+ * bind the rest of your real sub-presenter's parameters inside it.
+ * Internally wraps the lambda in [buildPresenter] so the scenario API is
  * identical to [testPresenter].
  */
 public fun <E, S, Eff> testSubPresenter(
-    subPresenter: @Composable PresenterScope<E, Eff>.() -> S,
     context: CoroutineContext = EmptyCoroutineContext,
-    block: suspend PresenterScenario<E, S, Eff>.() -> Unit,
+    subPresenter: @Composable PresenterScope<E, Eff>.() -> S,
+    scenario: suspend PresenterScenario<E, S, Eff>.() -> Unit,
 )
 ```
+
+Both entry points put `scenario` last so the scenario block is the trailing lambda at the call site. `presenter` / `subPresenter` must be passed by name because Kotlin only promotes the final lambda argument. `context` defaults to empty; pass a `TestDispatcher` if you need to share a scheduler with collaborating fakes.
 
 ### Scenario API
 
@@ -116,27 +125,38 @@ public suspend inline fun <E, S, Eff, reified T : Eff> PresenterScenario<E, S, E
 ### Usage example
 
 ```kotlin
-class CounterPresenterTest {
+class TodoPresenterTest {
     @Test
-    fun increment_emits_toast_on_reset() = testPresenter(::counterPresenter) {
-        // Initial state lands via the first recomposition.
-        awaitState { it.count == 0 }
+    fun adds_a_task_and_emits_toast() = testPresenter(
+        presenter = { events ->
+            // Bind the real presenter's own dependencies here — the framework
+            // only supplies `events`. Fakes, dispatchers, ids, flags all live
+            // at the test author's fingertips.
+            todoPresenter(
+                events = events,
+                repository = FakeTodoRepository(),
+                userId = "u1",
+            )
+        },
+    ) {
+        awaitState { it.items.isEmpty() }
 
-        send(CounterEvent.Increment)
-        assertEquals(1, state.count)
+        send(TodoEvent.Add(text = "milk"))
+        awaitState { it.items.size == 1 }
 
-        send(CounterEvent.Reset)
-        awaitEffect<CounterEffect.Toast> { assertEquals("reset", it.message) }
-        assertEquals(0, state.count)
+        awaitEffect<TodoEffect.Toast> { assertEquals("added", it.message) }
         expectNoEffects()
     }
 }
 
 class CounterSubPresenterTest {
     @Test
-    fun sub_presenter_state_survives_recompose() = testSubPresenter(::counterSub) {
+    fun counts_ticks() = testSubPresenter(
+        // Receiver here is PresenterScope<CounterEvent, CounterEffect>.
+        subPresenter = { counterSub(startAt = 0) },
+    ) {
         assertEquals(0, state)         // S = Int directly, no Presentation wrapper
-        send(Tick)
+        send(CounterEvent.Tick)
         awaitState { it == 1 }
     }
 }
@@ -197,6 +217,11 @@ Post-round-3 additions folded into the main proposal above:
 3. `send` / `advance` encapsulate the send-frame-yield-snapshot cycle as one atomic operation.
 4. `awaitEffect(timeout)` internally advances virtual time when the effect channel is empty, so `LaunchedEffect { delay(X); emit(Y) }` resolves within the scenario.
 5. Explicit `try/finally` tear-down order documented in the impl.
+
+### Round 4 — review-driven correction
+
+- **Function references don't fit.** The original draft used `testPresenter(::myPresenter) { … }`. That assumes the presenter has exactly one parameter — `Flow<E>` — and returns `Presentation<S, Eff>`. Real presenters take a repository, a user id, a dispatcher, a feature flag, etc. — any of which would force a synthetic shim wrapper just to test. Switched both entry points to take a `@Composable` lambda that receives the scenario-supplied `Flow<E>` / `PresenterScope<E, Eff>` receiver, leaving every other argument to be bound by the caller inline. This is also how Compose's own UI testing binds the content under test (`setContent { MyComposable(param1, param2) }`), so it's the idiom users will already recognize.
+- **Argument order.** With `presenter` and `scenario` both being lambdas, only one can be the trailing lambda; Kotlin picks the last-declared. Put `scenario` last so the scenario block stays visually dominant at the call site, and require `presenter` to be passed by name — this mirrors the `setContent { … }` feel while keeping the DSL-heavy `scenario { send; awaitState; … }` block last.
 
 ## Phasing
 
