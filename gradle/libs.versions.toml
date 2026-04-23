@@ -4,13 +4,13 @@
 # the version-specific CompatContext impl. `kotlin-k24` below is that pin for
 # the 2.4.0-Beta2 variant.
 kotlin = "2.3.21"
-# Oldest 2.3.x version fusio-compiler-compat/k2320 compiles against. Pinning
-# the compat impl to 2.3.0 makes the shaded bytecode forward-compatible with
-# every 2.3.x release the supportedRange declares.
-kotlin-k23 = "2.3.0"
-# Per-patch Kotlin 2.3.x pins used by the `fusio-compiler-plugin-tests/k*`
-# lanes — each lane runs the full box/diagnostics suite against its pinned
-# compiler so a regression that surfaces only at a specific patch is caught.
+# Per-patch Kotlin 2.3.x / 2.4 pins. Used in two kinds of module:
+# - `fusio-compiler-compat/kXXX` compiles against the oldest-in-range patch
+#   (k230→2.3.0, k2320→2.3.20) so its bytecode forward-links across every
+#   patch the matching CompatContext.Factory.supportedRange declares.
+# - `fusio-compiler-plugin-tests/kXXX` pins its test-framework + compiler +
+#   compose-plugin jars so each lane runs box/diagnostics against that
+#   exact patch.
 kotlin-k230 = "2.3.0"
 kotlin-k2310 = "2.3.10"
 kotlin-k2320 = "2.3.20"
@@ -29,7 +29,7 @@ fusio = "0.1.0-SNAPSHOT"
 
 [libraries]
 kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
-kotlin-compiler-embeddable-k23 = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-k23" }
+kotlin-compiler-embeddable-k230 = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-k230" }
 kotlin-compiler-embeddable-k2320 = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-k2320" }
 kotlin-compiler-embeddable-k24 = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-k24" }
 kotlin-compiler = { module = "org.jetbrains.kotlin:kotlin-compiler", version.ref = "kotlin" }

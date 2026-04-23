@@ -31,5 +31,5 @@ kotlin {
 
 dependencies {
     api(project(":fusio-compiler-compat"))
-    compileOnly(libs.kotlin.compiler.embeddable.k23)
+    compileOnly(libs.kotlin.compiler.embeddable.k230)
 }
