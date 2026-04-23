@@ -1,0 +1,930 @@
+FILE fqName:<root> fileName:/mappedScopeRewrite.kt
+  CLASS CLASS name:ChildState modality:FINAL visibility:public [data] superTypes:[kotlin.Any]
+    annotations:
+      StabilityInferred(parameters = 1)
+    thisReceiver: VALUE_PARAMETER INSTANCE_RECEIVER kind:DispatchReceiver name:<this> type:<root>.ChildState
+    PROPERTY name:toggled visibility:public modality:FINAL [val]
+      FIELD PROPERTY_BACKING_FIELD name:toggled type:kotlin.Boolean visibility:private [final]
+        EXPRESSION_BODY
+          GET_VAR 'toggled: kotlin.Boolean declared in <root>.ChildState.<init>' type=kotlin.Boolean origin=INITIALIZE_PROPERTY_FROM_PARAMETER
+      FUN DEFAULT_PROPERTY_ACCESSOR name:<get-toggled> visibility:public modality:FINAL returnType:kotlin.Boolean
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildState
+        correspondingProperty: PROPERTY name:toggled visibility:public modality:FINAL [val]
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public final fun <get-toggled> (): kotlin.Boolean declared in <root>.ChildState'
+            GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:toggled type:kotlin.Boolean visibility:private [final]' type=kotlin.Boolean origin=null
+              receiver: GET_VAR '<this>: <root>.ChildState declared in <root>.ChildState.<get-toggled>' type=<root>.ChildState origin=null
+    FIELD name:$stable type:kotlin.Int visibility:public [final,static]
+      EXPRESSION_BODY
+        CONST Int type=kotlin.Int value=0
+    CONSTRUCTOR visibility:public returnType:<root>.ChildState [primary]
+      VALUE_PARAMETER kind:Regular name:toggled index:0 type:kotlin.Boolean
+      BLOCK_BODY
+        DELEGATING_CONSTRUCTOR_CALL 'public constructor <init> () declared in kotlin.Any'
+        INSTANCE_INITIALIZER_CALL classDescriptor='CLASS CLASS name:ChildState modality:FINAL visibility:public [data] superTypes:[kotlin.Any]' type=kotlin.Unit
+    FUN GENERATED_DATA_CLASS_MEMBER name:component1 visibility:public modality:FINAL returnType:kotlin.Boolean [operator]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildState
+      BLOCK_BODY
+        RETURN type=kotlin.Nothing from='public final fun component1 (): kotlin.Boolean declared in <root>.ChildState'
+          GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:toggled type:kotlin.Boolean visibility:private [final]' type=kotlin.Boolean origin=null
+            receiver: GET_VAR '<this>: <root>.ChildState declared in <root>.ChildState.component1' type=<root>.ChildState origin=null
+    FUN GENERATED_DATA_CLASS_MEMBER name:copy visibility:public modality:FINAL returnType:<root>.ChildState
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildState
+      VALUE_PARAMETER kind:Regular name:toggled index:1 type:kotlin.Boolean
+        EXPRESSION_BODY
+          GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:toggled type:kotlin.Boolean visibility:private [final]' type=kotlin.Boolean origin=null
+            receiver: GET_VAR '<this>: <root>.ChildState declared in <root>.ChildState.copy' type=<root>.ChildState origin=null
+      BLOCK_BODY
+        RETURN type=kotlin.Nothing from='public final fun copy (toggled: kotlin.Boolean): <root>.ChildState declared in <root>.ChildState'
+          CONSTRUCTOR_CALL 'public constructor <init> (toggled: kotlin.Boolean) declared in <root>.ChildState' type=<root>.ChildState origin=null
+            ARG toggled: GET_VAR 'toggled: kotlin.Boolean declared in <root>.ChildState.copy' type=kotlin.Boolean origin=null
+    FUN GENERATED_DATA_CLASS_MEMBER name:equals visibility:public modality:OPEN returnType:kotlin.Boolean [operator]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildState
+      VALUE_PARAMETER kind:Regular name:other index:1 type:kotlin.Any?
+      overridden:
+        public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in kotlin.Any
+      BLOCK_BODY
+        WHEN type=kotlin.Unit origin=null
+          BRANCH
+            if: CALL 'public final fun EQEQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=EQEQEQ
+              ARG arg0: GET_VAR '<this>: <root>.ChildState declared in <root>.ChildState.equals' type=<root>.ChildState origin=null
+              ARG arg1: GET_VAR 'other: kotlin.Any? declared in <root>.ChildState.equals' type=kotlin.Any? origin=null
+            then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ChildState'
+              CONST Boolean type=kotlin.Boolean value=true
+        WHEN type=kotlin.Unit origin=null
+          BRANCH
+            if: TYPE_OP type=kotlin.Boolean origin=NOT_INSTANCEOF typeOperand=<root>.ChildState
+              GET_VAR 'other: kotlin.Any? declared in <root>.ChildState.equals' type=kotlin.Any? origin=null
+            then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ChildState'
+              CONST Boolean type=kotlin.Boolean value=false
+        VAR IR_TEMPORARY_VARIABLE name:tmp_0 type:<root>.ChildState [val]
+          TYPE_OP type=<root>.ChildState origin=IMPLICIT_CAST typeOperand=<root>.ChildState
+            GET_VAR 'other: kotlin.Any? declared in <root>.ChildState.equals' type=kotlin.Any? origin=null
+        WHEN type=kotlin.Unit origin=null
+          BRANCH
+            if: CALL 'public final fun not (): kotlin.Boolean declared in kotlin.Boolean' type=kotlin.Boolean origin=EXCLEQ
+              ARG <this>: CALL 'public final fun EQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=EXCLEQ
+                ARG arg0: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:toggled type:kotlin.Boolean visibility:private [final]' type=kotlin.Boolean origin=null
+                  receiver: GET_VAR '<this>: <root>.ChildState declared in <root>.ChildState.equals' type=<root>.ChildState origin=null
+                ARG arg1: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:toggled type:kotlin.Boolean visibility:private [final]' type=kotlin.Boolean origin=null
+                  receiver: GET_VAR 'val tmp_0: <root>.ChildState declared in <root>.ChildState.equals' type=<root>.ChildState origin=null
+            then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ChildState'
+              CONST Boolean type=kotlin.Boolean value=false
+        RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ChildState'
+          CONST Boolean type=kotlin.Boolean value=true
+    FUN GENERATED_DATA_CLASS_MEMBER name:hashCode visibility:public modality:OPEN returnType:kotlin.Int
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildState
+      overridden:
+        public open fun hashCode (): kotlin.Int declared in kotlin.Any
+      BLOCK_BODY
+        RETURN type=kotlin.Nothing from='public open fun hashCode (): kotlin.Int declared in <root>.ChildState'
+          CALL 'public open fun hashCode (): kotlin.Int declared in kotlin.Boolean' type=kotlin.Int origin=null
+            ARG <this>: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:toggled type:kotlin.Boolean visibility:private [final]' type=kotlin.Boolean origin=null
+              receiver: GET_VAR '<this>: <root>.ChildState declared in <root>.ChildState.hashCode' type=<root>.ChildState origin=null
+    FUN GENERATED_DATA_CLASS_MEMBER name:toString visibility:public modality:OPEN returnType:kotlin.String
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildState
+      overridden:
+        public open fun toString (): kotlin.String declared in kotlin.Any
+      BLOCK_BODY
+        RETURN type=kotlin.Nothing from='public open fun toString (): kotlin.String declared in <root>.ChildState'
+          STRING_CONCATENATION type=kotlin.String
+            CONST String type=kotlin.String value="ChildState("
+            CONST String type=kotlin.String value="toggled="
+            GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:toggled type:kotlin.Boolean visibility:private [final]' type=kotlin.Boolean origin=null
+              receiver: GET_VAR '<this>: <root>.ChildState declared in <root>.ChildState.toString' type=<root>.ChildState origin=null
+            CONST String type=kotlin.String value=")"
+  CLASS CLASS name:ScreenState modality:FINAL visibility:public [data] superTypes:[kotlin.Any]
+    annotations:
+      StabilityInferred(parameters = 1)
+    thisReceiver: VALUE_PARAMETER INSTANCE_RECEIVER kind:DispatchReceiver name:<this> type:<root>.ScreenState
+    PROPERTY name:child visibility:public modality:FINAL [val]
+      FIELD PROPERTY_BACKING_FIELD name:child type:<root>.ChildState visibility:private [final]
+        EXPRESSION_BODY
+          GET_VAR 'child: <root>.ChildState declared in <root>.ScreenState.<init>' type=<root>.ChildState origin=INITIALIZE_PROPERTY_FROM_PARAMETER
+      FUN DEFAULT_PROPERTY_ACCESSOR name:<get-child> visibility:public modality:FINAL returnType:<root>.ChildState
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ScreenState
+        correspondingProperty: PROPERTY name:child visibility:public modality:FINAL [val]
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public final fun <get-child> (): <root>.ChildState declared in <root>.ScreenState'
+            GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:child type:<root>.ChildState visibility:private [final]' type=<root>.ChildState origin=null
+              receiver: GET_VAR '<this>: <root>.ScreenState declared in <root>.ScreenState.<get-child>' type=<root>.ScreenState origin=null
+    FIELD name:$stable type:kotlin.Int visibility:public [final,static]
+      EXPRESSION_BODY
+        CONST Int type=kotlin.Int value=0
+    CONSTRUCTOR visibility:public returnType:<root>.ScreenState [primary]
+      VALUE_PARAMETER kind:Regular name:child index:0 type:<root>.ChildState
+      BLOCK_BODY
+        DELEGATING_CONSTRUCTOR_CALL 'public constructor <init> () declared in kotlin.Any'
+        INSTANCE_INITIALIZER_CALL classDescriptor='CLASS CLASS name:ScreenState modality:FINAL visibility:public [data] superTypes:[kotlin.Any]' type=kotlin.Unit
+    FUN GENERATED_DATA_CLASS_MEMBER name:component1 visibility:public modality:FINAL returnType:<root>.ChildState [operator]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ScreenState
+      BLOCK_BODY
+        RETURN type=kotlin.Nothing from='public final fun component1 (): <root>.ChildState declared in <root>.ScreenState'
+          GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:child type:<root>.ChildState visibility:private [final]' type=<root>.ChildState origin=null
+            receiver: GET_VAR '<this>: <root>.ScreenState declared in <root>.ScreenState.component1' type=<root>.ScreenState origin=null
+    FUN GENERATED_DATA_CLASS_MEMBER name:copy visibility:public modality:FINAL returnType:<root>.ScreenState
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ScreenState
+      VALUE_PARAMETER kind:Regular name:child index:1 type:<root>.ChildState
+        EXPRESSION_BODY
+          GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:child type:<root>.ChildState visibility:private [final]' type=<root>.ChildState origin=null
+            receiver: GET_VAR '<this>: <root>.ScreenState declared in <root>.ScreenState.copy' type=<root>.ScreenState origin=null
+      BLOCK_BODY
+        RETURN type=kotlin.Nothing from='public final fun copy (child: <root>.ChildState): <root>.ScreenState declared in <root>.ScreenState'
+          CONSTRUCTOR_CALL 'public constructor <init> (child: <root>.ChildState) declared in <root>.ScreenState' type=<root>.ScreenState origin=null
+            ARG child: GET_VAR 'child: <root>.ChildState declared in <root>.ScreenState.copy' type=<root>.ChildState origin=null
+    FUN GENERATED_DATA_CLASS_MEMBER name:equals visibility:public modality:OPEN returnType:kotlin.Boolean [operator]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ScreenState
+      VALUE_PARAMETER kind:Regular name:other index:1 type:kotlin.Any?
+      overridden:
+        public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in kotlin.Any
+      BLOCK_BODY
+        WHEN type=kotlin.Unit origin=null
+          BRANCH
+            if: CALL 'public final fun EQEQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=EQEQEQ
+              ARG arg0: GET_VAR '<this>: <root>.ScreenState declared in <root>.ScreenState.equals' type=<root>.ScreenState origin=null
+              ARG arg1: GET_VAR 'other: kotlin.Any? declared in <root>.ScreenState.equals' type=kotlin.Any? origin=null
+            then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ScreenState'
+              CONST Boolean type=kotlin.Boolean value=true
+        WHEN type=kotlin.Unit origin=null
+          BRANCH
+            if: TYPE_OP type=kotlin.Boolean origin=NOT_INSTANCEOF typeOperand=<root>.ScreenState
+              GET_VAR 'other: kotlin.Any? declared in <root>.ScreenState.equals' type=kotlin.Any? origin=null
+            then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ScreenState'
+              CONST Boolean type=kotlin.Boolean value=false
+        VAR IR_TEMPORARY_VARIABLE name:tmp_1 type:<root>.ScreenState [val]
+          TYPE_OP type=<root>.ScreenState origin=IMPLICIT_CAST typeOperand=<root>.ScreenState
+            GET_VAR 'other: kotlin.Any? declared in <root>.ScreenState.equals' type=kotlin.Any? origin=null
+        WHEN type=kotlin.Unit origin=null
+          BRANCH
+            if: CALL 'public final fun not (): kotlin.Boolean declared in kotlin.Boolean' type=kotlin.Boolean origin=EXCLEQ
+              ARG <this>: CALL 'public final fun EQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=EXCLEQ
+                ARG arg0: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:child type:<root>.ChildState visibility:private [final]' type=<root>.ChildState origin=null
+                  receiver: GET_VAR '<this>: <root>.ScreenState declared in <root>.ScreenState.equals' type=<root>.ScreenState origin=null
+                ARG arg1: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:child type:<root>.ChildState visibility:private [final]' type=<root>.ChildState origin=null
+                  receiver: GET_VAR 'val tmp_1: <root>.ScreenState declared in <root>.ScreenState.equals' type=<root>.ScreenState origin=null
+            then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ScreenState'
+              CONST Boolean type=kotlin.Boolean value=false
+        RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ScreenState'
+          CONST Boolean type=kotlin.Boolean value=true
+    FUN GENERATED_DATA_CLASS_MEMBER name:hashCode visibility:public modality:OPEN returnType:kotlin.Int
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ScreenState
+      overridden:
+        public open fun hashCode (): kotlin.Int declared in kotlin.Any
+      BLOCK_BODY
+        RETURN type=kotlin.Nothing from='public open fun hashCode (): kotlin.Int declared in <root>.ScreenState'
+          CALL 'public open fun hashCode (): kotlin.Int declared in <root>.ChildState' type=kotlin.Int origin=null
+            ARG <this>: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:child type:<root>.ChildState visibility:private [final]' type=<root>.ChildState origin=null
+              receiver: GET_VAR '<this>: <root>.ScreenState declared in <root>.ScreenState.hashCode' type=<root>.ScreenState origin=null
+    FUN GENERATED_DATA_CLASS_MEMBER name:toString visibility:public modality:OPEN returnType:kotlin.String
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ScreenState
+      overridden:
+        public open fun toString (): kotlin.String declared in kotlin.Any
+      BLOCK_BODY
+        RETURN type=kotlin.Nothing from='public open fun toString (): kotlin.String declared in <root>.ScreenState'
+          STRING_CONCATENATION type=kotlin.String
+            CONST String type=kotlin.String value="ScreenState("
+            CONST String type=kotlin.String value="child="
+            GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:child type:<root>.ChildState visibility:private [final]' type=<root>.ChildState origin=null
+              receiver: GET_VAR '<this>: <root>.ScreenState declared in <root>.ScreenState.toString' type=<root>.ScreenState origin=null
+            CONST String type=kotlin.String value=")"
+  CLASS INTERFACE name:ChildEffect modality:SEALED visibility:public superTypes:[kotlin.Any]
+    sealedSubclasses:
+      CLASS CLASS name:Reply modality:FINAL visibility:public [data] superTypes:[<root>.ChildEffect]
+    thisReceiver: VALUE_PARAMETER INSTANCE_RECEIVER kind:DispatchReceiver name:<this> type:<root>.ChildEffect
+    CLASS CLASS name:Reply modality:FINAL visibility:public [data] superTypes:[<root>.ChildEffect]
+      annotations:
+        StabilityInferred(parameters = 1)
+      thisReceiver: VALUE_PARAMETER INSTANCE_RECEIVER kind:DispatchReceiver name:<this> type:<root>.ChildEffect.Reply
+      PROPERTY name:message visibility:public modality:FINAL [val]
+        FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]
+          EXPRESSION_BODY
+            GET_VAR 'message: kotlin.String declared in <root>.ChildEffect.Reply.<init>' type=kotlin.String origin=INITIALIZE_PROPERTY_FROM_PARAMETER
+        FUN DEFAULT_PROPERTY_ACCESSOR name:<get-message> visibility:public modality:FINAL returnType:kotlin.String
+          VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildEffect.Reply
+          correspondingProperty: PROPERTY name:message visibility:public modality:FINAL [val]
+          BLOCK_BODY
+            RETURN type=kotlin.Nothing from='public final fun <get-message> (): kotlin.String declared in <root>.ChildEffect.Reply'
+              GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                receiver: GET_VAR '<this>: <root>.ChildEffect.Reply declared in <root>.ChildEffect.Reply.<get-message>' type=<root>.ChildEffect.Reply origin=null
+      FIELD name:$stable type:kotlin.Int visibility:public [final,static]
+        EXPRESSION_BODY
+          CONST Int type=kotlin.Int value=0
+      CONSTRUCTOR visibility:public returnType:<root>.ChildEffect.Reply [primary]
+        VALUE_PARAMETER kind:Regular name:message index:0 type:kotlin.String
+        BLOCK_BODY
+          DELEGATING_CONSTRUCTOR_CALL 'public constructor <init> () declared in kotlin.Any'
+          INSTANCE_INITIALIZER_CALL classDescriptor='CLASS CLASS name:Reply modality:FINAL visibility:public [data] superTypes:[<root>.ChildEffect]' type=kotlin.Unit
+      FUN GENERATED_DATA_CLASS_MEMBER name:component1 visibility:public modality:FINAL returnType:kotlin.String [operator]
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildEffect.Reply
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public final fun component1 (): kotlin.String declared in <root>.ChildEffect.Reply'
+            GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+              receiver: GET_VAR '<this>: <root>.ChildEffect.Reply declared in <root>.ChildEffect.Reply.component1' type=<root>.ChildEffect.Reply origin=null
+      FUN GENERATED_DATA_CLASS_MEMBER name:copy visibility:public modality:FINAL returnType:<root>.ChildEffect.Reply
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildEffect.Reply
+        VALUE_PARAMETER kind:Regular name:message index:1 type:kotlin.String
+          EXPRESSION_BODY
+            GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+              receiver: GET_VAR '<this>: <root>.ChildEffect.Reply declared in <root>.ChildEffect.Reply.copy' type=<root>.ChildEffect.Reply origin=null
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public final fun copy (message: kotlin.String): <root>.ChildEffect.Reply declared in <root>.ChildEffect.Reply'
+            CONSTRUCTOR_CALL 'public constructor <init> (message: kotlin.String) declared in <root>.ChildEffect.Reply' type=<root>.ChildEffect.Reply origin=null
+              ARG message: GET_VAR 'message: kotlin.String declared in <root>.ChildEffect.Reply.copy' type=kotlin.String origin=null
+      FUN GENERATED_DATA_CLASS_MEMBER name:equals visibility:public modality:OPEN returnType:kotlin.Boolean [operator]
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildEffect.Reply
+        VALUE_PARAMETER kind:Regular name:other index:1 type:kotlin.Any?
+        overridden:
+          public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ChildEffect
+        BLOCK_BODY
+          WHEN type=kotlin.Unit origin=null
+            BRANCH
+              if: CALL 'public final fun EQEQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=EQEQEQ
+                ARG arg0: GET_VAR '<this>: <root>.ChildEffect.Reply declared in <root>.ChildEffect.Reply.equals' type=<root>.ChildEffect.Reply origin=null
+                ARG arg1: GET_VAR 'other: kotlin.Any? declared in <root>.ChildEffect.Reply.equals' type=kotlin.Any? origin=null
+              then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ChildEffect.Reply'
+                CONST Boolean type=kotlin.Boolean value=true
+          WHEN type=kotlin.Unit origin=null
+            BRANCH
+              if: TYPE_OP type=kotlin.Boolean origin=NOT_INSTANCEOF typeOperand=<root>.ChildEffect.Reply
+                GET_VAR 'other: kotlin.Any? declared in <root>.ChildEffect.Reply.equals' type=kotlin.Any? origin=null
+              then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ChildEffect.Reply'
+                CONST Boolean type=kotlin.Boolean value=false
+          VAR IR_TEMPORARY_VARIABLE name:tmp_2 type:<root>.ChildEffect.Reply [val]
+            TYPE_OP type=<root>.ChildEffect.Reply origin=IMPLICIT_CAST typeOperand=<root>.ChildEffect.Reply
+              GET_VAR 'other: kotlin.Any? declared in <root>.ChildEffect.Reply.equals' type=kotlin.Any? origin=null
+          WHEN type=kotlin.Unit origin=null
+            BRANCH
+              if: CALL 'public final fun not (): kotlin.Boolean declared in kotlin.Boolean' type=kotlin.Boolean origin=EXCLEQ
+                ARG <this>: CALL 'public final fun EQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=EXCLEQ
+                  ARG arg0: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                    receiver: GET_VAR '<this>: <root>.ChildEffect.Reply declared in <root>.ChildEffect.Reply.equals' type=<root>.ChildEffect.Reply origin=null
+                  ARG arg1: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                    receiver: GET_VAR 'val tmp_2: <root>.ChildEffect.Reply declared in <root>.ChildEffect.Reply.equals' type=<root>.ChildEffect.Reply origin=null
+              then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ChildEffect.Reply'
+                CONST Boolean type=kotlin.Boolean value=false
+          RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ChildEffect.Reply'
+            CONST Boolean type=kotlin.Boolean value=true
+      FUN GENERATED_DATA_CLASS_MEMBER name:hashCode visibility:public modality:OPEN returnType:kotlin.Int
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildEffect.Reply
+        overridden:
+          public open fun hashCode (): kotlin.Int declared in <root>.ChildEffect
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public open fun hashCode (): kotlin.Int declared in <root>.ChildEffect.Reply'
+            CALL 'public open fun hashCode (): kotlin.Int declared in kotlin.String' type=kotlin.Int origin=null
+              ARG <this>: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                receiver: GET_VAR '<this>: <root>.ChildEffect.Reply declared in <root>.ChildEffect.Reply.hashCode' type=<root>.ChildEffect.Reply origin=null
+      FUN GENERATED_DATA_CLASS_MEMBER name:toString visibility:public modality:OPEN returnType:kotlin.String
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildEffect.Reply
+        overridden:
+          public open fun toString (): kotlin.String declared in <root>.ChildEffect
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public open fun toString (): kotlin.String declared in <root>.ChildEffect.Reply'
+            STRING_CONCATENATION type=kotlin.String
+              CONST String type=kotlin.String value="Reply("
+              CONST String type=kotlin.String value="message="
+              GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                receiver: GET_VAR '<this>: <root>.ChildEffect.Reply declared in <root>.ChildEffect.Reply.toString' type=<root>.ChildEffect.Reply origin=null
+              CONST String type=kotlin.String value=")"
+    FUN FAKE_OVERRIDE name:equals visibility:public modality:OPEN returnType:kotlin.Boolean [fake_override,operator]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:kotlin.Any
+      VALUE_PARAMETER kind:Regular name:other index:1 type:kotlin.Any?
+      overridden:
+        public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in kotlin.Any
+    FUN FAKE_OVERRIDE name:hashCode visibility:public modality:OPEN returnType:kotlin.Int [fake_override]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:kotlin.Any
+      overridden:
+        public open fun hashCode (): kotlin.Int declared in kotlin.Any
+    FUN FAKE_OVERRIDE name:toString visibility:public modality:OPEN returnType:kotlin.String [fake_override]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:kotlin.Any
+      overridden:
+        public open fun toString (): kotlin.String declared in kotlin.Any
+  CLASS INTERFACE name:ChildEvent modality:SEALED visibility:public superTypes:[kotlin.Any]
+    sealedSubclasses:
+      CLASS CLASS name:Toggle modality:FINAL visibility:public [data] superTypes:[<root>.ChildEvent]
+    thisReceiver: VALUE_PARAMETER INSTANCE_RECEIVER kind:DispatchReceiver name:<this> type:<root>.ChildEvent
+    CLASS CLASS name:Toggle modality:FINAL visibility:public [data] superTypes:[<root>.ChildEvent]
+      annotations:
+        StabilityInferred(parameters = 1)
+      thisReceiver: VALUE_PARAMETER INSTANCE_RECEIVER kind:DispatchReceiver name:<this> type:<root>.ChildEvent.Toggle
+      PROPERTY name:id visibility:public modality:FINAL [val]
+        FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]
+          EXPRESSION_BODY
+            GET_VAR 'id: kotlin.String declared in <root>.ChildEvent.Toggle.<init>' type=kotlin.String origin=INITIALIZE_PROPERTY_FROM_PARAMETER
+        FUN DEFAULT_PROPERTY_ACCESSOR name:<get-id> visibility:public modality:FINAL returnType:kotlin.String
+          VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildEvent.Toggle
+          correspondingProperty: PROPERTY name:id visibility:public modality:FINAL [val]
+          BLOCK_BODY
+            RETURN type=kotlin.Nothing from='public final fun <get-id> (): kotlin.String declared in <root>.ChildEvent.Toggle'
+              GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                receiver: GET_VAR '<this>: <root>.ChildEvent.Toggle declared in <root>.ChildEvent.Toggle.<get-id>' type=<root>.ChildEvent.Toggle origin=null
+      FIELD name:$stable type:kotlin.Int visibility:public [final,static]
+        EXPRESSION_BODY
+          CONST Int type=kotlin.Int value=0
+      CONSTRUCTOR visibility:public returnType:<root>.ChildEvent.Toggle [primary]
+        VALUE_PARAMETER kind:Regular name:id index:0 type:kotlin.String
+        BLOCK_BODY
+          DELEGATING_CONSTRUCTOR_CALL 'public constructor <init> () declared in kotlin.Any'
+          INSTANCE_INITIALIZER_CALL classDescriptor='CLASS CLASS name:Toggle modality:FINAL visibility:public [data] superTypes:[<root>.ChildEvent]' type=kotlin.Unit
+      FUN GENERATED_DATA_CLASS_MEMBER name:component1 visibility:public modality:FINAL returnType:kotlin.String [operator]
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildEvent.Toggle
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public final fun component1 (): kotlin.String declared in <root>.ChildEvent.Toggle'
+            GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+              receiver: GET_VAR '<this>: <root>.ChildEvent.Toggle declared in <root>.ChildEvent.Toggle.component1' type=<root>.ChildEvent.Toggle origin=null
+      FUN GENERATED_DATA_CLASS_MEMBER name:copy visibility:public modality:FINAL returnType:<root>.ChildEvent.Toggle
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildEvent.Toggle
+        VALUE_PARAMETER kind:Regular name:id index:1 type:kotlin.String
+          EXPRESSION_BODY
+            GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+              receiver: GET_VAR '<this>: <root>.ChildEvent.Toggle declared in <root>.ChildEvent.Toggle.copy' type=<root>.ChildEvent.Toggle origin=null
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public final fun copy (id: kotlin.String): <root>.ChildEvent.Toggle declared in <root>.ChildEvent.Toggle'
+            CONSTRUCTOR_CALL 'public constructor <init> (id: kotlin.String) declared in <root>.ChildEvent.Toggle' type=<root>.ChildEvent.Toggle origin=null
+              ARG id: GET_VAR 'id: kotlin.String declared in <root>.ChildEvent.Toggle.copy' type=kotlin.String origin=null
+      FUN GENERATED_DATA_CLASS_MEMBER name:equals visibility:public modality:OPEN returnType:kotlin.Boolean [operator]
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildEvent.Toggle
+        VALUE_PARAMETER kind:Regular name:other index:1 type:kotlin.Any?
+        overridden:
+          public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ChildEvent
+        BLOCK_BODY
+          WHEN type=kotlin.Unit origin=null
+            BRANCH
+              if: CALL 'public final fun EQEQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=EQEQEQ
+                ARG arg0: GET_VAR '<this>: <root>.ChildEvent.Toggle declared in <root>.ChildEvent.Toggle.equals' type=<root>.ChildEvent.Toggle origin=null
+                ARG arg1: GET_VAR 'other: kotlin.Any? declared in <root>.ChildEvent.Toggle.equals' type=kotlin.Any? origin=null
+              then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ChildEvent.Toggle'
+                CONST Boolean type=kotlin.Boolean value=true
+          WHEN type=kotlin.Unit origin=null
+            BRANCH
+              if: TYPE_OP type=kotlin.Boolean origin=NOT_INSTANCEOF typeOperand=<root>.ChildEvent.Toggle
+                GET_VAR 'other: kotlin.Any? declared in <root>.ChildEvent.Toggle.equals' type=kotlin.Any? origin=null
+              then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ChildEvent.Toggle'
+                CONST Boolean type=kotlin.Boolean value=false
+          VAR IR_TEMPORARY_VARIABLE name:tmp_3 type:<root>.ChildEvent.Toggle [val]
+            TYPE_OP type=<root>.ChildEvent.Toggle origin=IMPLICIT_CAST typeOperand=<root>.ChildEvent.Toggle
+              GET_VAR 'other: kotlin.Any? declared in <root>.ChildEvent.Toggle.equals' type=kotlin.Any? origin=null
+          WHEN type=kotlin.Unit origin=null
+            BRANCH
+              if: CALL 'public final fun not (): kotlin.Boolean declared in kotlin.Boolean' type=kotlin.Boolean origin=EXCLEQ
+                ARG <this>: CALL 'public final fun EQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=EXCLEQ
+                  ARG arg0: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                    receiver: GET_VAR '<this>: <root>.ChildEvent.Toggle declared in <root>.ChildEvent.Toggle.equals' type=<root>.ChildEvent.Toggle origin=null
+                  ARG arg1: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                    receiver: GET_VAR 'val tmp_3: <root>.ChildEvent.Toggle declared in <root>.ChildEvent.Toggle.equals' type=<root>.ChildEvent.Toggle origin=null
+              then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ChildEvent.Toggle'
+                CONST Boolean type=kotlin.Boolean value=false
+          RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ChildEvent.Toggle'
+            CONST Boolean type=kotlin.Boolean value=true
+      FUN GENERATED_DATA_CLASS_MEMBER name:hashCode visibility:public modality:OPEN returnType:kotlin.Int
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildEvent.Toggle
+        overridden:
+          public open fun hashCode (): kotlin.Int declared in <root>.ChildEvent
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public open fun hashCode (): kotlin.Int declared in <root>.ChildEvent.Toggle'
+            CALL 'public open fun hashCode (): kotlin.Int declared in kotlin.String' type=kotlin.Int origin=null
+              ARG <this>: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                receiver: GET_VAR '<this>: <root>.ChildEvent.Toggle declared in <root>.ChildEvent.Toggle.hashCode' type=<root>.ChildEvent.Toggle origin=null
+      FUN GENERATED_DATA_CLASS_MEMBER name:toString visibility:public modality:OPEN returnType:kotlin.String
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ChildEvent.Toggle
+        overridden:
+          public open fun toString (): kotlin.String declared in <root>.ChildEvent
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public open fun toString (): kotlin.String declared in <root>.ChildEvent.Toggle'
+            STRING_CONCATENATION type=kotlin.String
+              CONST String type=kotlin.String value="Toggle("
+              CONST String type=kotlin.String value="id="
+              GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                receiver: GET_VAR '<this>: <root>.ChildEvent.Toggle declared in <root>.ChildEvent.Toggle.toString' type=<root>.ChildEvent.Toggle origin=null
+              CONST String type=kotlin.String value=")"
+    FUN FAKE_OVERRIDE name:equals visibility:public modality:OPEN returnType:kotlin.Boolean [fake_override,operator]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:kotlin.Any
+      VALUE_PARAMETER kind:Regular name:other index:1 type:kotlin.Any?
+      overridden:
+        public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in kotlin.Any
+    FUN FAKE_OVERRIDE name:hashCode visibility:public modality:OPEN returnType:kotlin.Int [fake_override]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:kotlin.Any
+      overridden:
+        public open fun hashCode (): kotlin.Int declared in kotlin.Any
+    FUN FAKE_OVERRIDE name:toString visibility:public modality:OPEN returnType:kotlin.String [fake_override]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:kotlin.Any
+      overridden:
+        public open fun toString (): kotlin.String declared in kotlin.Any
+  CLASS INTERFACE name:ParentEffect modality:SEALED visibility:public superTypes:[kotlin.Any]
+    sealedSubclasses:
+      CLASS CLASS name:Echo modality:FINAL visibility:public [data] superTypes:[<root>.ParentEffect]
+    thisReceiver: VALUE_PARAMETER INSTANCE_RECEIVER kind:DispatchReceiver name:<this> type:<root>.ParentEffect
+    CLASS CLASS name:Echo modality:FINAL visibility:public [data] superTypes:[<root>.ParentEffect]
+      annotations:
+        MapFrom(source = CLASS_REFERENCE 'CLASS CLASS name:Reply modality:FINAL visibility:public [data] superTypes:[<root>.ChildEffect]' type=kotlin.reflect.KClass<<root>.ChildEffect.Reply>)
+        StabilityInferred(parameters = 1)
+      thisReceiver: VALUE_PARAMETER INSTANCE_RECEIVER kind:DispatchReceiver name:<this> type:<root>.ParentEffect.Echo
+      PROPERTY name:message visibility:public modality:FINAL [val]
+        FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]
+          EXPRESSION_BODY
+            GET_VAR 'message: kotlin.String declared in <root>.ParentEffect.Echo.<init>' type=kotlin.String origin=INITIALIZE_PROPERTY_FROM_PARAMETER
+        FUN DEFAULT_PROPERTY_ACCESSOR name:<get-message> visibility:public modality:FINAL returnType:kotlin.String
+          VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ParentEffect.Echo
+          correspondingProperty: PROPERTY name:message visibility:public modality:FINAL [val]
+          BLOCK_BODY
+            RETURN type=kotlin.Nothing from='public final fun <get-message> (): kotlin.String declared in <root>.ParentEffect.Echo'
+              GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                receiver: GET_VAR '<this>: <root>.ParentEffect.Echo declared in <root>.ParentEffect.Echo.<get-message>' type=<root>.ParentEffect.Echo origin=null
+      FIELD name:$stable type:kotlin.Int visibility:public [final,static]
+        EXPRESSION_BODY
+          CONST Int type=kotlin.Int value=0
+      CONSTRUCTOR visibility:public returnType:<root>.ParentEffect.Echo [primary]
+        VALUE_PARAMETER kind:Regular name:message index:0 type:kotlin.String
+        BLOCK_BODY
+          DELEGATING_CONSTRUCTOR_CALL 'public constructor <init> () declared in kotlin.Any'
+          INSTANCE_INITIALIZER_CALL classDescriptor='CLASS CLASS name:Echo modality:FINAL visibility:public [data] superTypes:[<root>.ParentEffect]' type=kotlin.Unit
+      FUN GENERATED_DATA_CLASS_MEMBER name:component1 visibility:public modality:FINAL returnType:kotlin.String [operator]
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ParentEffect.Echo
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public final fun component1 (): kotlin.String declared in <root>.ParentEffect.Echo'
+            GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+              receiver: GET_VAR '<this>: <root>.ParentEffect.Echo declared in <root>.ParentEffect.Echo.component1' type=<root>.ParentEffect.Echo origin=null
+      FUN GENERATED_DATA_CLASS_MEMBER name:copy visibility:public modality:FINAL returnType:<root>.ParentEffect.Echo
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ParentEffect.Echo
+        VALUE_PARAMETER kind:Regular name:message index:1 type:kotlin.String
+          EXPRESSION_BODY
+            GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+              receiver: GET_VAR '<this>: <root>.ParentEffect.Echo declared in <root>.ParentEffect.Echo.copy' type=<root>.ParentEffect.Echo origin=null
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public final fun copy (message: kotlin.String): <root>.ParentEffect.Echo declared in <root>.ParentEffect.Echo'
+            CONSTRUCTOR_CALL 'public constructor <init> (message: kotlin.String) declared in <root>.ParentEffect.Echo' type=<root>.ParentEffect.Echo origin=null
+              ARG message: GET_VAR 'message: kotlin.String declared in <root>.ParentEffect.Echo.copy' type=kotlin.String origin=null
+      FUN GENERATED_DATA_CLASS_MEMBER name:equals visibility:public modality:OPEN returnType:kotlin.Boolean [operator]
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ParentEffect.Echo
+        VALUE_PARAMETER kind:Regular name:other index:1 type:kotlin.Any?
+        overridden:
+          public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ParentEffect
+        BLOCK_BODY
+          WHEN type=kotlin.Unit origin=null
+            BRANCH
+              if: CALL 'public final fun EQEQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=EQEQEQ
+                ARG arg0: GET_VAR '<this>: <root>.ParentEffect.Echo declared in <root>.ParentEffect.Echo.equals' type=<root>.ParentEffect.Echo origin=null
+                ARG arg1: GET_VAR 'other: kotlin.Any? declared in <root>.ParentEffect.Echo.equals' type=kotlin.Any? origin=null
+              then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ParentEffect.Echo'
+                CONST Boolean type=kotlin.Boolean value=true
+          WHEN type=kotlin.Unit origin=null
+            BRANCH
+              if: TYPE_OP type=kotlin.Boolean origin=NOT_INSTANCEOF typeOperand=<root>.ParentEffect.Echo
+                GET_VAR 'other: kotlin.Any? declared in <root>.ParentEffect.Echo.equals' type=kotlin.Any? origin=null
+              then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ParentEffect.Echo'
+                CONST Boolean type=kotlin.Boolean value=false
+          VAR IR_TEMPORARY_VARIABLE name:tmp_4 type:<root>.ParentEffect.Echo [val]
+            TYPE_OP type=<root>.ParentEffect.Echo origin=IMPLICIT_CAST typeOperand=<root>.ParentEffect.Echo
+              GET_VAR 'other: kotlin.Any? declared in <root>.ParentEffect.Echo.equals' type=kotlin.Any? origin=null
+          WHEN type=kotlin.Unit origin=null
+            BRANCH
+              if: CALL 'public final fun not (): kotlin.Boolean declared in kotlin.Boolean' type=kotlin.Boolean origin=EXCLEQ
+                ARG <this>: CALL 'public final fun EQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=EXCLEQ
+                  ARG arg0: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                    receiver: GET_VAR '<this>: <root>.ParentEffect.Echo declared in <root>.ParentEffect.Echo.equals' type=<root>.ParentEffect.Echo origin=null
+                  ARG arg1: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                    receiver: GET_VAR 'val tmp_4: <root>.ParentEffect.Echo declared in <root>.ParentEffect.Echo.equals' type=<root>.ParentEffect.Echo origin=null
+              then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ParentEffect.Echo'
+                CONST Boolean type=kotlin.Boolean value=false
+          RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ParentEffect.Echo'
+            CONST Boolean type=kotlin.Boolean value=true
+      FUN GENERATED_DATA_CLASS_MEMBER name:hashCode visibility:public modality:OPEN returnType:kotlin.Int
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ParentEffect.Echo
+        overridden:
+          public open fun hashCode (): kotlin.Int declared in <root>.ParentEffect
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public open fun hashCode (): kotlin.Int declared in <root>.ParentEffect.Echo'
+            CALL 'public open fun hashCode (): kotlin.Int declared in kotlin.String' type=kotlin.Int origin=null
+              ARG <this>: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                receiver: GET_VAR '<this>: <root>.ParentEffect.Echo declared in <root>.ParentEffect.Echo.hashCode' type=<root>.ParentEffect.Echo origin=null
+      FUN GENERATED_DATA_CLASS_MEMBER name:toString visibility:public modality:OPEN returnType:kotlin.String
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ParentEffect.Echo
+        overridden:
+          public open fun toString (): kotlin.String declared in <root>.ParentEffect
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public open fun toString (): kotlin.String declared in <root>.ParentEffect.Echo'
+            STRING_CONCATENATION type=kotlin.String
+              CONST String type=kotlin.String value="Echo("
+              CONST String type=kotlin.String value="message="
+              GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:message type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                receiver: GET_VAR '<this>: <root>.ParentEffect.Echo declared in <root>.ParentEffect.Echo.toString' type=<root>.ParentEffect.Echo origin=null
+              CONST String type=kotlin.String value=")"
+    FUN FAKE_OVERRIDE name:equals visibility:public modality:OPEN returnType:kotlin.Boolean [fake_override,operator]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:kotlin.Any
+      VALUE_PARAMETER kind:Regular name:other index:1 type:kotlin.Any?
+      overridden:
+        public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in kotlin.Any
+    FUN FAKE_OVERRIDE name:hashCode visibility:public modality:OPEN returnType:kotlin.Int [fake_override]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:kotlin.Any
+      overridden:
+        public open fun hashCode (): kotlin.Int declared in kotlin.Any
+    FUN FAKE_OVERRIDE name:toString visibility:public modality:OPEN returnType:kotlin.String [fake_override]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:kotlin.Any
+      overridden:
+        public open fun toString (): kotlin.String declared in kotlin.Any
+  CLASS INTERFACE name:ParentEvent modality:SEALED visibility:public superTypes:[kotlin.Any]
+    sealedSubclasses:
+      CLASS CLASS name:Flip modality:FINAL visibility:public [data] superTypes:[<root>.ParentEvent]
+    thisReceiver: VALUE_PARAMETER INSTANCE_RECEIVER kind:DispatchReceiver name:<this> type:<root>.ParentEvent
+    CLASS CLASS name:Flip modality:FINAL visibility:public [data] superTypes:[<root>.ParentEvent]
+      annotations:
+        MapTo(target = CLASS_REFERENCE 'CLASS CLASS name:Toggle modality:FINAL visibility:public [data] superTypes:[<root>.ChildEvent]' type=kotlin.reflect.KClass<<root>.ChildEvent.Toggle>)
+        StabilityInferred(parameters = 1)
+      thisReceiver: VALUE_PARAMETER INSTANCE_RECEIVER kind:DispatchReceiver name:<this> type:<root>.ParentEvent.Flip
+      PROPERTY name:id visibility:public modality:FINAL [val]
+        FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]
+          EXPRESSION_BODY
+            GET_VAR 'id: kotlin.String declared in <root>.ParentEvent.Flip.<init>' type=kotlin.String origin=INITIALIZE_PROPERTY_FROM_PARAMETER
+        FUN DEFAULT_PROPERTY_ACCESSOR name:<get-id> visibility:public modality:FINAL returnType:kotlin.String
+          VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ParentEvent.Flip
+          correspondingProperty: PROPERTY name:id visibility:public modality:FINAL [val]
+          BLOCK_BODY
+            RETURN type=kotlin.Nothing from='public final fun <get-id> (): kotlin.String declared in <root>.ParentEvent.Flip'
+              GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                receiver: GET_VAR '<this>: <root>.ParentEvent.Flip declared in <root>.ParentEvent.Flip.<get-id>' type=<root>.ParentEvent.Flip origin=null
+      FIELD name:$stable type:kotlin.Int visibility:public [final,static]
+        EXPRESSION_BODY
+          CONST Int type=kotlin.Int value=0
+      CONSTRUCTOR visibility:public returnType:<root>.ParentEvent.Flip [primary]
+        VALUE_PARAMETER kind:Regular name:id index:0 type:kotlin.String
+        BLOCK_BODY
+          DELEGATING_CONSTRUCTOR_CALL 'public constructor <init> () declared in kotlin.Any'
+          INSTANCE_INITIALIZER_CALL classDescriptor='CLASS CLASS name:Flip modality:FINAL visibility:public [data] superTypes:[<root>.ParentEvent]' type=kotlin.Unit
+      FUN GENERATED_DATA_CLASS_MEMBER name:component1 visibility:public modality:FINAL returnType:kotlin.String [operator]
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ParentEvent.Flip
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public final fun component1 (): kotlin.String declared in <root>.ParentEvent.Flip'
+            GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+              receiver: GET_VAR '<this>: <root>.ParentEvent.Flip declared in <root>.ParentEvent.Flip.component1' type=<root>.ParentEvent.Flip origin=null
+      FUN GENERATED_DATA_CLASS_MEMBER name:copy visibility:public modality:FINAL returnType:<root>.ParentEvent.Flip
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ParentEvent.Flip
+        VALUE_PARAMETER kind:Regular name:id index:1 type:kotlin.String
+          EXPRESSION_BODY
+            GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+              receiver: GET_VAR '<this>: <root>.ParentEvent.Flip declared in <root>.ParentEvent.Flip.copy' type=<root>.ParentEvent.Flip origin=null
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public final fun copy (id: kotlin.String): <root>.ParentEvent.Flip declared in <root>.ParentEvent.Flip'
+            CONSTRUCTOR_CALL 'public constructor <init> (id: kotlin.String) declared in <root>.ParentEvent.Flip' type=<root>.ParentEvent.Flip origin=null
+              ARG id: GET_VAR 'id: kotlin.String declared in <root>.ParentEvent.Flip.copy' type=kotlin.String origin=null
+      FUN GENERATED_DATA_CLASS_MEMBER name:equals visibility:public modality:OPEN returnType:kotlin.Boolean [operator]
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ParentEvent.Flip
+        VALUE_PARAMETER kind:Regular name:other index:1 type:kotlin.Any?
+        overridden:
+          public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ParentEvent
+        BLOCK_BODY
+          WHEN type=kotlin.Unit origin=null
+            BRANCH
+              if: CALL 'public final fun EQEQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=EQEQEQ
+                ARG arg0: GET_VAR '<this>: <root>.ParentEvent.Flip declared in <root>.ParentEvent.Flip.equals' type=<root>.ParentEvent.Flip origin=null
+                ARG arg1: GET_VAR 'other: kotlin.Any? declared in <root>.ParentEvent.Flip.equals' type=kotlin.Any? origin=null
+              then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ParentEvent.Flip'
+                CONST Boolean type=kotlin.Boolean value=true
+          WHEN type=kotlin.Unit origin=null
+            BRANCH
+              if: TYPE_OP type=kotlin.Boolean origin=NOT_INSTANCEOF typeOperand=<root>.ParentEvent.Flip
+                GET_VAR 'other: kotlin.Any? declared in <root>.ParentEvent.Flip.equals' type=kotlin.Any? origin=null
+              then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ParentEvent.Flip'
+                CONST Boolean type=kotlin.Boolean value=false
+          VAR IR_TEMPORARY_VARIABLE name:tmp_5 type:<root>.ParentEvent.Flip [val]
+            TYPE_OP type=<root>.ParentEvent.Flip origin=IMPLICIT_CAST typeOperand=<root>.ParentEvent.Flip
+              GET_VAR 'other: kotlin.Any? declared in <root>.ParentEvent.Flip.equals' type=kotlin.Any? origin=null
+          WHEN type=kotlin.Unit origin=null
+            BRANCH
+              if: CALL 'public final fun not (): kotlin.Boolean declared in kotlin.Boolean' type=kotlin.Boolean origin=EXCLEQ
+                ARG <this>: CALL 'public final fun EQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=EXCLEQ
+                  ARG arg0: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                    receiver: GET_VAR '<this>: <root>.ParentEvent.Flip declared in <root>.ParentEvent.Flip.equals' type=<root>.ParentEvent.Flip origin=null
+                  ARG arg1: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                    receiver: GET_VAR 'val tmp_5: <root>.ParentEvent.Flip declared in <root>.ParentEvent.Flip.equals' type=<root>.ParentEvent.Flip origin=null
+              then: RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ParentEvent.Flip'
+                CONST Boolean type=kotlin.Boolean value=false
+          RETURN type=kotlin.Nothing from='public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in <root>.ParentEvent.Flip'
+            CONST Boolean type=kotlin.Boolean value=true
+      FUN GENERATED_DATA_CLASS_MEMBER name:hashCode visibility:public modality:OPEN returnType:kotlin.Int
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ParentEvent.Flip
+        overridden:
+          public open fun hashCode (): kotlin.Int declared in <root>.ParentEvent
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public open fun hashCode (): kotlin.Int declared in <root>.ParentEvent.Flip'
+            CALL 'public open fun hashCode (): kotlin.Int declared in kotlin.String' type=kotlin.Int origin=null
+              ARG <this>: GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                receiver: GET_VAR '<this>: <root>.ParentEvent.Flip declared in <root>.ParentEvent.Flip.hashCode' type=<root>.ParentEvent.Flip origin=null
+      FUN GENERATED_DATA_CLASS_MEMBER name:toString visibility:public modality:OPEN returnType:kotlin.String
+        VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:<root>.ParentEvent.Flip
+        overridden:
+          public open fun toString (): kotlin.String declared in <root>.ParentEvent
+        BLOCK_BODY
+          RETURN type=kotlin.Nothing from='public open fun toString (): kotlin.String declared in <root>.ParentEvent.Flip'
+            STRING_CONCATENATION type=kotlin.String
+              CONST String type=kotlin.String value="Flip("
+              CONST String type=kotlin.String value="id="
+              GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:id type:kotlin.String visibility:private [final]' type=kotlin.String origin=null
+                receiver: GET_VAR '<this>: <root>.ParentEvent.Flip declared in <root>.ParentEvent.Flip.toString' type=<root>.ParentEvent.Flip origin=null
+              CONST String type=kotlin.String value=")"
+    FUN FAKE_OVERRIDE name:equals visibility:public modality:OPEN returnType:kotlin.Boolean [fake_override,operator]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:kotlin.Any
+      VALUE_PARAMETER kind:Regular name:other index:1 type:kotlin.Any?
+      overridden:
+        public open fun equals (other: kotlin.Any?): kotlin.Boolean declared in kotlin.Any
+    FUN FAKE_OVERRIDE name:hashCode visibility:public modality:OPEN returnType:kotlin.Int [fake_override]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:kotlin.Any
+      overridden:
+        public open fun hashCode (): kotlin.Int declared in kotlin.Any
+    FUN FAKE_OVERRIDE name:toString visibility:public modality:OPEN returnType:kotlin.String [fake_override]
+      VALUE_PARAMETER kind:DispatchReceiver name:<this> index:0 type:kotlin.Any
+      overridden:
+        public open fun toString (): kotlin.String declared in kotlin.Any
+  FUN name:child visibility:public modality:FINAL returnType:<root>.ChildState
+    VALUE_PARAMETER kind:ExtensionReceiver name:<this> index:0 type:com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>
+    VALUE_PARAMETER kind:Regular name:$composer index:1 type:androidx.compose.runtime.Composer? [assignable]
+    VALUE_PARAMETER kind:Regular name:$changed index:2 type:kotlin.Int
+    annotations:
+      Composable
+    BLOCK_BODY
+      WHEN type=kotlin.Unit origin=IF
+        BRANCH
+          if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime' type=kotlin.Boolean origin=null
+          then: CALL 'public final fun traceEventStart (key: kotlin.Int, dirty1: kotlin.Int, dirty2: kotlin.Int, info: kotlin.String): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
+            ARG key: CONST Int type=kotlin.Int value=1088036184
+            ARG dirty1: GET_VAR '$changed: kotlin.Int declared in <root>.child' type=kotlin.Int origin=null
+            ARG dirty2: CONST Int type=kotlin.Int value=-1
+            ARG info: CONST String type=kotlin.String value="child (mappedScopeRewrite.kt:37)"
+      LOCAL_DELEGATED_PROPERTY name:toggled type:kotlin.Boolean flags:var
+        VAR PROPERTY_DELEGATE name:toggled$delegate type:androidx.compose.runtime.MutableState<kotlin.Boolean> [val]
+          BLOCK type=androidx.compose.runtime.MutableState<kotlin.Boolean> origin=null
+            CALL 'public final fun cache <T> (<this>: androidx.compose.runtime.Composer, invalid: kotlin.Boolean, block: @[DisallowComposableCalls] kotlin.Function0<T of androidx.compose.runtime.cache>): T of androidx.compose.runtime.cache declared in androidx.compose.runtime' type=androidx.compose.runtime.MutableState<kotlin.Boolean> origin=null
+              TYPE_ARG T: androidx.compose.runtime.MutableState<kotlin.Boolean>
+              ARG <this>: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.child' type=androidx.compose.runtime.Composer? origin=null
+              ARG invalid: CONST Boolean type=kotlin.Boolean value=false
+              ARG block: FUN_EXPR type=kotlin.Function0<androidx.compose.runtime.MutableState<kotlin.Boolean>> origin=LAMBDA
+                FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL returnType:androidx.compose.runtime.MutableState<kotlin.Boolean>
+                  BLOCK_BODY
+                    RETURN type=kotlin.Nothing from='local final fun <anonymous> (): androidx.compose.runtime.MutableState<kotlin.Boolean> declared in <root>.child'
+                      CALL 'public final fun mutableStateOf <T> (value: T of androidx.compose.runtime.mutableStateOf, policy: androidx.compose.runtime.SnapshotMutationPolicy<T of androidx.compose.runtime.mutableStateOf>): androidx.compose.runtime.MutableState<T of androidx.compose.runtime.mutableStateOf> declared in androidx.compose.runtime' type=androidx.compose.runtime.MutableState<kotlin.Boolean> origin=null
+                        TYPE_ARG T: kotlin.Boolean
+                        ARG value: CONST Boolean type=kotlin.Boolean value=false
+        FUN DELEGATED_PROPERTY_ACCESSOR name:<get-toggled> visibility:local modality:FINAL returnType:kotlin.Boolean
+          BLOCK_BODY
+            RETURN type=kotlin.Nothing from='local final fun <get-toggled> (): kotlin.Boolean declared in <root>.child'
+              CALL 'public final fun getValue <T> (<this>: androidx.compose.runtime.State<T of androidx.compose.runtime.getValue>, thisObj: kotlin.Any?, property: kotlin.reflect.KProperty<*>): T of androidx.compose.runtime.getValue declared in androidx.compose.runtime' type=kotlin.Boolean origin=null
+                TYPE_ARG T: kotlin.Boolean
+                ARG <this>: GET_VAR 'val toggled$delegate: androidx.compose.runtime.MutableState<kotlin.Boolean> declared in <root>.child' type=androidx.compose.runtime.MutableState<kotlin.Boolean> origin=null
+                ARG thisObj: CONST Null type=kotlin.Nothing? value=null
+                ARG property: LOCAL_DELEGATED_PROPERTY_REFERENCE 'var toggled: kotlin.Boolean by (...)' delegate='val toggled$delegate: androidx.compose.runtime.MutableState<kotlin.Boolean> declared in <root>.child' getter='local final fun <get-toggled> (): kotlin.Boolean declared in <root>.child' setter='local final fun <set-toggled> (<set-?>: kotlin.Boolean): kotlin.Unit declared in <root>.child' type=kotlin.reflect.KMutableProperty0<kotlin.Boolean> origin=PROPERTY_REFERENCE_FOR_DELEGATE
+        FUN DELEGATED_PROPERTY_ACCESSOR name:<set-toggled> visibility:local modality:FINAL returnType:kotlin.Unit
+          VALUE_PARAMETER kind:Regular name:<set-?> index:0 type:kotlin.Boolean
+          BLOCK_BODY
+            RETURN type=kotlin.Nothing from='local final fun <set-toggled> (<set-?>: kotlin.Boolean): kotlin.Unit declared in <root>.child'
+              CALL 'public final fun setValue <T> (<this>: androidx.compose.runtime.MutableState<T of androidx.compose.runtime.setValue>, thisObj: kotlin.Any?, property: kotlin.reflect.KProperty<*>, value: T of androidx.compose.runtime.setValue): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
+                TYPE_ARG T: kotlin.Boolean
+                ARG <this>: GET_VAR 'val toggled$delegate: androidx.compose.runtime.MutableState<kotlin.Boolean> declared in <root>.child' type=androidx.compose.runtime.MutableState<kotlin.Boolean> origin=null
+                ARG thisObj: CONST Null type=kotlin.Nothing? value=null
+                ARG property: LOCAL_DELEGATED_PROPERTY_REFERENCE 'var toggled: kotlin.Boolean by (...)' delegate='val toggled$delegate: androidx.compose.runtime.MutableState<kotlin.Boolean> declared in <root>.child' getter='local final fun <get-toggled> (): kotlin.Boolean declared in <root>.child' setter='local final fun <set-toggled> (<set-?>: kotlin.Boolean): kotlin.Unit declared in <root>.child' type=kotlin.reflect.KMutableProperty0<kotlin.Boolean> origin=PROPERTY_REFERENCE_FOR_DELEGATE
+                ARG value: GET_VAR '<set-?>: kotlin.Boolean declared in <root>.child.<set-toggled>' type=kotlin.Boolean origin=null
+      CALL 'public final fun on <E> (<this>: com.kitakkun.fusio.PresenterScope<*, *>, handler: kotlin.coroutines.SuspendFunction1<E of com.kitakkun.fusio.on, kotlin.Unit>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): kotlin.Unit declared in com.kitakkun.fusio' type=kotlin.Unit origin=null
+        TYPE_ARG E: <root>.ChildEvent.Toggle
+        ARG <this>: GET_VAR '<this>: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.child' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=IMPLICIT_ARGUMENT
+        ARG handler: BLOCK type=kotlin.coroutines.SuspendFunction1<<root>.ChildEvent.Toggle, kotlin.Unit> origin=null
+          CALL 'public final fun cache <T> (<this>: androidx.compose.runtime.Composer, invalid: kotlin.Boolean, block: @[DisallowComposableCalls] kotlin.Function0<T of androidx.compose.runtime.cache>): T of androidx.compose.runtime.cache declared in androidx.compose.runtime' type=kotlin.coroutines.SuspendFunction1<<root>.ChildEvent.Toggle, kotlin.Unit> origin=null
+            TYPE_ARG T: kotlin.coroutines.SuspendFunction1<<root>.ChildEvent.Toggle, kotlin.Unit>
+            ARG <this>: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.child' type=androidx.compose.runtime.Composer? origin=null
+            ARG invalid: WHEN type=kotlin.Boolean origin=OROR
+              BRANCH
+                if: WHEN type=kotlin.Boolean origin=ANDAND
+                  BRANCH
+                    if: CALL 'public final fun greater (arg0: kotlin.Int, arg1: kotlin.Int): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=GT
+                      ARG arg0: CALL 'public final fun xor (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                        ARG <this>: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                          ARG <this>: GET_VAR '$changed: kotlin.Int declared in <root>.child' type=kotlin.Int origin=null
+                          ARG other: CONST Int type=kotlin.Int value=14
+                        ARG other: CONST Int type=kotlin.Int value=6
+                      ARG arg1: CONST Int type=kotlin.Int value=4
+                    then: CALL 'public open fun changedInstance (value: kotlin.Any?): kotlin.Boolean declared in androidx.compose.runtime.Composer' type=kotlin.Boolean origin=null
+                      ARG <this>: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.child' type=androidx.compose.runtime.Composer? origin=null
+                      ARG value: GET_VAR '<this>: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.child' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
+                  BRANCH
+                    if: CONST Boolean type=kotlin.Boolean value=true
+                    then: CONST Boolean type=kotlin.Boolean value=false
+                then: CONST Boolean type=kotlin.Boolean value=true
+              BRANCH
+                if: CONST Boolean type=kotlin.Boolean value=true
+                then: CALL 'public final fun EQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=null
+                  ARG arg0: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                    ARG <this>: GET_VAR '$changed: kotlin.Int declared in <root>.child' type=kotlin.Int origin=null
+                    ARG other: CONST Int type=kotlin.Int value=6
+                  ARG arg1: CONST Int type=kotlin.Int value=4
+            ARG block: FUN_EXPR type=kotlin.Function0<kotlin.coroutines.SuspendFunction1<<root>.ChildEvent.Toggle, kotlin.Unit>> origin=LAMBDA
+              FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL returnType:kotlin.coroutines.SuspendFunction1<<root>.ChildEvent.Toggle, kotlin.Unit>
+                BLOCK_BODY
+                  RETURN type=kotlin.Nothing from='local final fun <anonymous> (): kotlin.coroutines.SuspendFunction1<<root>.ChildEvent.Toggle, kotlin.Unit> declared in <root>.child'
+                    FUN_EXPR type=kotlin.coroutines.SuspendFunction1<<root>.ChildEvent.Toggle, kotlin.Unit> origin=LAMBDA
+                      FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL returnType:kotlin.Unit [suspend]
+                        VALUE_PARAMETER kind:Regular name:event index:0 type:<root>.ChildEvent.Toggle
+                        BLOCK_BODY
+                          CALL 'local final fun <set-toggled> (<set-?>: kotlin.Boolean): kotlin.Unit declared in <root>.child' type=kotlin.Unit origin=EQ
+                            ARG <set-?>: CALL 'public final fun not (): kotlin.Boolean declared in kotlin.Boolean' type=kotlin.Boolean origin=null
+                              ARG <this>: CALL 'local final fun <get-toggled> (): kotlin.Boolean declared in <root>.child' type=kotlin.Boolean origin=GET_LOCAL_PROPERTY
+                          CALL 'public final fun emitEffect (effect: Effect of com.kitakkun.fusio.PresenterScope): kotlin.Unit declared in com.kitakkun.fusio.PresenterScope' type=kotlin.Unit origin=null
+                            ARG <this>: GET_VAR '<this>: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.child' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=IMPLICIT_ARGUMENT
+                            ARG effect: CONSTRUCTOR_CALL 'public constructor <init> (message: kotlin.String) declared in <root>.ChildEffect.Reply' type=<root>.ChildEffect.Reply origin=null
+                              ARG message: STRING_CONCATENATION type=kotlin.String
+                                CONST String type=kotlin.String value="toggled="
+                                CALL 'public final fun <get-id> (): kotlin.String declared in <root>.ChildEvent.Toggle' type=kotlin.String origin=GET_PROPERTY
+                                  ARG <this>: GET_VAR 'event: <root>.ChildEvent.Toggle declared in <root>.child.<anonymous>.<anonymous>' type=<root>.ChildEvent.Toggle origin=null
+        ARG $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.child' type=androidx.compose.runtime.Composer? origin=null
+        ARG $changed: CALL 'public final fun or (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+          ARG <this>: GET_FIELD 'FIELD name:$stable type:kotlin.Int visibility:public [final,static] declared in com.kitakkun.fusio.PresenterScope' type=kotlin.Int origin=null
+          ARG other: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+            ARG <this>: CONST Int type=kotlin.Int value=14
+            ARG other: GET_VAR '$changed: kotlin.Int declared in <root>.child' type=kotlin.Int origin=null
+      VAR IR_TEMPORARY_VARIABLE name:tmp_6 type:<root>.ChildState [val]
+        CONSTRUCTOR_CALL 'public constructor <init> (toggled: kotlin.Boolean) declared in <root>.ChildState' type=<root>.ChildState origin=null
+          ARG toggled: CALL 'local final fun <get-toggled> (): kotlin.Boolean declared in <root>.child' type=kotlin.Boolean origin=GET_LOCAL_PROPERTY
+      WHEN type=kotlin.Unit origin=IF
+        BRANCH
+          if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime' type=kotlin.Boolean origin=null
+          then: CALL 'public final fun traceEventEnd (): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
+      RETURN type=<root>.ChildState from='public final fun child (<this>: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): <root>.ChildState declared in <root>'
+        GET_VAR 'val tmp_6: <root>.ChildState declared in <root>.child' type=<root>.ChildState origin=null
+  FUN name:screenPresenter visibility:public modality:FINAL returnType:com.kitakkun.fusio.Fusio<<root>.ScreenState, <root>.ParentEffect>
+    VALUE_PARAMETER kind:Regular name:events index:0 type:kotlinx.coroutines.flow.Flow<<root>.ParentEvent>
+    VALUE_PARAMETER kind:Regular name:$composer index:1 type:androidx.compose.runtime.Composer? [assignable]
+    VALUE_PARAMETER kind:Regular name:$changed index:2 type:kotlin.Int
+    annotations:
+      Composable
+    BLOCK_BODY
+      WHEN type=kotlin.Unit origin=IF
+        BRANCH
+          if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime' type=kotlin.Boolean origin=null
+          then: CALL 'public final fun traceEventStart (key: kotlin.Int, dirty1: kotlin.Int, dirty2: kotlin.Int, info: kotlin.String): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
+            ARG key: CONST Int type=kotlin.Int value=-1219356829
+            ARG dirty1: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter' type=kotlin.Int origin=null
+            ARG dirty2: CONST Int type=kotlin.Int value=-1
+            ARG info: CONST String type=kotlin.String value="screenPresenter (mappedScopeRewrite.kt:49)"
+      VAR IR_TEMPORARY_VARIABLE name:tmp_7 type:com.kitakkun.fusio.Fusio<<root>.ScreenState, <root>.ParentEffect> [val]
+        CALL 'public final fun buildPresenter <Event, Effect, UiState> (eventFlow: kotlinx.coroutines.flow.Flow<Event of com.kitakkun.fusio.buildPresenter>, block: @[ExtensionFunctionType] kotlin.Function3<com.kitakkun.fusio.PresenterScope<Event of com.kitakkun.fusio.buildPresenter, Effect of com.kitakkun.fusio.buildPresenter>, androidx.compose.runtime.Composer, kotlin.Int, UiState of com.kitakkun.fusio.buildPresenter>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): com.kitakkun.fusio.Fusio<UiState of com.kitakkun.fusio.buildPresenter, Effect of com.kitakkun.fusio.buildPresenter> declared in com.kitakkun.fusio' type=com.kitakkun.fusio.Fusio<<root>.ScreenState, <root>.ParentEffect> origin=null
+          TYPE_ARG Event: <root>.ParentEvent
+          TYPE_ARG Effect: <root>.ParentEffect
+          TYPE_ARG UiState: <root>.ScreenState
+          ARG eventFlow: GET_VAR 'events: kotlinx.coroutines.flow.Flow<<root>.ParentEvent> declared in <root>.screenPresenter' type=kotlinx.coroutines.flow.Flow<<root>.ParentEvent> origin=null
+          ARG block: FUN_EXPR type=@[ExtensionFunctionType] kotlin.Function3<com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect>, androidx.compose.runtime.Composer, kotlin.Int, <root>.ScreenState> origin=LAMBDA
+            FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL returnType:<root>.ScreenState
+              VALUE_PARAMETER kind:ExtensionReceiver name:$this$buildPresenter index:0 type:com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect>
+              VALUE_PARAMETER kind:Regular name:$composer index:1 type:androidx.compose.runtime.Composer? [assignable]
+              VALUE_PARAMETER kind:Regular name:$changed index:2 type:kotlin.Int
+              annotations:
+                Composable
+              BLOCK_BODY
+                CALL 'public abstract fun startReplaceGroup (key: kotlin.Int): kotlin.Unit declared in androidx.compose.runtime.Composer' type=kotlin.Unit origin=null
+                  ARG <this>: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
+                  ARG key: CONST Int type=kotlin.Int value=-1504671504
+                WHEN type=kotlin.Unit origin=IF
+                  BRANCH
+                    if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime' type=kotlin.Boolean origin=null
+                    then: CALL 'public final fun traceEventStart (key: kotlin.Int, dirty1: kotlin.Int, dirty2: kotlin.Int, info: kotlin.String): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
+                      ARG key: CONST Int type=kotlin.Int value=-1504671504
+                      ARG dirty1: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter.<anonymous>' type=kotlin.Int origin=null
+                      ARG dirty2: CONST Int type=kotlin.Int value=-1
+                      ARG info: CONST String type=kotlin.String value="screenPresenter.<anonymous> (mappedScopeRewrite.kt:50)"
+                VAR name:childState type:<root>.ChildState [val]
+                  BLOCK type=<root>.ChildState origin=null
+                    VAR IR_TEMPORARY_VARIABLE name:tmp_8 type:com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> [val]
+                      GET_VAR '$this$buildPresenter: com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> origin=IMPLICIT_ARGUMENT
+                    VAR IR_TEMPORARY_VARIABLE name:tmp_9 type:kotlinx.coroutines.flow.Flow<ChildEvent of com.kitakkun.fusio.mapEvents> [val]
+                      CALL 'internal final fun mapEvents <ParentEvent, ChildEvent> (<this>: kotlinx.coroutines.flow.Flow<ParentEvent of com.kitakkun.fusio.mapEvents>, mapper: kotlin.Function1<ParentEvent of com.kitakkun.fusio.mapEvents, ChildEvent of com.kitakkun.fusio.mapEvents?>): kotlinx.coroutines.flow.Flow<ChildEvent of com.kitakkun.fusio.mapEvents> declared in com.kitakkun.fusio' type=kotlinx.coroutines.flow.Flow<ChildEvent of com.kitakkun.fusio.mapEvents> origin=null
+                        TYPE_ARG ParentEvent: <root>.ParentEvent
+                        TYPE_ARG ChildEvent: <root>.ChildEvent
+                        ARG <this>: CALL 'internal final fun <get-eventFlow> (): kotlinx.coroutines.flow.Flow<Event of com.kitakkun.fusio.PresenterScope> declared in com.kitakkun.fusio.PresenterScope' type=kotlinx.coroutines.flow.Flow<Event of com.kitakkun.fusio.PresenterScope> origin=null
+                          ARG <this>: GET_VAR 'val tmp_8: com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> origin=null
+                        ARG mapper: BLOCK type=kotlin.Function1<<root>.ParentEvent, <root>.ChildEvent?> origin=null
+                          CALL 'public final fun cache <T> (<this>: androidx.compose.runtime.Composer, invalid: kotlin.Boolean, block: @[DisallowComposableCalls] kotlin.Function0<T of androidx.compose.runtime.cache>): T of androidx.compose.runtime.cache declared in androidx.compose.runtime' type=kotlin.Function1<<root>.ParentEvent, <root>.ChildEvent?> origin=null
+                            TYPE_ARG T: kotlin.Function1<<root>.ParentEvent, <root>.ChildEvent?>
+                            ARG <this>: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
+                            ARG invalid: CONST Boolean type=kotlin.Boolean value=false
+                            ARG block: FUN_EXPR type=kotlin.Function0<kotlin.Function1<<root>.ParentEvent, <root>.ChildEvent?>> origin=LAMBDA
+                              FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL returnType:kotlin.Function1<<root>.ParentEvent, <root>.ChildEvent?>
+                                BLOCK_BODY
+                                  RETURN type=kotlin.Nothing from='local final fun <anonymous> (): kotlin.Function1<<root>.ParentEvent, <root>.ChildEvent?> declared in <root>.screenPresenter.<anonymous>'
+                                    FUN_EXPR type=kotlin.Function1<<root>.ParentEvent, <root>.ChildEvent?> origin=LAMBDA
+                                      FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL returnType:<root>.ChildEvent?
+                                        VALUE_PARAMETER kind:Regular name:it index:0 type:<root>.ParentEvent
+                                        BLOCK_BODY
+                                          RETURN type=kotlin.Nothing from='local final fun <anonymous> (it: <root>.ParentEvent): <root>.ChildEvent? declared in <root>.screenPresenter.<anonymous>.<anonymous>'
+                                            WHEN type=<root>.ChildEvent? origin=null
+                                              BRANCH
+                                                if: TYPE_OP type=kotlin.Boolean origin=INSTANCEOF typeOperand=<root>.ParentEvent.Flip
+                                                  GET_VAR 'it: <root>.ParentEvent declared in <root>.screenPresenter.<anonymous>.<anonymous>.<anonymous>' type=<root>.ParentEvent origin=null
+                                                then: CONSTRUCTOR_CALL 'public constructor <init> (id: kotlin.String) declared in <root>.ChildEvent.Toggle' type=<root>.ChildEvent.Toggle origin=null
+                                                  ARG id: CALL 'public final fun <get-id> (): kotlin.String declared in <root>.ParentEvent.Flip' type=kotlin.String origin=null
+                                                    ARG <this>: GET_VAR 'it: <root>.ParentEvent declared in <root>.screenPresenter.<anonymous>.<anonymous>.<anonymous>' type=<root>.ParentEvent origin=null
+                                              BRANCH
+                                                if: CONST Boolean type=kotlin.Boolean value=true
+                                                then: CONST Null type=<root>.ChildEvent? value=null
+                    VAR IR_TEMPORARY_VARIABLE name:tmp_10 type:com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> [val]
+                      CONSTRUCTOR_CALL 'public constructor <init> (eventFlow: kotlinx.coroutines.flow.Flow<Event of com.kitakkun.fusio.PresenterScope>) declared in com.kitakkun.fusio.PresenterScope' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
+                        TYPE_ARG (of class) Event: <root>.ChildEvent
+                        TYPE_ARG (of class) Effect: <root>.ChildEffect
+                        ARG eventFlow: GET_VAR 'val tmp_9: kotlinx.coroutines.flow.Flow<ChildEvent of com.kitakkun.fusio.mapEvents> declared in <root>.screenPresenter.<anonymous>' type=kotlinx.coroutines.flow.Flow<ChildEvent of com.kitakkun.fusio.mapEvents> origin=null
+                    CALL 'public final fun forwardEffects <ChildEffect, ParentEffect> (childScope: com.kitakkun.fusio.PresenterScope<*, ChildEffect of com.kitakkun.fusio.forwardEffects>, parentScope: com.kitakkun.fusio.PresenterScope<*, ParentEffect of com.kitakkun.fusio.forwardEffects>, mapper: kotlin.Function1<ChildEffect of com.kitakkun.fusio.forwardEffects, ParentEffect of com.kitakkun.fusio.forwardEffects?>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): kotlin.Unit declared in com.kitakkun.fusio' type=kotlin.Unit origin=null
+                      TYPE_ARG ChildEffect: <root>.ChildEffect
+                      TYPE_ARG ParentEffect: <root>.ParentEffect
+                      ARG childScope: GET_VAR 'val tmp_10: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
+                      ARG parentScope: GET_VAR 'val tmp_8: com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> origin=null
+                      ARG mapper: BLOCK type=kotlin.Function1<<root>.ChildEffect, <root>.ParentEffect?> origin=null
+                        CALL 'public final fun cache <T> (<this>: androidx.compose.runtime.Composer, invalid: kotlin.Boolean, block: @[DisallowComposableCalls] kotlin.Function0<T of androidx.compose.runtime.cache>): T of androidx.compose.runtime.cache declared in androidx.compose.runtime' type=kotlin.Function1<<root>.ChildEffect, <root>.ParentEffect?> origin=null
+                          TYPE_ARG T: kotlin.Function1<<root>.ChildEffect, <root>.ParentEffect?>
+                          ARG <this>: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
+                          ARG invalid: CONST Boolean type=kotlin.Boolean value=false
+                          ARG block: FUN_EXPR type=kotlin.Function0<kotlin.Function1<<root>.ChildEffect, <root>.ParentEffect?>> origin=LAMBDA
+                            FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL returnType:kotlin.Function1<<root>.ChildEffect, <root>.ParentEffect?>
+                              BLOCK_BODY
+                                RETURN type=kotlin.Nothing from='local final fun <anonymous> (): kotlin.Function1<<root>.ChildEffect, <root>.ParentEffect?> declared in <root>.screenPresenter.<anonymous>'
+                                  FUN_EXPR type=kotlin.Function1<<root>.ChildEffect, <root>.ParentEffect?> origin=LAMBDA
+                                    FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL returnType:<root>.ParentEffect?
+                                      VALUE_PARAMETER kind:Regular name:it index:0 type:<root>.ChildEffect
+                                      BLOCK_BODY
+                                        RETURN type=kotlin.Nothing from='local final fun <anonymous> (it: <root>.ChildEffect): <root>.ParentEffect? declared in <root>.screenPresenter.<anonymous>.<anonymous>'
+                                          WHEN type=<root>.ParentEffect? origin=null
+                                            BRANCH
+                                              if: TYPE_OP type=kotlin.Boolean origin=INSTANCEOF typeOperand=<root>.ChildEffect.Reply
+                                                GET_VAR 'it: <root>.ChildEffect declared in <root>.screenPresenter.<anonymous>.<anonymous>.<anonymous>' type=<root>.ChildEffect origin=null
+                                              then: CONSTRUCTOR_CALL 'public constructor <init> (message: kotlin.String) declared in <root>.ParentEffect.Echo' type=<root>.ParentEffect.Echo origin=null
+                                                ARG message: CALL 'public final fun <get-message> (): kotlin.String declared in <root>.ChildEffect.Reply' type=kotlin.String origin=null
+                                                  ARG <this>: GET_VAR 'it: <root>.ChildEffect declared in <root>.screenPresenter.<anonymous>.<anonymous>.<anonymous>' type=<root>.ChildEffect origin=null
+                                            BRANCH
+                                              if: CONST Boolean type=kotlin.Boolean value=true
+                                              then: CONST Null type=<root>.ParentEffect? value=null
+                      ARG $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
+                      ARG $changed: CALL 'public final fun or (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                        ARG <this>: CALL 'public final fun or (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                          ARG <this>: CALL 'public final fun or (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                            ARG <this>: CONST Int type=kotlin.Int value=384
+                            ARG other: GET_FIELD 'FIELD name:$stable type:kotlin.Int visibility:public [final,static] declared in com.kitakkun.fusio.PresenterScope' type=kotlin.Int origin=null
+                          ARG other: CALL 'public final fun shl (bitCount: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                            ARG <this>: GET_FIELD 'FIELD name:$stable type:kotlin.Int visibility:public [final,static] declared in com.kitakkun.fusio.PresenterScope' type=kotlin.Int origin=null
+                            ARG bitCount: CONST Int type=kotlin.Int value=3
+                        ARG other: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                          ARG <this>: CONST Int type=kotlin.Int value=112
+                          ARG other: CALL 'public final fun shl (bitCount: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                            ARG <this>: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter.<anonymous>' type=kotlin.Int origin=null
+                            ARG bitCount: CONST Int type=kotlin.Int value=3
+                    CALL 'public abstract fun invoke (p1: P1 of kotlin.Function3, p2: P2 of kotlin.Function3, p3: P3 of kotlin.Function3): R of kotlin.Function3 declared in kotlin.Function3' type=<root>.ChildState origin=null
+                      ARG <this>: FUN_EXPR type=@[ExtensionFunctionType] kotlin.Function3<com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>, androidx.compose.runtime.Composer, kotlin.Int, <root>.ChildState> origin=LAMBDA
+                        FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL returnType:<root>.ChildState
+                          VALUE_PARAMETER kind:ExtensionReceiver name:$this$mappedScope index:0 type:com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>
+                          VALUE_PARAMETER kind:Regular name:$composer index:1 type:androidx.compose.runtime.Composer? [assignable]
+                          VALUE_PARAMETER kind:Regular name:$changed index:2 type:kotlin.Int
+                          annotations:
+                            Composable
+                          BLOCK_BODY
+                            CALL 'public abstract fun startReplaceGroup (key: kotlin.Int): kotlin.Unit declared in androidx.compose.runtime.Composer' type=kotlin.Unit origin=null
+                              ARG <this>: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
+                              ARG key: CONST Int type=kotlin.Int value=-2104066473
+                            WHEN type=kotlin.Unit origin=IF
+                              BRANCH
+                                if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime' type=kotlin.Boolean origin=null
+                                then: CALL 'public final fun traceEventStart (key: kotlin.Int, dirty1: kotlin.Int, dirty2: kotlin.Int, info: kotlin.String): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
+                                  ARG key: CONST Int type=kotlin.Int value=-2104066473
+                                  ARG dirty1: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=kotlin.Int origin=null
+                                  ARG dirty2: CONST Int type=kotlin.Int value=-1
+                                  ARG info: CONST String type=kotlin.String value="screenPresenter.<anonymous>.<anonymous> (mappedScopeRewrite.kt:50)"
+                            VAR IR_TEMPORARY_VARIABLE name:tmp_11 type:<root>.ChildState [val]
+                              CALL 'public final fun child (<this>: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): <root>.ChildState declared in <root>' type=<root>.ChildState origin=null
+                                ARG <this>: GET_VAR '$this$mappedScope: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=IMPLICIT_ARGUMENT
+                                ARG $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
+                                ARG $changed: CALL 'public final fun or (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                                  ARG <this>: GET_FIELD 'FIELD name:$stable type:kotlin.Int visibility:public [final,static] declared in com.kitakkun.fusio.PresenterScope' type=kotlin.Int origin=null
+                                  ARG other: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                                    ARG <this>: CONST Int type=kotlin.Int value=14
+                                    ARG other: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=kotlin.Int origin=null
+                            WHEN type=kotlin.Unit origin=IF
+                              BRANCH
+                                if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime' type=kotlin.Boolean origin=null
+                                then: CALL 'public final fun traceEventEnd (): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
+                            CALL 'public abstract fun endReplaceGroup (): kotlin.Unit declared in androidx.compose.runtime.Composer' type=kotlin.Unit origin=null
+                              ARG <this>: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
+                            RETURN type=<root>.ChildState from='local final fun <anonymous> ($this$mappedScope: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): <root>.ChildState declared in <root>.screenPresenter.<anonymous>'
+                              GET_VAR 'val tmp_11: <root>.ChildState declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=<root>.ChildState origin=null
+                      ARG p1: GET_VAR 'val tmp_10: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
+                      ARG p2: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
+                      ARG p3: GET_FIELD 'FIELD name:$stable type:kotlin.Int visibility:public [final,static] declared in com.kitakkun.fusio.PresenterScope' type=kotlin.Int origin=null
+                VAR IR_TEMPORARY_VARIABLE name:tmp_12 type:<root>.ScreenState [val]
+                  CONSTRUCTOR_CALL 'public constructor <init> (child: <root>.ChildState) declared in <root>.ScreenState' type=<root>.ScreenState origin=null
+                    ARG child: GET_VAR 'val childState: <root>.ChildState declared in <root>.screenPresenter.<anonymous>' type=<root>.ChildState origin=null
+                WHEN type=kotlin.Unit origin=IF
+                  BRANCH
+                    if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime' type=kotlin.Boolean origin=null
+                    then: CALL 'public final fun traceEventEnd (): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
+                CALL 'public abstract fun endReplaceGroup (): kotlin.Unit declared in androidx.compose.runtime.Composer' type=kotlin.Unit origin=null
+                  ARG <this>: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
+                RETURN type=<root>.ScreenState from='local final fun <anonymous> ($this$buildPresenter: com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): <root>.ScreenState declared in <root>.screenPresenter'
+                  GET_VAR 'val tmp_12: <root>.ScreenState declared in <root>.screenPresenter.<anonymous>' type=<root>.ScreenState origin=null
+          ARG $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter' type=androidx.compose.runtime.Composer? origin=null
+          ARG $changed: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+            ARG <this>: CONST Int type=kotlin.Int value=14
+            ARG other: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter' type=kotlin.Int origin=null
+      WHEN type=kotlin.Unit origin=IF
+        BRANCH
+          if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime' type=kotlin.Boolean origin=null
+          then: CALL 'public final fun traceEventEnd (): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
+      RETURN type=com.kitakkun.fusio.Fusio<<root>.ScreenState, <root>.ParentEffect> from='public final fun screenPresenter (events: kotlinx.coroutines.flow.Flow<<root>.ParentEvent>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): com.kitakkun.fusio.Fusio<<root>.ScreenState, <root>.ParentEffect> declared in <root>'
+        GET_VAR 'val tmp_7: com.kitakkun.fusio.Fusio<<root>.ScreenState, <root>.ParentEffect> declared in <root>.screenPresenter' type=com.kitakkun.fusio.Fusio<<root>.ScreenState, <root>.ParentEffect> origin=null

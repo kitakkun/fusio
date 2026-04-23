@@ -2,6 +2,7 @@ package com.kitakkun.fusio.compiler.test
 
 import com.kitakkun.fusio.compiler.test.runners.AbstractFusioJvmBoxTest
 import com.kitakkun.fusio.compiler.test.runners.AbstractFusioJvmDiagnosticTest
+import com.kitakkun.fusio.compiler.test.runners.AbstractFusioJvmIrTextTest
 import org.jetbrains.kotlin.generators.dsl.junit5.generateTestGroupSuiteWithJUnit5
 
 fun main() {
@@ -15,6 +16,9 @@ fun main() {
             }
             testClass<AbstractFusioJvmBoxTest> {
                 model("box")
+            }
+            testClass<AbstractFusioJvmIrTextTest> {
+                model("ir")
             }
         }
     }
