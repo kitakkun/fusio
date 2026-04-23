@@ -1,31 +1,31 @@
 # Step 4: FIR Checker — @MapTo / @MapFrom Validation
 
-## Module: `aria-compiler-plugin`
+## Module: `fusio-compiler-plugin`
 
 FIR (Frontend IR) checker that validates `@MapTo` and `@MapFrom` annotations at compile time, ensuring property name/type compatibility between mapped Event/Effect types.
 
 ## Architecture
 
 ```
-AriaFirExtensionRegistrar
+FusioFirExtensionRegistrar
   └── configurePlugin()
-        ├── +AriaFirCheckersExtension (registers checkers)
-        └── registerDiagnosticContainers(AriaErrors)
+        ├── +FusioFirCheckersExtension (registers checkers)
+        └── registerDiagnosticContainers(FusioErrors)
 ```
 
 ## Components
 
-### AriaErrors
+### FusioErrors
 
 Diagnostic factory definitions using Kotlin's `KtDiagnosticsContainer` DSL.
 
 ```kotlin
-package com.kitakkun.aria.compiler
+package com.kitakkun.fusio.compiler
 
 import org.jetbrains.kotlin.diagnostics.*
 import com.intellij.psi.PsiElement
 
-object AriaErrors : KtDiagnosticsContainer() {
+object FusioErrors : KtDiagnosticsContainer() {
     // @MapTo target must be a sealed subtype of the child Event sealed interface
     val MAP_TO_INVALID_TARGET by error1<PsiElement, String>()
 
@@ -50,31 +50,31 @@ object AriaErrors : KtDiagnosticsContainer() {
 **Key API notes:**
 - `KtDiagnosticsContainer` provides the `context(container: KtDiagnosticsContainer)` receiver for `error0`, `error1`, etc.
 - `by error1<PsiElement, String>()` uses Kotlin property delegation — the property name becomes the diagnostic name
-- Diagnostics must be registered via `registerDiagnosticContainers(AriaErrors)` in the registrar
+- Diagnostics must be registered via `registerDiagnosticContainers(FusioErrors)` in the registrar
 
-### AriaErrorMessages
+### FusioErrorMessages
 
 Human-readable message templates for each diagnostic. Without this, diagnostics would have no display text.
 
 ```kotlin
-package com.kitakkun.aria.compiler
+package com.kitakkun.fusio.compiler
 
 import org.jetbrains.kotlin.diagnostics.KtDiagnosticFactoryToRendererMap
 import org.jetbrains.kotlin.diagnostics.rendering.BaseDiagnosticRendererFactory
 import org.jetbrains.kotlin.diagnostics.rendering.CommonRenderers
 
-object AriaErrorMessages : BaseDiagnosticRendererFactory() {
+object FusioErrorMessages : BaseDiagnosticRendererFactory() {
     override val MAP: KtDiagnosticFactoryToRendererMap =
-        KtDiagnosticFactoryToRendererMap("Aria").also { map ->
-            map.put(AriaErrors.MAP_TO_INVALID_TARGET, "Invalid @MapTo target: {0}")
-            map.put(AriaErrors.MAP_FROM_INVALID_SOURCE, "Invalid @MapFrom source: {0}")
+        KtDiagnosticFactoryToRendererMap("Fusio").also { map ->
+            map.put(FusioErrors.MAP_TO_INVALID_TARGET, "Invalid @MapTo target: {0}")
+            map.put(FusioErrors.MAP_FROM_INVALID_SOURCE, "Invalid @MapFrom source: {0}")
             map.put(
-                AriaErrors.PROPERTY_MISMATCH,
+                FusioErrors.PROPERTY_MISMATCH,
                 "Property mismatch between ''{0}'' and ''{1}'': {2}",
             )
-            map.put(AriaErrors.ANNOTATION_ON_NON_SEALED_SUBTYPE, "@MapTo/@MapFrom can only be used on sealed interface subtypes: {0}")
-            map.put(AriaErrors.MISSING_EVENT_MAPPINGS, "Missing @MapTo mappings for ''{0}'' subtypes: {1}")
-            map.put(AriaErrors.MISSING_EFFECT_MAPPINGS, "Missing @MapFrom mappings for ''{0}'' subtypes: {1}")
+            map.put(FusioErrors.ANNOTATION_ON_NON_SEALED_SUBTYPE, "@MapTo/@MapFrom can only be used on sealed interface subtypes: {0}")
+            map.put(FusioErrors.MISSING_EVENT_MAPPINGS, "Missing @MapTo mappings for ''{0}'' subtypes: {1}")
+            map.put(FusioErrors.MISSING_EFFECT_MAPPINGS, "Missing @MapFrom mappings for ''{0}'' subtypes: {1}")
         }
 }
 ```
@@ -85,46 +85,46 @@ object AriaErrorMessages : BaseDiagnosticRendererFactory() {
 - `''` escapes single quotes in MessageFormat syntax
 - The `MAP` property is discovered by the diagnostic infrastructure via `BaseDiagnosticRendererFactory`
 
-### AriaFirExtensionRegistrar
+### FusioFirExtensionRegistrar
 
 Registers FIR extensions using the `+` operator DSL.
 
 ```kotlin
-package com.kitakkun.aria.compiler
+package com.kitakkun.fusio.compiler
 
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 
-class AriaFirExtensionRegistrar : FirExtensionRegistrar() {
+class FusioFirExtensionRegistrar : FirExtensionRegistrar() {
     override fun ExtensionRegistrarContext.configurePlugin() {
-        +::AriaFirCheckersExtension
-        registerDiagnosticContainers(AriaErrors)
+        +::FusioFirCheckersExtension
+        registerDiagnosticContainers(FusioErrors)
     }
 }
 ```
 
 **How registration works:**
-- `+::AriaFirCheckersExtension` invokes the `unaryPlus()` operator on `(FirSession) -> FirAdditionalCheckersExtension`
-- This is syntactic sugar for `FirAdditionalCheckersExtension.Factory { AriaFirCheckersExtension(it) }.unaryPlus()`
+- `+::FusioFirCheckersExtension` invokes the `unaryPlus()` operator on `(FirSession) -> FirAdditionalCheckersExtension`
+- This is syntactic sugar for `FirAdditionalCheckersExtension.Factory { FusioFirCheckersExtension(it) }.unaryPlus()`
 - `registerDiagnosticContainers` makes diagnostics available to the FIR diagnostic infrastructure
 
-### AriaFirCheckersExtension
+### FusioFirCheckersExtension
 
 Provides the set of checkers to the FIR pipeline.
 
 ```kotlin
-package com.kitakkun.aria.compiler
+package com.kitakkun.fusio.compiler
 
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.DeclarationCheckers
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
 import org.jetbrains.kotlin.fir.analysis.extensions.FirAdditionalCheckersExtension
 
-class AriaFirCheckersExtension(session: FirSession) : FirAdditionalCheckersExtension(session) {
+class FusioFirCheckersExtension(session: FirSession) : FirAdditionalCheckersExtension(session) {
     override val declarationCheckers: DeclarationCheckers = object : DeclarationCheckers() {
         override val classCheckers: Set<FirClassChecker> = setOf(
-            AriaMapToChecker,
-            AriaMapFromChecker,
-            // AriaExhaustivenessChecker added in Step 6
+            FusioMapToChecker,
+            FusioMapFromChecker,
+            // FusioExhaustivenessChecker added in Step 6
         )
     }
 }
@@ -137,12 +137,12 @@ class AriaFirCheckersExtension(session: FirSession) : FirAdditionalCheckersExten
 - `propertyCheckers: Set<FirPropertyChecker>` — checks properties
 - All checkers inherit from `FirDeclarationChecker<D>` hierarchy
 
-### AriaMapToChecker
+### FusioMapToChecker
 
 Validates `@MapTo` annotations on sealed interface members.
 
 ```kotlin
-package com.kitakkun.aria.compiler
+package com.kitakkun.fusio.compiler
 
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.diagnostics.reportOn
@@ -160,9 +160,9 @@ import org.jetbrains.kotlin.fir.types.ConeKotlinType
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 
-object AriaMapToChecker : FirClassChecker(MppCheckerKind.Common) {
-    // ClassId for com.kitakkun.aria.MapTo
-    private val MAP_TO_CLASS_ID = ClassId.fromString("com/kitakkun/aria/MapTo")
+object FusioMapToChecker : FirClassChecker(MppCheckerKind.Common) {
+    // ClassId for com.kitakkun.fusio.MapTo
+    private val MAP_TO_CLASS_ID = ClassId.fromString("com/kitakkun/fusio/MapTo")
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(declaration: FirClass) {
@@ -179,18 +179,18 @@ object AriaMapToChecker : FirClassChecker(MppCheckerKind.Common) {
         // 2. Extract the target KClass from @MapTo(target = ...)
         val targetType: ConeKotlinType = mapToAnnotation.getKClassArgument(Name.identifier("target"))
             ?: run {
-                reporter.reportOn(declaration.source, AriaErrors.MAP_TO_INVALID_TARGET, "Missing target argument")
+                reporter.reportOn(declaration.source, FusioErrors.MAP_TO_INVALID_TARGET, "Missing target argument")
                 return
             }
         val targetClassId = targetType.classId ?: run {
-            reporter.reportOn(declaration.source, AriaErrors.MAP_TO_INVALID_TARGET, "Target must be a class reference")
+            reporter.reportOn(declaration.source, FusioErrors.MAP_TO_INVALID_TARGET, "Target must be a class reference")
             return
         }
 
         // 3. Resolve target class and verify it's a sealed subtype
         val targetClass = resolveClassById(targetClassId, context)
         if (targetClass == null) {
-            reporter.reportOn(declaration.source, AriaErrors.MAP_TO_INVALID_TARGET, "Cannot resolve target class: $targetClassId")
+            reporter.reportOn(declaration.source, FusioErrors.MAP_TO_INVALID_TARGET, "Cannot resolve target class: $targetClassId")
             return
         }
 
@@ -228,7 +228,7 @@ private fun validatePropertyCompatibility(
         if (sourceType == null) {
             reporter.reportOn(
                 source.source,
-                AriaErrors.PROPERTY_MISMATCH,
+                FusioErrors.PROPERTY_MISMATCH,
                 source.name.asString(),
                 target.name.asString(),
                 "Missing property '$name' required by target ${target.name}",
@@ -238,7 +238,7 @@ private fun validatePropertyCompatibility(
         if (!sourceType.isSubtypeOf(targetType, context.session)) {
             reporter.reportOn(
                 source.source,
-                AriaErrors.PROPERTY_MISMATCH,
+                FusioErrors.PROPERTY_MISMATCH,
                 source.name.asString(),
                 target.name.asString(),
                 "Property '$name' type mismatch: expected ${targetType.renderReadable()}, got ${sourceType.renderReadable()}",
@@ -262,13 +262,13 @@ private fun FirRegularClass.collectConstructorProperties(session: FirSession): M
 }
 ```
 
-### AriaMapFromChecker
+### FusioMapFromChecker
 
-Mirror of `AriaMapToChecker` for `@MapFrom` annotations. Validates the reverse mapping (child Effect → parent Effect).
+Mirror of `FusioMapToChecker` for `@MapFrom` annotations. Validates the reverse mapping (child Effect → parent Effect).
 
 ```kotlin
-object AriaMapFromChecker : FirClassChecker(MppCheckerKind.Common) {
-    private val MAP_FROM_CLASS_ID = ClassId.fromString("com/kitakkun/aria/MapFrom")
+object FusioMapFromChecker : FirClassChecker(MppCheckerKind.Common) {
+    private val MAP_FROM_CLASS_ID = ClassId.fromString("com/kitakkun/fusio/MapFrom")
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(declaration: FirClass) {
@@ -281,17 +281,17 @@ object AriaMapFromChecker : FirClassChecker(MppCheckerKind.Common) {
         // Extract source KClass from @MapFrom(source = ...)
         val sourceType = mapFromAnnotation.getKClassArgument(Name.identifier("source"))
             ?: run {
-                reporter.reportOn(declaration.source, AriaErrors.MAP_FROM_INVALID_SOURCE, "Missing source argument")
+                reporter.reportOn(declaration.source, FusioErrors.MAP_FROM_INVALID_SOURCE, "Missing source argument")
                 return
             }
         val sourceClassId = sourceType.classId ?: run {
-            reporter.reportOn(declaration.source, AriaErrors.MAP_FROM_INVALID_SOURCE, "Source must be a class reference")
+            reporter.reportOn(declaration.source, FusioErrors.MAP_FROM_INVALID_SOURCE, "Source must be a class reference")
             return
         }
 
         val sourceClass = resolveClassById(sourceClassId, context)
         if (sourceClass == null) {
-            reporter.reportOn(declaration.source, AriaErrors.MAP_FROM_INVALID_SOURCE, "Cannot resolve source class: $sourceClassId")
+            reporter.reportOn(declaration.source, FusioErrors.MAP_FROM_INVALID_SOURCE, "Cannot resolve source class: $sourceClassId")
             return
         }
 
@@ -333,7 +333,7 @@ val inheritorIds: List<ClassId> = firRegularClass.getSealedClassInheritors(sessi
 ```kotlin
 // Report diagnostic on a source element
 // context(context: CheckerContext, reporter: DiagnosticReporter)
-reporter.reportOn(declaration.source, AriaErrors.PROPERTY_MISMATCH, arg1, arg2, arg3)
+reporter.reportOn(declaration.source, FusioErrors.PROPERTY_MISMATCH, arg1, arg2, arg3)
 ```
 
 ### Class Resolution
@@ -352,7 +352,7 @@ User code:
   @MapTo(FavoriteEvent.Toggle::class)
   data class ToggleFavorite(val id: String) : MyScreenEvent
 
-AriaMapToChecker.check(ToggleFavorite):
+FusioMapToChecker.check(ToggleFavorite):
   1. Find @MapTo annotation → present
   2. Extract target = FavoriteEvent.Toggle
   3. Resolve FavoriteEvent.Toggle → FirRegularClass
@@ -372,7 +372,7 @@ Error case:
 ## Build Dependencies
 
 ```kotlin
-// aria-compiler-plugin/build.gradle.kts
+// fusio-compiler-plugin/build.gradle.kts
 dependencies {
     compileOnly("org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlinVersion")
 }

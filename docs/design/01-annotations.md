@@ -1,6 +1,6 @@
-# Step 1: aria-annotations
+# Step 1: fusio-annotations
 
-## Module: `aria-annotations`
+## Module: `fusio-annotations`
 
 Pure Kotlin module with zero dependencies. Defines annotations used by the compiler plugin.
 
@@ -11,7 +11,7 @@ Pure Kotlin module with zero dependencies. Defines annotations used by the compi
 Maps a parent Event sealed subtype to a child Event type. Used on sealed interface members.
 
 ```kotlin
-package com.kitakkun.aria
+package com.kitakkun.fusio
 
 import kotlin.reflect.KClass
 

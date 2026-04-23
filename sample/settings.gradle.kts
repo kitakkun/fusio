@@ -16,7 +16,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "aria-sample"
+rootProject.name = "fusio-sample"
 
 // Use the parent project's Gradle plugin and compiler plugin via composite build
 includeBuild("../")

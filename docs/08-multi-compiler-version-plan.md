@@ -7,9 +7,9 @@ Status: **Phase 2 landed** (single shaded jar, Metro-style compiler-compat layer
 ### Module layout
 
 ```
-aria-compiler-plugin/             FIR checkers + IR MappedScopeTransformer
+fusio-compiler-plugin/             FIR checkers + IR MappedScopeTransformer
   build.gradle.kts                shadow plugin shades the compat modules in
-aria-compiler-compat/             host module
+fusio-compiler-compat/             host module
   src/.../CompatContext.kt        interface + Version/VersionRange + Factory
   src/.../CompatContextResolver.kt ServiceLoader-based runtime selection
   k2320/
@@ -27,20 +27,20 @@ aria-compiler-compat/             host module
 
 - `CompatContext` declares every API the plugin needs whose signature shifts between Kotlin versions (currently `kclassArg`, `setArg`, `setTypeArg`).
 - Each k** subproject compiles against its pinned `kotlin-compiler-embeddable` version and registers a `CompatContext.Factory` with a `supportedRange: VersionRange`.
-- `aria-compiler-plugin/build.gradle.kts` uses the `com.gradleup.shadow` plugin to bundle the three compat jars into a single artifact. A dedicated non-transitive `shaded` configuration keeps kotlin-stdlib and other transitive deps out of the final jar (~65 KB, 29 classes). `mergeServiceFiles()` stitches each subproject's `META-INF/services/.../CompatContext$Factory` into one.
+- `fusio-compiler-plugin/build.gradle.kts` uses the `com.gradleup.shadow` plugin to bundle the three compat jars into a single artifact. A dedicated non-transitive `shaded` configuration keeps kotlin-stdlib and other transitive deps out of the final jar (~65 KB, 29 classes). `mergeServiceFiles()` stitches each subproject's `META-INF/services/.../CompatContext$Factory` into one.
 - At compiler runtime, `CompatContextResolver.resolve()` reads `KotlinCompilerVersion.VERSION`, loads every `Factory` via `ServiceLoader`, and instantiates the first whose `supportedRange` contains the running version.
-- `AriaIrGenerationExtension` and `AriaFirCheckersExtension` call `CompatContextResolver.resolve()` eagerly at construction, so a classpath missing a matching impl fails with a clear error before any analysis runs.
+- `FusioIrGenerationExtension` and `FusioFirCheckersExtension` call `CompatContextResolver.resolve()` eagerly at construction, so a classpath missing a matching impl fails with a clear error before any analysis runs.
 - Checkers and `MappedScopeTransformer` delegate to the resolved context via Kotlin interface delegation (`: CompatContext by compat`), so call sites inside the plugin read like `annotation.kclassArg(...)` / `call.setArg(...)` with no version-sensitive API touched directly.
 
 ### Published artifact
 
-- `com.kitakkun.aria:aria-compiler-plugin:<aria-version>` — single shaded jar
-- `aria-compiler-compat` and its k** subprojects are NOT published separately; they're shaded in.
-- `AriaGradlePlugin.getPluginArtifact()` returns a single coordinate; the Kotlin version dispatch happens at compiler runtime inside the jar, not at Gradle-apply time.
+- `com.kitakkun.fusio:fusio-compiler-plugin:<fusio-version>` — single shaded jar
+- `fusio-compiler-compat` and its k** subprojects are NOT published separately; they're shaded in.
+- `FusioGradlePlugin.getPluginArtifact()` returns a single coordinate; the Kotlin version dispatch happens at compiler runtime inside the jar, not at Gradle-apply time.
 
 ### Composite-build compatibility
 
-The sample (`sample/`) consumes `:aria-compiler-plugin` through Gradle's composite-build mechanism, which resolves via the project's `runtimeElements`/`apiElements` configurations rather than the published Maven artifact. `aria-compiler-plugin/build.gradle.kts` explicitly swaps those configurations' outgoing artifact from the plain `jar` task output to `shadowJar`, so composite consumers see the same shaded jar that mavenLocal does.
+The sample (`sample/`) consumes `:fusio-compiler-plugin` through Gradle's composite-build mechanism, which resolves via the project's `runtimeElements`/`apiElements` configurations rather than the published Maven artifact. `fusio-compiler-plugin/build.gradle.kts` explicitly swaps those configurations' outgoing artifact from the plain `jar` task output to `shadowJar`, so composite consumers see the same shaded jar that mavenLocal does.
 
 ### Validation
 
@@ -78,9 +78,9 @@ All of these could hide behind compat extension functions of the form `fun IrCal
 
 | Missing class / annotation | Where used | Implication |
 |---------------------------|------------|-------------|
-| `KtDiagnosticsContainer` | `AriaErrors` extends it | 2.0's diagnostic API was entirely different (pre-`KtDiagnosticFactoryToRendererMap` factory DSL). The whole `AriaErrors` file is unworkable as-is. |
-| `DirectDeclarationsAccess` annotation | `@OptIn(DirectDeclarationsAccess::class)` in `AriaFirCheckerUtils` | Pre-existing opt-in wasn't there; remove annotation for 2.0 |
-| Factory function `by KtDiagnosticFactoryToRendererMap("name") { ... }` | `AriaErrors` / `AriaErrorMessages` | Different builder shape in 2.0 |
+| `KtDiagnosticsContainer` | `FusioErrors` extends it | 2.0's diagnostic API was entirely different (pre-`KtDiagnosticFactoryToRendererMap` factory DSL). The whole `FusioErrors` file is unworkable as-is. |
+| `DirectDeclarationsAccess` annotation | `@OptIn(DirectDeclarationsAccess::class)` in `FusioFirCheckerUtils` | Pre-existing opt-in wasn't there; remove annotation for 2.0 |
+| Factory function `by KtDiagnosticFactoryToRendererMap("name") { ... }` | `FusioErrors` / `FusioErrorMessages` | Different builder shape in 2.0 |
 
 Compat functions can't save this — you can't compat-away a missing receiver type.
 
@@ -112,12 +112,12 @@ override fun check(declaration: FirClass, context: CheckerContext, reporter: Dia
 
 ### Breakage scope estimate
 
-Of our ~500 LoC in `aria-compiler-plugin/src/main/kotlin/`:
+Of our ~500 LoC in `fusio-compiler-plugin/src/main/kotlin/`:
 
-- `AriaErrors.kt` (31 lines) — full rewrite for 2.0 (Level 2)
-- `AriaMapToChecker.kt` / `AriaMapFromChecker.kt` / `AriaExhaustivenessChecker.kt` (~200 lines combined) — fork for check() signature (Level 4)
-- `AriaCompilerPluginRegistrar.kt` / `AriaFirExtensionRegistrar.kt` / `AriaFirCheckersExtension.kt` (~50 lines) — adjust for Level 3 changes
-- `AriaFirCheckerUtils.kt` (30 lines) — compat-fixable if we strip `DirectDeclarationsAccess`
+- `FusioErrors.kt` (31 lines) — full rewrite for 2.0 (Level 2)
+- `FusioMapToChecker.kt` / `FusioMapFromChecker.kt` / `FusioExhaustivenessChecker.kt` (~200 lines combined) — fork for check() signature (Level 4)
+- `FusioCompilerPluginRegistrar.kt` / `FusioFirExtensionRegistrar.kt` / `FusioFirCheckersExtension.kt` (~50 lines) — adjust for Level 3 changes
+- `FusioFirCheckerUtils.kt` (30 lines) — compat-fixable if we strip `DirectDeclarationsAccess`
 - `MappedScopeTransformer.kt` (375 lines) — many Level 1 breaks but fixable with wider compat layer
 
 So **~300 of 500 lines need per-version content** for a 2.0 variant. The current layout with a single `compat/` file per variant can't carry this — we'd need file-level forks and a wider compat surface.
@@ -132,11 +132,11 @@ So **~300 of 500 lines need per-version content** for a 2.0 variant. The current
 
 4. **Realistic support window** is probably "last 1-2 minors that all sit above the Level 4 boundary." For the current codebase: 2.3 and 2.4 (both use context-parameter checkers). 2.2 might be reachable with a wider compat layer; 2.1 and below are out without a full fork.
 
-5. **Dedicated compat module needed if we want more.** A separate `aria-compiler-compat/` sub-layer that each variant module depends on — housing `IrCall.setArgument(i)`, `IrPluginContext.findClassSymbol(classId)`, and similar — would at least halve the per-variant surface area. Plan that in Phase 2.
+5. **Dedicated compat module needed if we want more.** A separate `fusio-compiler-compat/` sub-layer that each variant module depends on — housing `IrCall.setArgument(i)`, `IrPluginContext.findClassSymbol(classId)`, and similar — would at least halve the per-variant surface area. Plan that in Phase 2.
 
 ### Action for now
 
-k20 probe is not merged. Neither the `aria-compiler-plugin-k20/` module nor the `kotlin-k20` catalog entry remained — this document is the paper trail. When someone re-attempts older-version support, start here.
+k20 probe is not merged. Neither the `fusio-compiler-plugin-k20/` module nor the `kotlin-k20` catalog entry remained — this document is the paper trail. When someone re-attempts older-version support, start here.
 
 ## Phase 2 plan: Metro-style `compiler-compat` layer
 
@@ -156,9 +156,9 @@ k20 probe is not merged. Neither the `aria-compiler-plugin-k20/` module nor the 
 - **All compat subprojects are shaded into the main plugin jar**, so end users install a single artifact. The ServiceLoader picks the right impl at runtime; impls whose Kotlin-compiler classes aren't on the classpath simply aren't instantiated (lazy class resolution keeps the dead impls silent).
 - **Template script** (`generate-compat-module.sh`) scaffolds a new version's module skeleton, and `fetch-all-ide-kotlin-versions.py` enumerates IDE-bundled Kotlin builds so IntelliJ/Android-Studio-canary users are covered.
 
-### How this maps onto Aria
+### How this maps onto Fusio
 
-Aria's version-sensitive touchpoints (from the audit earlier in this doc) are:
+Fusio's version-sensitive touchpoints (from the audit earlier in this doc) are:
 
 - `IrCall.arguments[i]` / `typeArguments[i]` writes (Level 1)
 - `IrPluginContext.finderForBuiltins()` vs `referenceClass(classId)` (Level 1)
@@ -172,10 +172,10 @@ Level 1-3 go behind `CompatContext`. Level 4 (checker class shape) can't — **p
 ### Target module layout
 
 ```
-aria-compiler-compat/                               top-level host (shaded into main)
+fusio-compiler-compat/                               top-level host (shaded into main)
 ├── build.gradle.kts                                compileOnly(kotlin-compiler), publishes CompatContext interface
 ├── README.md                                       the pattern; mirror of Metro's docs
-├── src/main/kotlin/com/kitakkun/aria/compiler/compat/
+├── src/main/kotlin/com/kitakkun/fusio/compiler/compat/
 │   ├── CompatContext.kt                            interface CompatContext + Factory
 │   └── CompatContextResolver.kt                    ServiceLoader-based lookup
 ├── k2320/
@@ -189,31 +189,31 @@ aria-compiler-compat/                               top-level host (shaded into 
 └── scripts/
     └── generate-compat-module.sh                   (future, when ≥3 variants)
 
-aria-compiler-plugin/                               primary plugin (single artifact now)
-├── build.gradle.kts                                uses shadow plugin; shades aria-compiler-compat + its k** subprojects
-├── src/main/kotlin/com/kitakkun/aria/compiler/
-│   ├── AriaClassIds.kt                             unchanged
-│   ├── AriaErrors.kt                               unchanged (2.2+ only)
-│   ├── AriaFirCheckerUtils.kt                      changes `symbol.fir` path to go through CompatContext
-│   ├── AriaMapToChecker.kt                         calls CompatContext.kclassArg(...)
-│   ├── AriaMapFromChecker.kt                       same
-│   ├── AriaExhaustivenessChecker.kt                same
-│   ├── AriaIrGenerationExtension.kt                resolves CompatContext from ServiceLoader at .generate()
+fusio-compiler-plugin/                               primary plugin (single artifact now)
+├── build.gradle.kts                                uses shadow plugin; shades fusio-compiler-compat + its k** subprojects
+├── src/main/kotlin/com/kitakkun/fusio/compiler/
+│   ├── FusioClassIds.kt                             unchanged
+│   ├── FusioErrors.kt                               unchanged (2.2+ only)
+│   ├── FusioFirCheckerUtils.kt                      changes `symbol.fir` path to go through CompatContext
+│   ├── FusioMapToChecker.kt                         calls CompatContext.kclassArg(...)
+│   ├── FusioMapFromChecker.kt                       same
+│   ├── FusioExhaustivenessChecker.kt                same
+│   ├── FusioIrGenerationExtension.kt                resolves CompatContext from ServiceLoader at .generate()
 │   └── MappedScopeTransformer.kt                   uses CompatContext for every IrCall.arguments / typeArguments / finderForBuiltins touchpoint
 └── ...existing test-fixtures, test-gen, testData intact
 ```
 
 Meanwhile:
-- `aria-compiler-plugin-k24/` module is **removed** — its purpose (building against 2.4) moves to `aria-compiler-compat/k240_beta2/`.
-- `aria-compiler-plugin/src/main-k23/` is **removed** — its purpose moves to `aria-compiler-compat/k2320/`.
-- `AriaGradlePlugin.getPluginArtifact()` is simplified to return a single `aria-compiler-plugin` coordinate. The per-Kotlin-version detection at Gradle time is replaced by runtime ServiceLoader resolution.
+- `fusio-compiler-plugin-k24/` module is **removed** — its purpose (building against 2.4) moves to `fusio-compiler-compat/k240_beta2/`.
+- `fusio-compiler-plugin/src/main-k23/` is **removed** — its purpose moves to `fusio-compiler-compat/k2320/`.
+- `FusioGradlePlugin.getPluginArtifact()` is simplified to return a single `fusio-compiler-plugin` coordinate. The per-Kotlin-version detection at Gradle time is replaced by runtime ServiceLoader resolution.
 
 ### `CompatContext` surface (first pass)
 
 Based on what the current shared source actually needs:
 
 ```kotlin
-package com.kitakkun.aria.compiler.compat
+package com.kitakkun.fusio.compiler.compat
 
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
@@ -242,18 +242,18 @@ The IR-builder helpers in `MappedScopeTransformer` (`irBlock`, `irCall`, `irTemp
 
 ### Version resolution
 
-`CompatContextResolver` loads all `CompatContext.Factory` instances via `ServiceLoader`, reads the running Kotlin compiler's version (via `KotlinCompilerVersion.VERSION` or similar stable constant), and picks the first factory whose `supportedRange` contains it. If none match, throw a clear error message at `AriaIrGenerationExtension.generate()` time pointing the user at the supported-Kotlin list in the README.
+`CompatContextResolver` loads all `CompatContext.Factory` instances via `ServiceLoader`, reads the running Kotlin compiler's version (via `KotlinCompilerVersion.VERSION` or similar stable constant), and picks the first factory whose `supportedRange` contains it. If none match, throw a clear error message at `FusioIrGenerationExtension.generate()` time pointing the user at the supported-Kotlin list in the README.
 
 ### Implementation order (suggested)
 
-1. **Create the new `aria-compiler-compat/` module** with `CompatContext` interface, `CompatContextResolver`, and a k2320 impl that mirrors the current Kotlin 2.3.20 behaviour.
+1. **Create the new `fusio-compiler-compat/` module** with `CompatContext` interface, `CompatContextResolver`, and a k2320 impl that mirrors the current Kotlin 2.3.20 behaviour.
 2. **Port `MappedScopeTransformer` and the checkers** to call `CompatContext` for each Level-1/2 touchpoint. Keep `compat/FirAnnotationCompat.kt` working during the transition by delegating to `CompatContext`.
 3. **Add the k240_beta2 impl**, likely `by k2320.CompatContextImpl()` with the single `kclassArg` override.
-4. **Introduce the shadow plugin** on `aria-compiler-plugin`'s build, relocate `aria-compiler-compat:*` jars inside the main jar. Confirm `jar tf` on the result shows both `k2320/CompatContextImpl.class` and `k240_beta2/CompatContextImpl.class` without classpath conflicts.
-5. **Remove `aria-compiler-plugin-k24/` and `src/main-k23/`**. Delete `kotlin-k24` / `kotlin-compiler-embeddable-k24` catalog entries at the same time.
-6. **Simplify `AriaGradlePlugin.getPluginArtifact()`** back to a single artifact; drop the reflection-based version detection.
+4. **Introduce the shadow plugin** on `fusio-compiler-plugin`'s build, relocate `fusio-compiler-compat:*` jars inside the main jar. Confirm `jar tf` on the result shows both `k2320/CompatContextImpl.class` and `k240_beta2/CompatContextImpl.class` without classpath conflicts.
+5. **Remove `fusio-compiler-plugin-k24/` and `src/main-k23/`**. Delete `kotlin-k24` / `kotlin-compiler-embeddable-k24` catalog entries at the same time.
+6. **Simplify `FusioGradlePlugin.getPluginArtifact()`** back to a single artifact; drop the reflection-based version detection.
 7. **Smoke-test the sample** (still pinned to Kotlin 2.3.20 via its own build) — verifies ServiceLoader picks k2320.
-8. **Extend `:aria-compiler-plugin:test`** to run against both 2.3.20 and 2.4.0-Beta2 — ideally by varying the test framework's Kotlin version, but the Kotlin internal test framework pins one version per test JVM, so this likely becomes two test configurations or a matrix CI job.
+8. **Extend `:fusio-compiler-plugin:test`** to run against both 2.3.20 and 2.4.0-Beta2 — ideally by varying the test framework's Kotlin version, but the Kotlin internal test framework pins one version per test JVM, so this likely becomes two test configurations or a matrix CI job.
 
 ### Out of scope for Phase 2 (defer to Phase 3 if needed)
 
@@ -266,8 +266,8 @@ The IR-builder helpers in `MappedScopeTransformer` (`irBlock`, `irCall`, `irTemp
 
 1. **Shading strategy**: Gradle shadow plugin works, but the shaded jar needs to preserve the `META-INF/services/CompatContext$Factory` files from every sub-module. Standard behaviour is "last wins" — we need the shadow plugin's service-file merger explicitly enabled.
 2. **Kotlin-compiler-embeddable class loading**: all the shaded `CompatContextImpl` classes have references to Kotlin compiler classes at different versions. Only the running compiler's classes will actually be loadable; the other impls must NOT be triggered. This is ServiceLoader-safe as long as the Factory's `create()` is the ONLY thing that loads the impl class and all impl classes are independent (no cross-version refs). Needs testing.
-3. **Shaded jar publishing**: currently `aria-compiler-plugin` is published via `aria.publish` convention. After shading, its published artifact should still be a valid Gradle-consumable jar; the convention plugin may need a tweak.
-4. **Compose plugin version alignment is still external**: `aria-compiler-plugin` being version-agnostic doesn't help with Compose, which is still one jar per Kotlin version. The Gradle plugin should keep injecting `-Xcompiler-plugin-order=com.kitakkun.aria>androidx.compose.compiler.plugins.kotlin` regardless.
+3. **Shaded jar publishing**: currently `fusio-compiler-plugin` is published via `fusio.publish` convention. After shading, its published artifact should still be a valid Gradle-consumable jar; the convention plugin may need a tweak.
+4. **Compose plugin version alignment is still external**: `fusio-compiler-plugin` being version-agnostic doesn't help with Compose, which is still one jar per Kotlin version. The Gradle plugin should keep injecting `-Xcompiler-plugin-order=com.kitakkun.fusio>androidx.compose.compiler.plugins.kotlin` regardless.
 5. **Breakages we haven't seen yet**: the audit was based on 2.3→2.4 + 2.3→2.0 probes. A Kotlin 2.5 or 2.6 might introduce a Level 2/3 break that the current `CompatContext` surface doesn't cover — planned growth of the interface over time, mirroring Metro's trajectory.
 
 ### Starting point when resuming
@@ -278,18 +278,18 @@ The IR-builder helpers in `MappedScopeTransformer` (`irBlock`, `irCall`, `irTemp
 
 ## Problem
 
-Aria currently pins Kotlin 2.3.20 end-to-end:
+Fusio currently pins Kotlin 2.3.20 end-to-end:
 
 - `kotlin` version in `gradle/libs.versions.toml` drives every catalog alias
-- `aria-compiler-plugin` imports internal IR / FIR types that move between Kotlin minor releases
+- `fusio-compiler-plugin` imports internal IR / FIR types that move between Kotlin minor releases
 - `kotlin-compose-compiler-plugin` is one jar per Kotlin version
 - `kotlin-compiler-internal-test-framework` is one jar per Kotlin version
 
-Users that can't bump their project to 2.3.20 (downstream dependency pinning, Android Studio compat, etc.) can't adopt Aria at all. Once Kotlin 2.4.x stabilises we'll face the same cliff in reverse.
+Users that can't bump their project to 2.3.20 (downstream dependency pinning, Android Studio compat, etc.) can't adopt Fusio at all. Once Kotlin 2.4.x stabilises we'll face the same cliff in reverse.
 
 ## Why the current code is version-sensitive
 
-Audit of what in Aria actually touches Kotlin-minor-version-shifting surface:
+Audit of what in Fusio actually touches Kotlin-minor-version-shifting surface:
 
 ### IR transformer (MappedScopeTransformer)
 
@@ -302,7 +302,7 @@ Audit of what in Aria actually touches Kotlin-minor-version-shifting surface:
 | `IrCall.symbol.owner.parent.kotlinFqName` | stable | stable |
 | `irGetObject`, `irCall`, `irBlock`, `irTemporary` etc. | stable with minor deprecations | stable |
 
-### FIR checkers (AriaMapToChecker, AriaMapFromChecker, AriaExhaustivenessChecker)
+### FIR checkers (FusioMapToChecker, FusioMapFromChecker, FusioExhaustivenessChecker)
 
 | API used | Notes |
 |----------|-------|
@@ -341,7 +341,7 @@ Brief notes from observation / prior art:
 
 Single implementation; always ships with the current Kotlin release. Users upgrading Kotlin upgrade the plugin atomically. Zero multi-version logic in the plugin itself.
 
-**Applicable to Aria?** Not directly — we're not shipping with Kotlin. But the "per-Kotlin-version artifact" output model is the same goal.
+**Applicable to Fusio?** Not directly — we're not shipping with Kotlin. But the "per-Kotlin-version artifact" output model is the same goal.
 
 ### Arrow Meta / older third-party plugins
 
@@ -359,16 +359,16 @@ Ships a single plugin jar against the latest Kotlin. Doesn't attempt multi-versi
 
 Multi-module split: core logic in a common module, per-Kotlin-version thin shim modules. The common module exposes only stable APIs.
 
-## Options for Aria
+## Options for Fusio
 
 ### A. One plugin jar per Kotlin minor — "Compose-style fan-out"
 
 Publish:
 
 ```
-com.kitakkun.aria:aria-compiler-plugin-kotlin-2.3:0.1.0
-com.kitakkun.aria:aria-compiler-plugin-kotlin-2.4:0.1.0
-com.kitakkun.aria:aria-compiler-plugin-kotlin-2.5:0.1.0
+com.kitakkun.fusio:fusio-compiler-plugin-kotlin-2.3:0.1.0
+com.kitakkun.fusio:fusio-compiler-plugin-kotlin-2.4:0.1.0
+com.kitakkun.fusio:fusio-compiler-plugin-kotlin-2.5:0.1.0
 ```
 
 Each targets a specific Kotlin minor. Runtime / annotations modules remain single-artifact (no compiler API used there). Gradle plugin detects the user's Kotlin version and resolves the matching compiler-plugin artifact as `SubpluginArtifact`.
@@ -401,8 +401,8 @@ One jar; at plugin init, inspects available Kotlin compiler classes and picks an
 ### C. Shared-core + per-version-adapter modules
 
 ```
-aria-compiler-plugin-core/        // shared FIR checker logic, compiler-version-agnostic
-aria-compiler-plugin-adapters/
+fusio-compiler-plugin-core/        // shared FIR checker logic, compiler-version-agnostic
+fusio-compiler-plugin-adapters/
   k23/                            // Kotlin 2.3 adapter, implements facade interfaces
   k24/                            // Kotlin 2.4 adapter
 ```
@@ -415,26 +415,26 @@ Core module declares a small facade (say `IrBuilderAdapter`) and per-version mod
 
 **Cons**
 - Facade design is the whole engineering cost — it has to capture every shifting API
-- Aria's compiler plugin surface is **too small** to justify a facade layer (~500 LoC total). The facade would be half the codebase.
+- Fusio's compiler plugin surface is **too small** to justify a facade layer (~500 LoC total). The facade would be half the codebase.
 - Adapter modules still need to be tested per Kotlin version, so the matrix doesn't shrink much
 
 ### D. "Latest only" — formalise the current policy
 
-Explicitly document: Aria tracks the latest stable Kotlin. Each Aria version targets exactly one Kotlin version. Users on older Kotlin use older Aria.
+Explicitly document: Fusio tracks the latest stable Kotlin. Each Fusio version targets exactly one Kotlin version. Users on older Kotlin use older Fusio.
 
 **Pros**
 - Zero extra engineering
 - Matches what JetBrains-shipped plugins do
 
 **Cons**
-- Adopters stuck on older Kotlin cannot use Aria at all
-- No story for "my project is 2.3, the new Aria is 2.5-only"
+- Adopters stuck on older Kotlin cannot use Fusio at all
+- No story for "my project is 2.3, the new Fusio is 2.5-only"
 
 ## Recommended approach: **A, staged**
 
 Adopt Strategy A, but phased — don't build the fan-out until we actually need to support a second Kotlin version. Concretely:
 
-**Phase 0 (now):** formalise Strategy D in docs. One Aria version = one Kotlin version. Publish compatibility table in README. Lowers user confusion while we stay single-version.
+**Phase 0 (now):** formalise Strategy D in docs. One Fusio version = one Kotlin version. Publish compatibility table in README. Lowers user confusion while we stay single-version.
 
 **Phase 1 (when Kotlin 2.4.0 stabilises and we want to keep 2.3.20 support):** introduce Strategy A. Adds a second compiler-plugin artifact. The Gradle plugin auto-picks.
 
@@ -447,12 +447,12 @@ Deferring the build matrix until we have >1 active version keeps YAGNI-compliant
 Pull Kotlin-compiler-API touchpoints into a narrow set of functions named so the Phase 1 split is obvious:
 
 ```
-aria-compiler-plugin/
-  src/main/kotlin/com/kitakkun/aria/compiler/
+fusio-compiler-plugin/
+  src/main/kotlin/com/kitakkun/fusio/compiler/
     compat/                         NEW — future split point
       IrCallCompat.kt               val IrCall.extReceiver; fun IrCall.setArg(i, e); ...
       FirAnnotationCompat.kt        fun FirAnnotation.kclassArgOf(name: String, session): ConeKotlinType?
-    AriaMapToChecker.kt             (uses compat helpers)
+    FusioMapToChecker.kt             (uses compat helpers)
     MappedScopeTransformer.kt       (uses compat helpers)
 ```
 
@@ -465,7 +465,7 @@ Add a section to README:
 ```
 ### Kotlin version compatibility
 
-| Aria version | Kotlin version |
+| Fusio version | Kotlin version |
 |--------------|----------------|
 | 0.1.x        | 2.3.20 only    |
 | 0.2.x        | TBD            |
@@ -479,7 +479,7 @@ Add an optional CI job that tries to build against Kotlin 2.4.0-Beta (when it's 
 
 ### 4. Target-version source-set scaffolding (no-op today)
 
-Set up `aria-compiler-plugin`'s build such that the switch to per-version source-sets is one Gradle block away:
+Set up `fusio-compiler-plugin`'s build such that the switch to per-version source-sets is one Gradle block away:
 
 ```kotlin
 sourceSets {
@@ -499,29 +499,29 @@ With an empty `src-2.3.20/` directory today. Phase 1 populates it with version-s
 ### 1. Per-Kotlin-version subprojects
 
 ```
-aria-compiler-plugin/                 shared build-logic, no source
-aria-compiler-plugin-k23/             targets Kotlin 2.3.x
+fusio-compiler-plugin/                 shared build-logic, no source
+fusio-compiler-plugin-k23/             targets Kotlin 2.3.x
   src/main/kotlin/                    (symlinked / copied common sources)
   src/main/kotlin/compat/k23/         version-specific overrides
-aria-compiler-plugin-k24/             targets Kotlin 2.4.x
+fusio-compiler-plugin-k24/             targets Kotlin 2.4.x
   src/main/kotlin/
   src/main/kotlin/compat/k24/
 ```
 
-Common sources sit in `aria-compiler-plugin/common/` and are pulled in via `kotlin.sourceSets.main.srcDir("../common/kotlin")` from each subproject. The `compat/` directory differs per subproject.
+Common sources sit in `fusio-compiler-plugin/common/` and are pulled in via `kotlin.sourceSets.main.srcDir("../common/kotlin")` from each subproject. The `compat/` directory differs per subproject.
 
 ### 2. Gradle plugin picks the right artifact
 
-`AriaGradlePlugin.getPluginArtifact()` becomes dynamic:
+`FusioGradlePlugin.getPluginArtifact()` becomes dynamic:
 
 ```kotlin
 override fun getPluginArtifact(): SubpluginArtifact {
     val kotlinVersion = project.getKotlinPluginVersion()
     val major = kotlinVersion.split(".").take(2).joinToString("")  // "2.3" -> "23"
     return SubpluginArtifact(
-        groupId = "com.kitakkun.aria",
-        artifactId = "aria-compiler-plugin-k$major",
-        version = ariaVersion,
+        groupId = "com.kitakkun.fusio",
+        artifactId = "fusio-compiler-plugin-k$major",
+        version = fusioVersion,
     )
 }
 ```
@@ -536,15 +536,15 @@ strategy:
     kotlin: ['2.3.20', '2.4.0']
 ```
 
-Each matrix cell runs `./gradlew :aria-compiler-plugin-k${version}:test`. Box tests catch runtime regressions per version.
+Each matrix cell runs `./gradlew :fusio-compiler-plugin-k${version}:test`. Box tests catch runtime regressions per version.
 
 ### 4. Convention-plugin-level version config
 
-Add `aria.kotlin-version` convention plugin that takes the target Kotlin version as a parameter:
+Add `fusio.kotlin-version` convention plugin that takes the target Kotlin version as a parameter:
 
 ```kotlin
-plugins { id("aria.kotlin-version") }
-ariaKotlin { version.set("2.3.20") }
+plugins { id("fusio.kotlin-version") }
+fusioKotlin { version.set("2.3.20") }
 ```
 
 This centralises dep resolution across subprojects.
@@ -553,22 +553,22 @@ This centralises dep resolution across subprojects.
 
 ### Scenario: Kotlin 2.4.0 stable lands, we keep 2.3 support
 
-1. Create `aria-compiler-plugin-k24` subproject targeting 2.4.0
+1. Create `fusio-compiler-plugin-k24` subproject targeting 2.4.0
 2. Copy compat code from k23 as baseline; update for API drift
 3. Run matrix CI; fix breaks
-4. Release Aria 0.2.0 with both `-k23` and `-k24` artifacts
+4. Release Fusio 0.2.0 with both `-k23` and `-k24` artifacts
 5. Gradle plugin now picks either
 
 ### Scenario: Kotlin 2.3 EOL'd, drop support
 
-1. Delete `aria-compiler-plugin-k23` subproject
+1. Delete `fusio-compiler-plugin-k23` subproject
 2. Remove k23 from matrix
 3. Update compat table in README
-4. Release Aria 0.3.0
+4. Release Fusio 0.3.0
 
 ### Scenario: Kotlin 2.5 introduces a big IR API break
 
-1. Create `aria-compiler-plugin-k25`
+1. Create `fusio-compiler-plugin-k25`
 2. May need to extract more functions into `compat/` if the shared core breaks
 3. Common layer may shrink — that's fine
 
@@ -578,14 +578,14 @@ This centralises dep resolution across subprojects.
 
 2. **Sample and tests — per-version or shared?** Probably one sample pinned to latest; box tests run matrix-style against each supported compiler-plugin variant.
 
-3. **Compose plugin version alignment** — Compose's per-Kotlin-version jar means we can't mix "Aria for Kotlin 2.3 + Compose for Kotlin 2.4". Each Aria-Kotlin-pair implies a Compose-Kotlin-pair. Must document.
+3. **Compose plugin version alignment** — Compose's per-Kotlin-version jar means we can't mix "Fusio for Kotlin 2.3 + Compose for Kotlin 2.4". Each Fusio-Kotlin-pair implies a Compose-Kotlin-pair. Must document.
 
-4. **Gradle plugin backwards-compat** — if a user has `id("com.kitakkun.aria")` with Aria 0.2 installed but the old 0.1 `SubpluginArtifact` resolution logic, do things work? Need to decide: ship a single Gradle plugin that always detects, or version the Gradle plugin alongside the compiler plugins?
+4. **Gradle plugin backwards-compat** — if a user has `id("com.kitakkun.fusio")` with Fusio 0.2 installed but the old 0.1 `SubpluginArtifact` resolution logic, do things work? Need to decide: ship a single Gradle plugin that always detects, or version the Gradle plugin alongside the compiler plugins?
 
-5. **Artifact naming scheme** — `aria-compiler-plugin-k23` vs `aria-compiler-plugin-kotlin-2.3` vs putting the Kotlin version in the coordinate as a classifier. Classifier is cleanest but Gradle's `SubpluginArtifact` API doesn't easily express classifiers.
+5. **Artifact naming scheme** — `fusio-compiler-plugin-k23` vs `fusio-compiler-plugin-kotlin-2.3` vs putting the Kotlin version in the coordinate as a classifier. Classifier is cleanest but Gradle's `SubpluginArtifact` API doesn't easily express classifiers.
 
 ## References
 
-- `reference_aria_gotchas.md` (memory) — itemised list of which APIs we touch and why they're sensitive
-- `project_aria_current_state.md` (memory) — as-built shape; Phase 0 preserves it
+- `reference_fusio_gotchas.md` (memory) — itemised list of which APIs we touch and why they're sensitive
+- `project_fusio_current_state.md` (memory) — as-built shape; Phase 0 preserves it
 - `docs/07-test-infrastructure-plan.md` — adjacent pattern of landed-status-per-item for test cases; this doc follows the same format

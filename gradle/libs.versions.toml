@@ -1,5 +1,5 @@
 [versions]
-# Primary Kotlin version — used everywhere except the aria-compiler-compat/k**
+# Primary Kotlin version — used everywhere except the fusio-compiler-compat/k**
 # subprojects, which each pin their own kotlin-compiler-embeddable to compile
 # the version-specific CompatContext impl. `kotlin-k24` below is that pin for
 # the 2.4.0-Beta2 variant.
@@ -9,9 +9,9 @@ compose-multiplatform = "1.10.3"
 coroutines = "1.10.2"
 junit-jupiter = "5.11.3"
 # gradleup/shadow — 8.3.x is the current stable line that works with Gradle 8.
-# Bumped when Gradle 9 lands. See aria-compiler-plugin for usage.
+# Bumped when Gradle 9 lands. See fusio-compiler-plugin for usage.
 shadow = "8.3.5"
-aria = "0.1.0-SNAPSHOT"
+fusio = "0.1.0-SNAPSHOT"
 
 [libraries]
 kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }

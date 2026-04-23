@@ -1,8 +1,8 @@
-# Aria Implementation Plan - Overview
+# Fusio Implementation Plan - Overview
 
-## What is Aria?
+## What is Fusio?
 
-Aria is a Kotlin Compiler Plugin library that decomposes fat Composable Presenters into reusable, self-contained units.
+Fusio is a Kotlin Compiler Plugin library that decomposes fat Composable Presenters into reusable, self-contained units.
 
 ### Problem
 
@@ -10,7 +10,7 @@ In Composable-first architectures (e.g., DroidKaigi 2025), Presenters accumulate
 
 ### Solution
 
-Aria provides:
+Fusio provides:
 - **`buildPresenter`** DSL to define screen-level Presenters
 - **`mappedScope`** to delegate to sub-Presenters with automatic Event/Effect type bridging
 - **`on<Event>`** for type-safe individual event handling
@@ -26,7 +26,7 @@ context(screenContext: MyScreenContext)
 @Composable
 fun myScreenPresenter(
     eventFlow: Flow<MyScreenEvent>
-): Aria<MyScreenUiState, MyScreenEffect> = buildPresenter(eventFlow) {
+): Fusio<MyScreenUiState, MyScreenEffect> = buildPresenter(eventFlow) {
     val favoriteState = mappedScope { favorite() }
 
     on<MyScreenEvent.Search> { event -> /* handle search */ }
@@ -37,11 +37,11 @@ fun myScreenPresenter(
 // Sub-Presenter (completely independent, reusable)
 context(ctx: FavoriteContext)
 @Composable
-fun PresenterScope<FavoriteEvent, FavoriteEffect>.favorite(): Aria<FavoriteState, FavoriteEffect> {
+fun PresenterScope<FavoriteEvent, FavoriteEffect>.favorite(): Fusio<FavoriteState, FavoriteEffect> {
     on<FavoriteEvent.Toggle> { event ->
         emitEffect(FavoriteEffect.ShowMessage("Toggled!"))
     }
-    return Aria(FavoriteState(...))
+    return Fusio(FavoriteState(...))
 }
 ```
 
@@ -66,11 +66,11 @@ sealed interface MyScreenEffect {
 ## Project Structure
 
 ```
-aria/
-├── aria-annotations/          # @MapTo, @MapFrom annotations (pure Kotlin)
-├── aria-runtime/              # Aria, PresenterScope, buildPresenter, on<> (Compose dependency)
-├── aria-compiler-plugin/      # Kotlin Compiler Plugin (FIR + IR)
-├── aria-gradle-plugin/        # Gradle integration
+fusio/
+├── fusio-annotations/          # @MapTo, @MapFrom annotations (pure Kotlin)
+├── fusio-runtime/              # Fusio, PresenterScope, buildPresenter, on<> (Compose dependency)
+├── fusio-compiler-plugin/      # Kotlin Compiler Plugin (FIR + IR)
+├── fusio-gradle-plugin/        # Gradle integration
 └── sample/                    # Sample app
 ```
 
@@ -78,12 +78,12 @@ aria/
 
 | Step | Module | Description | Doc |
 |------|--------|-------------|-----|
-| 1 | aria-annotations | Annotation definitions | [01-annotations.md](01-annotations.md) |
-| 2 | aria-runtime | Runtime API (Aria, PresenterScope, buildPresenter) | [02-runtime.md](02-runtime.md) |
-| 3 | aria-gradle-plugin | Gradle plugin shell + compiler plugin registration | [03-gradle-plugin.md](03-gradle-plugin.md) |
-| 4 | aria-compiler-plugin | FIR Checker: @MapTo/@MapFrom property validation | [04-fir-checker.md](04-fir-checker.md) |
-| 5 | aria-compiler-plugin | IR Transformer: mappedScope code generation | [05-ir-transformer.md](05-ir-transformer.md) |
-| 6 | aria-compiler-plugin | FIR Checker: Exhaustiveness verification | [06-exhaustiveness.md](06-exhaustiveness.md) |
+| 1 | fusio-annotations | Annotation definitions | [01-annotations.md](01-annotations.md) |
+| 2 | fusio-runtime | Runtime API (Fusio, PresenterScope, buildPresenter) | [02-runtime.md](02-runtime.md) |
+| 3 | fusio-gradle-plugin | Gradle plugin shell + compiler plugin registration | [03-gradle-plugin.md](03-gradle-plugin.md) |
+| 4 | fusio-compiler-plugin | FIR Checker: @MapTo/@MapFrom property validation | [04-fir-checker.md](04-fir-checker.md) |
+| 5 | fusio-compiler-plugin | IR Transformer: mappedScope code generation | [05-ir-transformer.md](05-ir-transformer.md) |
+| 6 | fusio-compiler-plugin | FIR Checker: Exhaustiveness verification | [06-exhaustiveness.md](06-exhaustiveness.md) |
 
 ## Design Principles
 

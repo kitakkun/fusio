@@ -6,6 +6,6 @@ plugins {
 }
 
 allprojects {
-    group = "com.kitakkun.aria"
+    group = "com.kitakkun.fusio"
     version = "0.1.0-SNAPSHOT"
 }

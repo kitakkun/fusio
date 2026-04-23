@@ -1,6 +1,6 @@
 # Step 6: FIR Checker — Exhaustiveness Verification
 
-## Module: `aria-compiler-plugin`
+## Module: `fusio-compiler-plugin`
 
 FIR checker that verifies `@MapTo` / `@MapFrom` annotations cover all subtypes of the child Event/Effect sealed interfaces used in `mappedScope`. This ensures no child Events are silently dropped and no child Effects are lost.
 
@@ -36,11 +36,11 @@ This checker operates at a different level than Step 4's checkers:
 - **Step 6**: Validates completeness across the entire parent sealed interface
 
 ```
-AriaFirCheckersExtension
+FusioFirCheckersExtension
   └── declarationCheckers
-        ├── AriaMapToChecker         (Step 4)
-        ├── AriaMapFromChecker       (Step 4)
-        └── AriaExhaustivenessChecker (Step 6) — THIS
+        ├── FusioMapToChecker         (Step 4)
+        ├── FusioMapFromChecker       (Step 4)
+        └── FusioExhaustivenessChecker (Step 6) — THIS
 ```
 
 ## Design: Where to Check
@@ -76,10 +76,10 @@ Check at the `mappedScope<ChildEvent, ChildEffect> { ... }` call, where both par
 
 ## Components
 
-### AriaExhaustivenessChecker
+### FusioExhaustivenessChecker
 
 ```kotlin
-package com.kitakkun.aria.compiler
+package com.kitakkun.fusio.compiler
 
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.diagnostics.reportOn
@@ -93,9 +93,9 @@ import org.jetbrains.kotlin.fir.declarations.utils.isSealed
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 
-object AriaExhaustivenessChecker : FirClassChecker(MppCheckerKind.Common) {
-    private val MAP_TO_CLASS_ID = ClassId.fromString("com/kitakkun/aria/MapTo")
-    private val MAP_FROM_CLASS_ID = ClassId.fromString("com/kitakkun/aria/MapFrom")
+object FusioExhaustivenessChecker : FirClassChecker(MppCheckerKind.Common) {
+    private val MAP_TO_CLASS_ID = ClassId.fromString("com/kitakkun/fusio/MapTo")
+    private val MAP_FROM_CLASS_ID = ClassId.fromString("com/kitakkun/fusio/MapFrom")
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(declaration: FirClass) {
@@ -148,7 +148,7 @@ object AriaExhaustivenessChecker : FirClassChecker(MppCheckerKind.Common) {
                 val missingNames = missingSubtypes.joinToString(", ") { it.shortClassName.asString() }
                 reporter.reportOn(
                     sealedClass.source,
-                    AriaErrors.MISSING_EVENT_MAPPINGS,
+                    FusioErrors.MISSING_EVENT_MAPPINGS,
                     childSealed.name.asString(),
                     missingNames,
                 )
@@ -194,7 +194,7 @@ object AriaExhaustivenessChecker : FirClassChecker(MppCheckerKind.Common) {
                 val missingNames = missingSubtypes.joinToString(", ") { it.shortClassName.asString() }
                 reporter.reportOn(
                     sealedClass.source,
-                    AriaErrors.MISSING_EFFECT_MAPPINGS,
+                    FusioErrors.MISSING_EFFECT_MAPPINGS,
                     childSealed.name.asString(),
                     missingNames,
                 )
@@ -320,15 +320,15 @@ No property matching needed — the mapping is purely type-based. The FIR checke
 
 ## Registration
 
-Already registered in `AriaFirCheckersExtension`:
+Already registered in `FusioFirCheckersExtension`:
 
 ```kotlin
-class AriaFirCheckersExtension(session: FirSession) : FirAdditionalCheckersExtension(session) {
+class FusioFirCheckersExtension(session: FirSession) : FirAdditionalCheckersExtension(session) {
     override val declarationCheckers: DeclarationCheckers = object : DeclarationCheckers() {
         override val classCheckers: Set<FirClassChecker> = setOf(
-            AriaMapToChecker,         // Step 4
-            AriaMapFromChecker,       // Step 4
-            AriaExhaustivenessChecker, // Step 6
+            FusioMapToChecker,         // Step 4
+            FusioMapFromChecker,       // Step 4
+            FusioExhaustivenessChecker, // Step 6
         )
     }
 }
@@ -338,7 +338,7 @@ class AriaFirCheckersExtension(session: FirSession) : FirAdditionalCheckersExten
 
 1. **Opt-out mechanism**: Should we support `@IgnoreMapping` or `@Suppress("MISSING_EVENT_MAPPINGS")` for intentional partial mappings? Current plan is to defer to v2 and require full exhaustiveness in v1.
 
-2. **Warning vs Error**: Should missing mappings be errors (blocking) or warnings (advisory)? Errors are safer but may frustrate users during incremental development. Consider making it configurable via the Gradle plugin option: `aria { exhaustivenessLevel = "error" | "warning" }`.
+2. **Warning vs Error**: Should missing mappings be errors (blocking) or warnings (advisory)? Errors are safer but may frustrate users during incremental development. Consider making it configurable via the Gradle plugin option: `fusio { exhaustivenessLevel = "error" | "warning" }`.
 
 3. **Performance**: For large sealed hierarchies, `getSealedClassInheritors` + `resolveClassById` for each inheritor could be expensive. Profile in real-world usage and cache if needed.
 

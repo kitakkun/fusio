@@ -1,21 +1,21 @@
-# Step 2: aria-runtime
+# Step 2: fusio-runtime
 
-## Module: `aria-runtime`
+## Module: `fusio-runtime`
 
 Runtime API that users interact with directly. Depends on Compose Runtime and Kotlinx Coroutines.
 
 ## Core Types
 
-### Aria<State, Effect>
+### Fusio<State, Effect>
 
 The core return type of both screen-level and sub-level Presenters. Library name = core type.
 
 ```kotlin
-package com.kitakkun.aria
+package com.kitakkun.fusio
 
 import kotlinx.coroutines.flow.Flow
 
-data class Aria<State, Effect>(
+data class Fusio<State, Effect>(
     val state: State,
     val effectFlow: Flow<Effect>,
 )
@@ -26,7 +26,7 @@ data class Aria<State, Effect>(
 Scope that manages Event/Effect plumbing internally. `eventFlow` is never exposed to users.
 
 ```kotlin
-package com.kitakkun.aria
+package com.kitakkun.fusio
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -78,7 +78,7 @@ DSL entry point for screen-level Presenters.
 fun <Event, Effect, UiState> buildPresenter(
     eventFlow: Flow<Event>,
     block: @Composable PresenterScope<Event, Effect>.() -> UiState,
-): Aria<UiState, Effect> {
+): Fusio<UiState, Effect> {
     val scope = remember { PresenterScope<Event, Effect>(eventFlow) }
 
     DisposableEffect(Unit) {
@@ -87,7 +87,7 @@ fun <Event, Effect, UiState> buildPresenter(
 
     val uiState = scope.block()
 
-    return Aria(uiState, scope.internalEffectFlow)
+    return Fusio(uiState, scope.internalEffectFlow)
 }
 ```
 
@@ -98,11 +98,11 @@ Stub that will be replaced by the IR Transformer. Throws at runtime if compiler 
 ```kotlin
 @Composable
 fun <ChildEvent, ChildEffect, ChildState> PresenterScope<*, *>.mappedScope(
-    block: @Composable PresenterScope<ChildEvent, ChildEffect>.() -> Aria<ChildState, ChildEffect>,
+    block: @Composable PresenterScope<ChildEvent, ChildEffect>.() -> Fusio<ChildState, ChildEffect>,
 ): ChildState {
     error(
-        "mappedScope requires the Aria Compiler Plugin. " +
-        "Make sure 'com.kitakkun.aria' Gradle plugin is applied."
+        "mappedScope requires the Fusio Compiler Plugin. " +
+        "Make sure 'com.kitakkun.fusio' Gradle plugin is applied."
     )
 }
 ```
@@ -121,7 +121,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":aria-annotations"))
+                api(project(":fusio-annotations"))
                 implementation(compose.runtime)
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
             }
@@ -150,4 +150,4 @@ kotlin {
 
 2. **PresenterScope lifecycle**: Should PresenterScope survive configuration changes? If used with `rememberRetained` (Soil/Circuit pattern), the Channel must also be retained.
 
-3. **Aria return type**: Should `Aria<State, Nothing>` have a convenience constructor that doesn't require effectFlow? e.g., `fun <State> Aria(state: State) = Aria(state, emptyFlow())`
+3. **Fusio return type**: Should `Fusio<State, Nothing>` have a convenience constructor that doesn't require effectFlow? e.g., `fun <State> Fusio(state: State) = Fusio(state, emptyFlow())`

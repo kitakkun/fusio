@@ -6,8 +6,8 @@ pluginManagement {
         google()
     }
     // Composite build that provides the shared convention plugins
-    // (aria.publish, ...). Module build files reference them via
-    // `plugins { id("aria.publish") }`.
+    // (fusio.publish, ...). Module build files reference them via
+    // `plugins { id("fusio.publish") }`.
     includeBuild("build-logic")
 }
 
@@ -20,13 +20,13 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "aria"
+rootProject.name = "fusio"
 
-include(":aria-annotations")
-include(":aria-runtime")
-include(":aria-compiler-plugin")
-include(":aria-compiler-compat")
-include(":aria-compiler-compat:k2320")
-include(":aria-compiler-compat:k240_beta2")
-include(":aria-gradle-plugin")
+include(":fusio-annotations")
+include(":fusio-runtime")
+include(":fusio-compiler-plugin")
+include(":fusio-compiler-compat")
+include(":fusio-compiler-compat:k2320")
+include(":fusio-compiler-compat:k240_beta2")
+include(":fusio-gradle-plugin")
 // sample is a separate composite build — see sample/settings.gradle.kts

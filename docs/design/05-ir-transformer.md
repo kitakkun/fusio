@@ -1,6 +1,6 @@
 # Step 5: IR Transformer — `mappedScope` Code Generation
 
-## Module: `aria-compiler-plugin`
+## Module: `fusio-compiler-plugin`
 
 IR (Intermediate Representation) transformer that replaces the `mappedScope` stub call with generated bridging code that:
 1. Filters parent `eventFlow` to extract mapped child Events via `@MapTo`
@@ -11,7 +11,7 @@ IR (Intermediate Representation) transformer that replaces the `mappedScope` stu
 ## Architecture
 
 ```
-AriaIrGenerationExtension
+FusioIrGenerationExtension
   └── generate(moduleFragment, pluginContext)
         └── MappedScopeTransformer (IrElementTransformerVoidWithContext)
               └── visitCall() — intercepts mappedScope<ChildEvent, ChildEffect, ChildState> { ... }
@@ -19,18 +19,18 @@ AriaIrGenerationExtension
 
 ## Components
 
-### AriaIrGenerationExtension
+### FusioIrGenerationExtension
 
 Entry point for IR code generation. Implements `IrGenerationExtension`.
 
 ```kotlin
-package com.kitakkun.aria.compiler
+package com.kitakkun.fusio.compiler
 
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 
-class AriaIrGenerationExtension : IrGenerationExtension {
+class FusioIrGenerationExtension : IrGenerationExtension {
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
         moduleFragment.transform(MappedScopeTransformer(pluginContext), null)
     }
@@ -42,7 +42,7 @@ class AriaIrGenerationExtension : IrGenerationExtension {
 Core transformer that intercepts `mappedScope` calls and replaces them with generated bridging code.
 
 ```kotlin
-package com.kitakkun.aria.compiler
+package com.kitakkun.fusio.compiler
 
 import org.jetbrains.kotlin.backend.common.IrElementTransformerVoidWithContext
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
@@ -59,11 +59,11 @@ class MappedScopeTransformer(
 
     companion object {
         val MAPPED_SCOPE_CALLABLE_ID = CallableId(
-            FqName("com.kitakkun.aria"),
+            FqName("com.kitakkun.fusio"),
             Name.identifier("mappedScope"),
         )
-        val PRESENTER_SCOPE_CLASS_ID = ClassId.fromString("com/kitakkun/aria/PresenterScope")
-        val ARIA_CLASS_ID = ClassId.fromString("com/kitakkun/aria/Aria")
+        val PRESENTER_SCOPE_CLASS_ID = ClassId.fromString("com/kitakkun/fusio/PresenterScope")
+        val FUSIO_CLASS_ID = ClassId.fromString("com/kitakkun/fusio/Fusio")
     }
 
     override fun visitCall(expression: IrCall): IrExpression {
@@ -78,7 +78,7 @@ class MappedScopeTransformer(
     private fun isMappedScopeCall(call: IrCall): Boolean {
         val callee = call.symbol.owner
         return callee.name == Name.identifier("mappedScope")
-            && callee.parent.let { /* verify it's in com.kitakkun.aria package */ }
+            && callee.parent.let { /* verify it's in com.kitakkun.fusio package */ }
     }
 }
 ```
@@ -114,7 +114,7 @@ val favoriteState = run {
     val childScope = remember { PresenterScope<FavoriteEvent, FavoriteEffect>(childEventFlow) }
 
     // 3. Invoke child presenter (the lambda body)
-    val childResult: Aria<FavoriteState, FavoriteEffect> = childScope.favorite()
+    val childResult: Fusio<FavoriteState, FavoriteEffect> = childScope.favorite()
 
     // 4. Forward child effects → parent effects via @MapFrom mappings
     LaunchedEffect(Unit) {
@@ -135,7 +135,7 @@ val favoriteState = run {
         onDispose { childScope.close() }
     }
 
-    // 6. Return child state (unwrap Aria<State, Effect> → State)
+    // 6. Return child state (unwrap Fusio<State, Effect> → State)
     childResult.state
 }
 ```
@@ -154,7 +154,7 @@ private fun resolveSymbols(pluginContext: IrPluginContext, fromFile: IrFile) {
 
     // Runtime classes
     val presenterScopeClass = finder.findClass(PRESENTER_SCOPE_CLASS_ID)!!
-    val ariaClass = finder.findClass(ARIA_CLASS_ID)!!
+    val fusioClass = finder.findClass(FUSIO_CLASS_ID)!!
 
     // Runtime functions
     val emitEffectFn = finder.findFunctions(
@@ -265,7 +265,7 @@ private fun buildEffectForwarding(
 
 ### Type Parameter Extraction
 
-`mappedScope` has 3 type parameters: `<ChildEvent, ChildEffect, ChildState>`. At call site, all 3 are typically inferred from the lambda return type (`Aria<ChildState, ChildEffect>`), so users just write `mappedScope { favorite() }`.
+`mappedScope` has 3 type parameters: `<ChildEvent, ChildEffect, ChildState>`. At call site, all 3 are typically inferred from the lambda return type (`Fusio<ChildState, ChildEffect>`), so users just write `mappedScope { favorite() }`.
 
 At the IR level:
 ```kotlin
@@ -288,14 +288,14 @@ val parentEffectType = resolveParentEffectType(expression)  // MyScreenEffect
 
 The IR transformer MUST run **before** the Compose compiler plugin. This is critical because:
 
-1. Aria generates `@Composable` lambda bodies (`LaunchedEffect`, `DisposableEffect`, `remember`)
+1. Fusio generates `@Composable` lambda bodies (`LaunchedEffect`, `DisposableEffect`, `remember`)
 2. The Compose plugin must see these generated calls to apply its own transformations (slot table, restartability, etc.)
 3. If Compose runs first, the generated code would not get Compose IR treatment
 
 **Ordering mechanism:**
 - Plugin execution order follows `-Xplugin` argument order in the Kotlin compiler
-- The Aria Gradle plugin should be applied before the Compose plugin
-- Alternatively, use `-Xcompiler-plugin-order=com.kitakkun.aria,org.jetbrains.compose.compiler` (Kotlin 2.1+)
+- The Fusio Gradle plugin should be applied before the Compose plugin
+- Alternatively, use `-Xcompiler-plugin-order=com.kitakkun.fusio,org.jetbrains.compose.compiler` (Kotlin 2.1+)
 
 ## Key Kotlin Compiler IR APIs Used
 
@@ -380,7 +380,7 @@ This is required for every generated `LaunchedEffect { ... }`, `DisposableEffect
 ```
 Input IR:
   CALL mappedScope<FavoriteEvent, FavoriteEffect>
-    LAMBDA: PresenterScope<FavoriteEvent, FavoriteEffect>.() -> Aria<FavoriteState, FavoriteEffect>
+    LAMBDA: PresenterScope<FavoriteEvent, FavoriteEffect>.() -> Fusio<FavoriteState, FavoriteEffect>
       CALL favorite()
 
 Output IR:
@@ -402,7 +402,7 @@ The generated code must be stable across recompositions:
 
 2. **`childScope`**: Wrapped in `remember { }` — survives recomposition. The Channel inside PresenterScope persists.
 
-3. **`childResult`**: The lambda `childScope.favorite()` re-executes on each recomposition (it's `@Composable`). This produces a new `Aria` instance each time, but the `state` inside is managed by Compose's `remember`/`mutableStateOf` in the child presenter. The `effectFlow` reference from the remembered child scope is stable.
+3. **`childResult`**: The lambda `childScope.favorite()` re-executes on each recomposition (it's `@Composable`). This produces a new `Fusio` instance each time, but the `state` inside is managed by Compose's `remember`/`mutableStateOf` in the child presenter. The `effectFlow` reference from the remembered child scope is stable.
 
 4. **`LaunchedEffect(Unit)`**: Runs once and collects effects for the lifetime of the composition. Since the child scope is `remember`ed, the effect flow reference is stable.
 
@@ -414,7 +414,7 @@ The generated code must be stable across recompositions:
 
 2. **~~`remember` for PresenterScope~~** (RESOLVED): The generated child `PresenterScope` MUST be wrapped in `remember { }` to survive recomposition. Without it, every recomposition creates a new Channel, losing pending Effects. This is now reflected in the generated code above.
 
-3. **Incremental compilation safety**: Using `finderForBuiltins()` vs `finderForSource(fromFile)` — Aria's runtime types (`PresenterScope`, `Aria`) are library types, so `finderForBuiltins()` is correct. But for resolving user's Event/Effect sealed classes, we need `finderForSource(fromFile)` to properly track IC dependencies.
+3. **Incremental compilation safety**: Using `finderForBuiltins()` vs `finderForSource(fromFile)` — Fusio's runtime types (`PresenterScope`, `Fusio`) are library types, so `finderForBuiltins()` is correct. But for resolving user's Event/Effect sealed classes, we need `finderForSource(fromFile)` to properly track IC dependencies.
 
 4. **Error recovery**: If annotation resolution fails at IR stage (shouldn't happen if FIR checker ran), should the transformer leave the `mappedScope` stub call in place (will throw at runtime with a clear message) or emit a compiler error?
 

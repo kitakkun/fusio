@@ -1,17 +1,17 @@
-# Step 3: aria-gradle-plugin
+# Step 3: fusio-gradle-plugin
 
-## Module: `aria-gradle-plugin`
+## Module: `fusio-gradle-plugin`
 
-Gradle plugin that registers the Aria Compiler Plugin and automatically adds runtime dependencies.
+Gradle plugin that registers the Fusio Compiler Plugin and automatically adds runtime dependencies.
 
 ## Components
 
-### AriaGradlePlugin
+### FusioGradlePlugin
 
 Implements `KotlinCompilerPluginSupportPlugin` to integrate with the Kotlin Gradle Plugin.
 
 ```kotlin
-package com.kitakkun.aria.gradle
+package com.kitakkun.fusio.gradle
 
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
@@ -20,17 +20,17 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 
-class AriaGradlePlugin : KotlinCompilerPluginSupportPlugin {
+class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
     override fun apply(target: Project) {
         // No extension needed for now
     }
 
-    override fun getCompilerPluginId(): String = "com.kitakkun.aria"
+    override fun getCompilerPluginId(): String = "com.kitakkun.fusio"
 
     override fun getPluginArtifact(): SubpluginArtifact =
         SubpluginArtifact(
-            groupId = "com.kitakkun.aria",
-            artifactId = "aria-compiler-plugin",
+            groupId = "com.kitakkun.fusio",
+            artifactId = "fusio-compiler-plugin",
             version = VERSION,
         )
 
@@ -44,21 +44,21 @@ class AriaGradlePlugin : KotlinCompilerPluginSupportPlugin {
         // Auto-add runtime dependencies
         project.dependencies.add(
             kotlinCompilation.defaultSourceSet.implementationConfigurationName,
-            "com.kitakkun.aria:aria-runtime:$VERSION",
+            "com.kitakkun.fusio:fusio-runtime:$VERSION",
         )
-        // aria-annotations is transitively included via aria-runtime's api dependency
+        // fusio-annotations is transitively included via fusio-runtime's api dependency
 
         return project.provider { emptyList() }
     }
 }
 ```
 
-### AriaCommandLineProcessor
+### FusioCommandLineProcessor
 
 Receives options from Gradle and passes them to the compiler plugin via `CompilerConfiguration`.
 
 ```kotlin
-package com.kitakkun.aria.compiler
+package com.kitakkun.fusio.compiler
 
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOption
@@ -67,11 +67,11 @@ import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
 
 @OptIn(ExperimentalCompilerApi::class)
-class AriaCommandLineProcessor : CommandLineProcessor {
-    override val pluginId: String = "com.kitakkun.aria"
+class FusioCommandLineProcessor : CommandLineProcessor {
+    override val pluginId: String = "com.kitakkun.fusio"
 
     override val pluginOptions: Collection<CliOption> = listOf(
-        CliOption("enabled", "<true|false>", "Enable Aria compiler plugin", required = false),
+        CliOption("enabled", "<true|false>", "Enable Fusio compiler plugin", required = false),
     )
 
     override fun processOption(
@@ -80,18 +80,18 @@ class AriaCommandLineProcessor : CommandLineProcessor {
         configuration: CompilerConfiguration
     ) {
         when (option.optionName) {
-            "enabled" -> configuration.put(AriaConfigurationKeys.ENABLED, value.toBoolean())
+            "enabled" -> configuration.put(FusioConfigurationKeys.ENABLED, value.toBoolean())
         }
     }
 }
 ```
 
-### AriaCompilerPluginRegistrar
+### FusioCompilerPluginRegistrar
 
 Entry point for the compiler plugin. Registers both FIR and IR extensions.
 
 ```kotlin
-package com.kitakkun.aria.compiler
+package com.kitakkun.fusio.compiler
 
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
@@ -100,18 +100,18 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 
 @OptIn(ExperimentalCompilerApi::class)
-class AriaCompilerPluginRegistrar : CompilerPluginRegistrar() {
-    override val pluginId: String = "com.kitakkun.aria"
+class FusioCompilerPluginRegistrar : CompilerPluginRegistrar() {
+    override val pluginId: String = "com.kitakkun.fusio"
     override val supportsK2: Boolean = true
 
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
-        if (configuration.get(AriaConfigurationKeys.ENABLED, true).not()) return
+        if (configuration.get(FusioConfigurationKeys.ENABLED, true).not()) return
 
         // FIR extensions (analysis + checking)
-        FirExtensionRegistrarAdapter.registerExtension(AriaFirExtensionRegistrar())
+        FirExtensionRegistrarAdapter.registerExtension(FusioFirExtensionRegistrar())
 
         // IR extensions (code generation)
-        IrGenerationExtension.registerExtension(AriaIrGenerationExtension())
+        IrGenerationExtension.registerExtension(FusioIrGenerationExtension())
     }
 }
 ```
@@ -120,23 +120,23 @@ class AriaCompilerPluginRegistrar : CompilerPluginRegistrar() {
 
 ### META-INF/services/org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 ```
-com.kitakkun.aria.compiler.AriaCompilerPluginRegistrar
+com.kitakkun.fusio.compiler.FusioCompilerPluginRegistrar
 ```
 
 ### META-INF/services/org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 ```
-com.kitakkun.aria.compiler.AriaCommandLineProcessor
+com.kitakkun.fusio.compiler.FusioCommandLineProcessor
 ```
 
-### META-INF/gradle-plugins/com.kitakkun.aria.properties
+### META-INF/gradle-plugins/com.kitakkun.fusio.properties
 ```
-implementation-class=com.kitakkun.aria.gradle.AriaGradlePlugin
+implementation-class=com.kitakkun.fusio.gradle.FusioGradlePlugin
 ```
 
 ## Build Configuration
 
 ```kotlin
-// aria-gradle-plugin/build.gradle.kts
+// fusio-gradle-plugin/build.gradle.kts
 plugins {
     kotlin("jvm")
     `java-gradle-plugin`
@@ -148,9 +148,9 @@ dependencies {
 
 gradlePlugin {
     plugins {
-        create("aria") {
-            id = "com.kitakkun.aria"
-            implementationClass = "com.kitakkun.aria.gradle.AriaGradlePlugin"
+        create("fusio") {
+            id = "com.kitakkun.fusio"
+            implementationClass = "com.kitakkun.fusio.gradle.FusioGradlePlugin"
         }
     }
 }
@@ -158,13 +158,13 @@ gradlePlugin {
 
 ## Compose Plugin Ordering
 
-Aria's IR transformer should run **before** the Compose compiler plugin to operate on raw `@Composable` lambdas. Plugin execution order follows `CompilerPluginRegistrar` registration order, which is controlled by Gradle's `-Xplugin` argument order.
+Fusio's IR transformer should run **before** the Compose compiler plugin to operate on raw `@Composable` lambdas. Plugin execution order follows `CompilerPluginRegistrar` registration order, which is controlled by Gradle's `-Xplugin` argument order.
 
-The Aria Gradle plugin should be applied **before** the Compose plugin in the user's `build.gradle.kts`:
+The Fusio Gradle plugin should be applied **before** the Compose plugin in the user's `build.gradle.kts`:
 
 ```kotlin
 plugins {
-    id("com.kitakkun.aria")  // Aria first
+    id("com.kitakkun.fusio")  // Fusio first
     id("org.jetbrains.compose")      // Compose second
 }
 ```

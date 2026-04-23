@@ -1,4 +1,4 @@
-Aria
+Fusio
 Copyright 2026 kitakkun
 
 This product is licensed under the Apache License, Version 2.0 (the "License");
@@ -6,7 +6,7 @@ see the LICENSE file for the full text of the License.
 
 ---
 
-The design of Aria's compiler-compat layer (per-Kotlin-version CompatContext
+The design of Fusio's compiler-compat layer (per-Kotlin-version CompatContext
 implementations with ServiceLoader-based runtime selection and shaded artifact
 distribution) is inspired by the `compiler-compat` module of ZacSweers/Metro:
 
@@ -15,5 +15,5 @@ distribution) is inspired by the `compiler-compat` module of ZacSweers/Metro:
 Metro is Copyright Zac Sweers and contributors, and is distributed under the
 Apache License, Version 2.0.
 
-No source code from Metro is incorporated into Aria; only the architectural
+No source code from Metro is incorporated into Fusio; only the architectural
 pattern is adopted. This notice exists to acknowledge that intellectual debt.
