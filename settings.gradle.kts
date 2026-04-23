@@ -60,6 +60,7 @@ include(":fusio-compiler-plugin-tests:k240_beta2")
 project(":fusio-compiler-plugin-tests:k2320").name = "tests-k2320"
 project(":fusio-compiler-plugin-tests:k240_beta2").name = "tests-k240_beta2"
 include(":fusio-compiler-compat")
+include(":fusio-compiler-compat:k230")
 include(":fusio-compiler-compat:k2320")
 include(":fusio-compiler-compat:k240_beta2")
 include(":benchmarks")

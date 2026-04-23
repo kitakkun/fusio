@@ -22,7 +22,6 @@ import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.builders.irWhen
 import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrCall
@@ -76,13 +75,16 @@ class FuseTransformer(
     compat: CompatContext,
 ) : IrElementTransformerVoidWithContext(), CompatContext by compat {
 
-    private val finder by lazy { pluginContext.finderForBuiltins() }
-
+    // Lookups route through CompatContext (findClass / findConstructors /
+    // findFunctions) so the shaded plugin jar works on the whole 2.3.0+ range:
+    // on 2.3.20+ the k2320 / k240_beta2 impls use the new `finderForBuiltins`
+    // API, on 2.3.0 / 2.3.10 the k230 impl falls back to the legacy
+    // `referenceClass` / `referenceConstructors` / `referenceFunctions`.
     private val presenterScopeClass: IrClassSymbol by lazy {
-        finder.findClass(FusioClassIds.PRESENTER_SCOPE)!!
+        pluginContext.findClass(FusioClassIds.PRESENTER_SCOPE)!!
     }
     private val presenterScopeConstructor: IrConstructorSymbol by lazy {
-        finder.findConstructors(FusioClassIds.PRESENTER_SCOPE).single()
+        pluginContext.findConstructors(FusioClassIds.PRESENTER_SCOPE).single()
     }
     private val presenterScopeEventFlowGetter: IrSimpleFunctionSymbol by lazy {
         presenterScopeClass.owner.properties
@@ -90,10 +92,10 @@ class FuseTransformer(
             .getter!!.symbol
     }
     private val mapEventsFn: IrSimpleFunctionSymbol by lazy {
-        finder.findFunctions(FusioClassIds.MAP_EVENTS).single()
+        pluginContext.findFunctions(FusioClassIds.MAP_EVENTS).single()
     }
     private val forwardEffectsFn: IrSimpleFunctionSymbol by lazy {
-        finder.findFunctions(FusioClassIds.FORWARD_EFFECTS).single()
+        pluginContext.findFunctions(FusioClassIds.FORWARD_EFFECTS).single()
     }
 
     override fun visitCall(expression: IrCall): IrExpression {
@@ -283,7 +285,10 @@ class FuseTransformer(
         val functionType = pluginContext.irBuiltIns.functionN(1).typeWith(fromType, nullableToType)
 
         val lambdaFun = pluginContext.irFactory.buildFun {
-            origin = IrDeclarationOrigin.LOCAL_FUNCTION_FOR_LAMBDA
+            // Routed through CompatContext so the underlying companion call is
+            // emitted in per-version bytecode — 2.3.0's companion getter returns
+            // `IrDeclarationOriginImpl`, 2.3.20+ returns `IrDeclarationOrigin`.
+            origin = localFunctionForLambdaOrigin
             name = Name.special("<anonymous>")
             visibility = DescriptorVisibilities.LOCAL
             returnType = nullableToType

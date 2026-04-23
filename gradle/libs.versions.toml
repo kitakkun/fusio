@@ -30,6 +30,7 @@ fusio = "0.1.0-SNAPSHOT"
 [libraries]
 kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
 kotlin-compiler-embeddable-k23 = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-k23" }
+kotlin-compiler-embeddable-k2320 = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-k2320" }
 kotlin-compiler-embeddable-k24 = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-k24" }
 kotlin-compiler = { module = "org.jetbrains.kotlin:kotlin-compiler", version.ref = "kotlin" }
 kotlin-compiler-k230 = { module = "org.jetbrains.kotlin:kotlin-compiler", version.ref = "kotlin-k230" }

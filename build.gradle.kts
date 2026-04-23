@@ -67,6 +67,7 @@ apiValidation {
         "k2321",
         "tests-k240_beta2",
         "fusio-compiler-compat",
+        "k230",
         "k2320",
         "k240_beta2",
         "benchmarks",

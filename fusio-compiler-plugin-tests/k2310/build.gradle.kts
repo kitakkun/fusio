@@ -1,9 +1,7 @@
 /**
- * Kotlin 2.3.10 test lane.
- *
- * KNOWN-FAILING: same compat gap as the k230 lane — plugin references
- * `DeclarationFinder` / `finderForBuiltins()`, added in 2.3.20. The lane
- * stays registered (opted out of `check`) to make the gap visible.
+ * Kotlin 2.3.10 test lane. Same structure as `:k230`, pinned to 2.3.10.
+ * Runtime picks the `:fusio-compiler-compat:k230` impl via
+ * `CompatContextResolver`.
  */
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -67,8 +65,6 @@ tasks.test {
     useJUnitPlatform()
     dependsOn(testArtifacts)
     workingDir = rootDir
-    // Known-failing lane — see module KDoc.
-    ignoreFailures = true
 
     setLibraryProperty("org.jetbrains.kotlin.test.kotlin-stdlib", "kotlin-stdlib")
     setLibraryProperty("org.jetbrains.kotlin.test.kotlin-stdlib-jdk8", "kotlin-stdlib-jdk8")

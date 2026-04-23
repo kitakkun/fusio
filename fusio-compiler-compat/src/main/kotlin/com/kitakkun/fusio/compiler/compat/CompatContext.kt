@@ -1,14 +1,21 @@
 package com.kitakkun.fusio.compiler.compat
 
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
+import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
+import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
+import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
+import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.name.CallableId
+import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 
 /**
@@ -78,6 +85,48 @@ interface CompatContext {
      * break, same fix: per-k**-impl bytecode.
      */
     fun CompilerPluginRegistrar.ExtensionStorage.registerIrGenerationExtension(extension: IrGenerationExtension)
+
+    /**
+     * Looks up an IR class symbol by [ClassId] on a running [IrPluginContext].
+     *
+     * - Kotlin 2.3.20+: `pluginContext.finderForBuiltins().findClass(classId)`
+     *   (the `DeclarationFinder` API, IC-compatible).
+     * - Kotlin 2.3.0 – 2.3.19: `DeclarationFinder` doesn't exist yet. Falls back
+     *   to the legacy `pluginContext.referenceClass(classId)`.
+     *
+     * Routed through CompatContext so each k** impl's bytecode references the
+     * API its compiler jar actually ships — without this, the shaded plugin
+     * jar link-fails on 2.3.0 / 2.3.10 because `DeclarationFinder` is absent.
+     */
+    fun IrPluginContext.findClass(classId: ClassId): IrClassSymbol?
+
+    /**
+     * Looks up all constructors of [classId]. See [findClass] for the per-version
+     * API story.
+     */
+    fun IrPluginContext.findConstructors(classId: ClassId): Collection<IrConstructorSymbol>
+
+    /**
+     * Looks up all top-level / class-member functions matching [callableId]. See
+     * [findClass] for the per-version API story.
+     */
+    fun IrPluginContext.findFunctions(callableId: CallableId): Collection<IrSimpleFunctionSymbol>
+
+    /**
+     * `IrDeclarationOrigin.LOCAL_FUNCTION_FOR_LAMBDA` — used as the origin for
+     * synthetic `@MapTo` / `@MapFrom` mapper lambdas the IR transformer
+     * generates.
+     *
+     * - Kotlin 2.3.0 – 2.3.19: `IrDeclarationOrigin.Companion.getLOCAL_FUNCTION_FOR_LAMBDA()`
+     *   returns `IrDeclarationOriginImpl` (subtype).
+     * - Kotlin 2.3.20+: same call returns `IrDeclarationOrigin` (the interface).
+     *
+     * JVM considers the two signatures distinct, so the 2.3.21-compiled plugin
+     * bytecode `NoSuchMethodError`s under 2.3.0 runtime. Routing through this
+     * property gives each k** impl the chance to call its own compiler's
+     * getter and up-cast to the common interface type.
+     */
+    val localFunctionForLambdaOrigin: IrDeclarationOrigin
 
     /**
      * Registered per subproject via META-INF/services. [CompatContextResolver]

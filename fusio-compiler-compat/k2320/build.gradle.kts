@@ -1,13 +1,13 @@
 /**
- * Kotlin 2.3.x implementation of [com.kitakkun.fusio.compiler.compat.CompatContext].
+ * Kotlin 2.3.20 – 2.3.x implementation of
+ * [com.kitakkun.fusio.compiler.compat.CompatContext].
  *
- * Compiled against `kotlin-compiler-embeddable:2.3.0` — the oldest version
- * the [CompatContext.Factory.supportedRange] declares it handles. Using the
- * oldest surface guarantees the emitted bytecode only references members
- * that exist in every 2.3.x release (2.3.0 / 2.3.10 / 2.3.20 / …), so the
- * shaded jar runs against any of them. Building against 2.3.20 would let
- * the compiler silently pick up members added in later patches and break
- * downstream consumers still on 2.3.0.
+ * Compiled against `kotlin-compiler-embeddable:2.3.20` — the oldest version
+ * this impl targets. 2.3.20 is the first release that shipped
+ * `IrPluginContext.finderForBuiltins()` / `DeclarationFinder`, which
+ * [CompatContext.findClass] etc. route through. Older 2.3 patches
+ * (2.3.0 / 2.3.10 / 2.3.19) are handled by the sibling `:k230` impl using
+ * the legacy `referenceClass` / `referenceFunctions` APIs.
  *
  * Not published on its own — shaded into fusio-compiler-plugin at release time.
  */
@@ -24,5 +24,5 @@ kotlin {
 
 dependencies {
     api(project(":fusio-compiler-compat"))
-    compileOnly(libs.kotlin.compiler.embeddable.k23)
+    compileOnly(libs.kotlin.compiler.embeddable.k2320)
 }

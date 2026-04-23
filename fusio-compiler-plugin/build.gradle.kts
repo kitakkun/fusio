@@ -27,10 +27,11 @@ dependencies {
     // compileOnly, not implementation.
     compileOnly(project(":fusio-compiler-compat"))
 
-    // These three jars get bundled into shadowJar. The k** subprojects
-    // register themselves via META-INF/services and are only referenced by
+    // These jars get bundled into shadowJar. The k** subprojects register
+    // themselves via META-INF/services and are only referenced by
     // ServiceLoader, so compileOnly isn't needed for them — only shaded.
     shaded(project(":fusio-compiler-compat"))
+    shaded(project(":fusio-compiler-compat:k230"))
     shaded(project(":fusio-compiler-compat:k2320"))
     shaded(project(":fusio-compiler-compat:k240_beta2"))
 

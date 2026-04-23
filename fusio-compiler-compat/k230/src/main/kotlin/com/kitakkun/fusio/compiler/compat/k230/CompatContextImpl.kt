@@ -1,4 +1,4 @@
-package com.kitakkun.fusio.compiler.compat.k2320
+package com.kitakkun.fusio.compiler.compat.k230
 
 import com.kitakkun.fusio.compiler.compat.CompatContext
 import com.kitakkun.fusio.compiler.compat.Version
@@ -24,17 +24,19 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 
 /**
- * Kotlin 2.3.20+ [CompatContext]. Targets 2.3.20 through (excluding) 2.4.0.
+ * Kotlin 2.3.0 – 2.3.19 [CompatContext].
  *
- * API specifics used:
- * - `FirAnnotation.getKClassArgument(name, session)` — 2.3 requires the session
- *   parameter; 2.4 dropped it.
- * - `IrCall.arguments[i] = expr`, `IrCall.typeArguments[i] = type` — list-access
- *   writes stabilised in 2.3; earlier versions used `putValueArgument` /
- *   `putTypeArgument`.
- * - `IrPluginContext.finderForBuiltins()` — added in 2.3.20; older 2.3 patches
- *   are handled by the sibling `:k230` impl.
+ * Delegation-by-object would save duplication against `:k2320`, but that
+ * would force loading k2320's bytecode — which references
+ * `finderForBuiltins()` / `DeclarationFinder` — and fail with
+ * `NoClassDefFoundError` on 2.3.0 / 2.3.10 even though the delegate's
+ * overrides would never be invoked. So every method is re-implemented here
+ * against bytecode compiled only against the 2.3.0 surface.
+ *
+ * The finder trio uses the legacy `referenceClass` / `referenceConstructors`
+ * / `referenceFunctions` APIs that predate `DeclarationFinder`.
  */
+@Suppress("DEPRECATION")
 class CompatContextImpl : CompatContext {
     override fun FirAnnotation.kclassArg(name: Name, session: FirSession): ConeKotlinType? =
         getKClassArgument(name, session)
@@ -56,25 +58,23 @@ class CompatContextImpl : CompatContext {
     }
 
     override fun IrPluginContext.findClass(classId: ClassId): IrClassSymbol? =
-        finderForBuiltins().findClass(classId)
+        referenceClass(classId)
 
     override fun IrPluginContext.findConstructors(classId: ClassId): Collection<IrConstructorSymbol> =
-        finderForBuiltins().findConstructors(classId)
+        referenceConstructors(classId)
 
     override fun IrPluginContext.findFunctions(callableId: CallableId): Collection<IrSimpleFunctionSymbol> =
-        finderForBuiltins().findFunctions(callableId)
+        referenceFunctions(callableId)
 
+    // In 2.3.0 the companion getter's return type is `IrDeclarationOriginImpl`;
+    // the implicit upcast to `IrDeclarationOrigin` happens here in 2.3.0 bytecode.
     override val localFunctionForLambdaOrigin: IrDeclarationOrigin
         get() = IrDeclarationOrigin.LOCAL_FUNCTION_FOR_LAMBDA
 
-    /**
-     * Discovered by [java.util.ServiceLoader] via the META-INF/services
-     * registration shipped in this module's resources.
-     */
     class Factory : CompatContext.Factory {
         override val supportedRange: VersionRange = VersionRange(
-            min = Version(2, 3, 20),
-            max = Version(2, 4, 0),
+            min = Version(2, 3, 0),
+            max = Version(2, 3, 20),
         )
 
         override fun create(): CompatContext = CompatContextImpl()

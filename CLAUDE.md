@@ -31,7 +31,7 @@ Build: Gradle 9.3.0, shadow 9.4.1, Kotlin 2.3.21 (+ 2.4.0-Beta2 via smokeK24). C
 ./gradlew build                                            # compiles + runs all tests (7 platforms × commonTest)
 ./gradlew :fusio-compiler-plugin-tests:k2321:test           # primary Kotlin 2.3.21 lane — diagnostics + box + IR
 ./gradlew :fusio-compiler-plugin-tests:tests-k240_beta2:test # Kotlin 2.4.0-Beta2 lane (own IR goldens)
-./gradlew :fusio-compiler-plugin-tests:k230:test            # Kotlin 2.3.0 (KNOWN-FAILING — see note below)
+./gradlew :fusio-compiler-plugin-tests:k230:test            # Kotlin 2.3.0 — box + diagnostics via :compat:k230
 ./gradlew :fusio-runtime:allTests                           # runtime tests on every KMP target
 ./gradlew :fusio-runtime:jvmTest                            # JVM only — fastest feedback
 cd demo && ../gradlew runJvm                               # launch Compose Desktop demo
@@ -54,15 +54,10 @@ mavenLocal is content-filtered to `com.kitakkun.fusio` in settings so external K
 Single shaded `fusio-compiler-plugin` jar covers every supported Kotlin version. Per-Kotlin-version logic lives in `fusio-compiler-compat/`:
 
 - `fusio-compiler-compat/` — `CompatContext` interface + `CompatContextResolver` (ServiceLoader)
-- `fusio-compiler-compat/k2320/` — Kotlin 2.3.x impl
+- `fusio-compiler-compat/k230/` — Kotlin 2.3.0 – 2.3.19 impl (legacy `referenceClass` / `referenceFunctions` for the finder trio; same bytecode as k2320 for everything else)
+- `fusio-compiler-compat/k2320/` — Kotlin 2.3.20 – 2.3.x impl (uses `finderForBuiltins()` / `DeclarationFinder`)
 - `fusio-compiler-compat/k240_beta2/` — Kotlin 2.4.0-Beta2 impl (delegates to k2320 except `kclassArg`, which lost its `session` parameter in 2.4)
 
-Shadow plugin in `fusio-compiler-plugin/build.gradle.kts` bundles all three jars and merges their `META-INF/services/…/CompatContext$Factory` files. `CompatContextResolver.resolve()` picks the matching factory via `KotlinCompilerVersion.VERSION` at plugin init.
+Shadow plugin in `fusio-compiler-plugin/build.gradle.kts` bundles all four jars and merges their `META-INF/services/…/CompatContext$Factory` files. `CompatContextResolver.resolve()` picks the matching factory via `KotlinCompilerVersion.VERSION` at plugin init.
 
 Adding Kotlin 2.5 support: create `fusio-compiler-compat/k250/` mirroring `k240_beta2/`, declare its `supportedRange`, add it to the `shaded` configuration in `fusio-compiler-plugin/build.gradle.kts`. See `docs/08-multi-compiler-version-plan.md` for the full outline.
-
-### Known compat gap on 2.3.0 / 2.3.10
-
-`FuseTransformer` uses `IrPluginContext.finderForBuiltins()` + `DeclarationFinder`, which were added in **Kotlin 2.3.20**. The shaded plugin jar references those symbols directly, so on 2.3.0 / 2.3.10 the first `fuse { }` transform fails with `NoClassDefFoundError: …/DeclarationFinder`.
-
-`:fusio-compiler-plugin-tests:k230` and `:k2310` run the full suite against those patches and mark the failures with `ignoreFailures = true` — so `./gradlew check` stays green, but the red test report makes the gap visible. To actually support 2.3.0+ the `finder` access would need to move behind `CompatContext` with a polyfill (via the legacy `pluginContext.referenceClass()` API) in a new `k230` compat impl.

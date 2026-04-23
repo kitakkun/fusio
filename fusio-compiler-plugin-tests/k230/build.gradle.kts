@@ -1,13 +1,7 @@
 /**
- * Kotlin 2.3.0 test lane.
- *
- * KNOWN-FAILING: this lane currently reports 7 box-test NoClassDefFoundError
- * failures. FuseTransformer uses `IrPluginContext.finderForBuiltins()` +
- * `DeclarationFinder`, which were added in Kotlin 2.3.20 — the shaded plugin
- * jar references symbols that don't exist on the 2.3.0 classpath. Keeping
- * the lane registered (but opted out of `check`) so the compat gap is
- * visible and runnable via `./gradlew :fusio-compiler-plugin-tests:k230:test`
- * when someone wants to verify a compat shim.
+ * Kotlin 2.3.0 test lane — exercises every shared testData case against the
+ * 2.3.0 compiler, which routes through the `:fusio-compiler-compat:k230`
+ * impl (legacy `referenceClass` / `referenceFunctions` fallback) at runtime.
  */
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -71,10 +65,6 @@ tasks.test {
     useJUnitPlatform()
     dependsOn(testArtifacts)
     workingDir = rootDir
-    // Known-failing lane — see module KDoc. `ignoreFailures` keeps
-    // `./gradlew check` green while still running + reporting the lane, so
-    // the compat gap is visible as test-report red but doesn't block CI.
-    ignoreFailures = true
 
     setLibraryProperty("org.jetbrains.kotlin.test.kotlin-stdlib", "kotlin-stdlib")
     setLibraryProperty("org.jetbrains.kotlin.test.kotlin-stdlib-jdk8", "kotlin-stdlib-jdk8")
