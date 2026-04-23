@@ -3,114 +3,87 @@ package com.kitakkun.fusio.demo
 import com.kitakkun.fusio.MapFrom
 import com.kitakkun.fusio.MapTo
 
-// ---------- Counter (leaf) ----------
-//
-// Bounded counter 0..MAX. `Reset` returns to 0. When `Increment` would cross
-// MAX, the counter stays pinned and emits `MaxReached` so the parent can react
-// without the leaf needing to know about any "screen-level" behaviour.
-
-sealed interface CounterEvent {
-    data object Increment : CounterEvent
-    data object Reset : CounterEvent
-}
-
-sealed interface CounterEffect {
-    data object MaxReached : CounterEffect
-}
-
-data class CounterState(val value: Int, val isAtMax: Boolean)
-
-// ---------- Favorite (mid — hosts Counter) ----------
-//
-// Toggles favorite status and forwards its `ShowMessage` up. Also relays
-// counter actions down via @MapTo and chains the counter's MaxReached up
-// via @MapFrom.
-
-sealed interface FavoriteEvent {
-    data class Toggle(val id: String) : FavoriteEvent
-
-    @MapTo(CounterEvent.Increment::class)
-    data object IncrementCounter : FavoriteEvent
-
-    @MapTo(CounterEvent.Reset::class)
-    data object ResetCounter : FavoriteEvent
-}
-
-sealed interface FavoriteEffect {
-    data class ShowMessage(val message: String) : FavoriteEffect
-
-    @MapFrom(CounterEffect.MaxReached::class)
-    data object CounterMaxReached : FavoriteEffect
-}
-
-data class FavoriteState(
-    val isFavorited: Boolean,
-    val counter: CounterState,
+data class Task(
+    val id: Long,
+    val title: String,
+    val completed: Boolean,
 )
 
-// ---------- Wallet (leaf, sibling of Favorite) ----------
+enum class TaskFilter { All, Active, Completed }
+
+// ---------- TaskList (sub-presenter) ----------
 //
-// Balance with deposit / withdraw. A withdrawal that exceeds the balance
-// is rejected inside the presenter; the UI learns via the InsufficientFunds
-// effect instead of duplicating the rule. BalanceUpdated is fired on every
-// successful change so the parent can log / snack it.
+// Owns the list of tasks and all the add / toggle / remove bookkeeping.
+// Knows nothing about filtering, UI, or snackbars — just emits effects
+// for "something interesting happened" and lets the parent decide what to
+// do about it (here, show a snackbar).
 
-sealed interface WalletEvent {
-    data class Deposit(val amount: Int) : WalletEvent
-    data class Withdraw(val amount: Int) : WalletEvent
+sealed interface TaskListEvent {
+    data class Add(val title: String) : TaskListEvent
+    data class Toggle(val id: Long) : TaskListEvent
+    data class Remove(val id: Long) : TaskListEvent
 }
 
-sealed interface WalletEffect {
-    data class InsufficientFunds(val requested: Int, val available: Int) : WalletEffect
-    data class BalanceUpdated(val newBalance: Int) : WalletEffect
+sealed interface TaskListEffect {
+    data class Added(val title: String) : TaskListEffect
+    data class Completed(val title: String) : TaskListEffect
 }
 
-data class WalletState(
-    val balance: Int,
-    val lastAction: String?,
-)
+data class TaskListState(val tasks: List<Task>)
+
+// ---------- Filter (sub-presenter) ----------
+//
+// Trivial state-machine — stores the currently selected filter. Its only
+// job is to hold one enum value and emit an effect when it changes. Being
+// a sibling of TaskList means the two can evolve independently: TaskList
+// doesn't need to know the filter exists, and Filter doesn't need access
+// to the task list.
+
+sealed interface FilterEvent {
+    data class Select(val filter: TaskFilter) : FilterEvent
+}
+
+sealed interface FilterEffect {
+    data class Changed(val newFilter: TaskFilter) : FilterEffect
+}
+
+data class FilterState(val current: TaskFilter)
 
 // ---------- MyScreen (root) ----------
 //
-// Binds Favorite + Wallet as siblings via two sibling `mappedScope { ... }`
-// calls. `Search` is a parent-only concern (no child maps it), everything
-// else is routed down to the child that owns the rule.
+// Binds TaskList + Filter as siblings via two `mappedScope { ... }` calls.
+// The filter is applied in the parent, which is where the two sub-states
+// first come together — neither child can see the other.
 
 sealed interface MyScreenEvent {
-    data class Search(val query: String) : MyScreenEvent
+    @MapTo(TaskListEvent.Add::class)
+    data class AddTask(val title: String) : MyScreenEvent
 
-    @MapTo(FavoriteEvent.Toggle::class)
-    data class ToggleFavorite(val id: String) : MyScreenEvent
+    @MapTo(TaskListEvent.Toggle::class)
+    data class ToggleTask(val id: Long) : MyScreenEvent
 
-    @MapTo(FavoriteEvent.IncrementCounter::class)
-    data object IncrementCounter : MyScreenEvent
+    @MapTo(TaskListEvent.Remove::class)
+    data class RemoveTask(val id: Long) : MyScreenEvent
 
-    @MapTo(FavoriteEvent.ResetCounter::class)
-    data object ResetCounter : MyScreenEvent
-
-    @MapTo(WalletEvent.Deposit::class)
-    data class Deposit(val amount: Int) : MyScreenEvent
-
-    @MapTo(WalletEvent.Withdraw::class)
-    data class Withdraw(val amount: Int) : MyScreenEvent
+    @MapTo(FilterEvent.Select::class)
+    data class SelectFilter(val filter: TaskFilter) : MyScreenEvent
 }
 
 sealed interface MyScreenEffect {
-    @MapFrom(FavoriteEffect.ShowMessage::class)
-    data class ShowSnackbar(val message: String) : MyScreenEffect
+    @MapFrom(TaskListEffect.Added::class)
+    data class ShowTaskAdded(val title: String) : MyScreenEffect
 
-    @MapFrom(FavoriteEffect.CounterMaxReached::class)
-    data object CounterHitMax : MyScreenEffect
+    @MapFrom(TaskListEffect.Completed::class)
+    data class ShowTaskCompleted(val title: String) : MyScreenEffect
 
-    @MapFrom(WalletEffect.InsufficientFunds::class)
-    data class WalletWarning(val requested: Int, val available: Int) : MyScreenEffect
-
-    @MapFrom(WalletEffect.BalanceUpdated::class)
-    data class WalletBalanceChanged(val newBalance: Int) : MyScreenEffect
+    @MapFrom(FilterEffect.Changed::class)
+    data class ShowFilterChanged(val newFilter: TaskFilter) : MyScreenEffect
 }
 
 data class MyScreenUiState(
-    val searchQuery: String,
-    val favoriteState: FavoriteState,
-    val walletState: WalletState,
+    val visibleTasks: List<Task>,
+    val filter: TaskFilter,
+    val totalCount: Int,
+    val activeCount: Int,
+    val completedCount: Int,
 )
