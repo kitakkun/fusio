@@ -42,4 +42,5 @@ include(":fusio-compiler-compat")
 include(":fusio-compiler-compat:k2320")
 include(":fusio-compiler-compat:k240_beta2")
 include(":fusio-gradle-plugin")
+include(":benchmarks")
 // sample is a separate composite build — see sample/settings.gradle.kts
