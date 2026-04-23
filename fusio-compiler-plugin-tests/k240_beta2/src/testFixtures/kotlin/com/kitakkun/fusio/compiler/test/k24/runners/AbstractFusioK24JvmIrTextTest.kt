@@ -12,14 +12,14 @@ import org.jetbrains.kotlin.test.services.KotlinStandardLibrariesPathProvider
 
 /**
  * Kotlin 2.4.0-Beta2 IR text lane. Uses its own testData under
- * `fusio-compiler-plugin-k24-tests/testData/ir/` with .kt files that
- * mirror the primary lane + version-specific `.fir.ir.txt` /
+ * `fusio-compiler-plugin-tests/k240_beta2/testData/ir/` with .kt files
+ * that mirror the primary lane + version-specific `.fir.ir.txt` /
  * `.fir.kt.txt` goldens. Compiler patch releases regenerate the IR dump
  * format; keeping goldens pinned to a compiler version is what makes the
  * snapshot a meaningful regression guard instead of a shifting target.
  *
  * Regenerate with:
- *   ./gradlew :fusio-compiler-plugin-k24-tests:test -Pkotlin.test.update.test.data=true
+ *   ./gradlew :fusio-compiler-plugin-tests:tests-k240_beta2:test -Pkotlin.test.update.test.data=true
  */
 open class AbstractFusioK24JvmIrTextTest : AbstractFirLightTreeJvmIrTextTest() {
     override fun createKotlinStandardLibrariesPathProvider(): KotlinStandardLibrariesPathProvider {

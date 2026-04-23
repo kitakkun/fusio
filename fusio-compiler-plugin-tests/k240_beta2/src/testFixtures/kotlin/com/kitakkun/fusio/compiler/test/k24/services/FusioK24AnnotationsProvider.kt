@@ -41,6 +41,6 @@ private class FusioK24RuntimeClasspathProvider(testServices: TestServices) : Run
 
 private val fusioRuntimeClasspath: List<File> = run {
     val property = System.getProperty("fusioRuntime.classpath")
-        ?: error("System property 'fusioRuntime.classpath' is not set; check fusio-compiler-plugin-k24-tests/build.gradle.kts")
+        ?: error("System property 'fusioRuntime.classpath' is not set; check fusio-compiler-plugin-tests/k240_beta2/build.gradle.kts")
     property.split(File.pathSeparator).map(::File)
 }
