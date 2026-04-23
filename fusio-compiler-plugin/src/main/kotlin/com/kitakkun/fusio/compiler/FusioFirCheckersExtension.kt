@@ -13,8 +13,8 @@ class FusioFirCheckersExtension(session: FirSession) : FirAdditionalCheckersExte
 
     override val declarationCheckers: DeclarationCheckers = object : DeclarationCheckers() {
         override val classCheckers: Set<FirClassChecker> = setOf(
-            FusioMapToChecker(compat),
-            FusioMapFromChecker(compat),
+            FusioMappingChecker(compat, MappingDirection.MAP_TO),
+            FusioMappingChecker(compat, MappingDirection.MAP_FROM),
             FusioExhaustivenessChecker(compat),
         )
     }
