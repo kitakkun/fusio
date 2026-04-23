@@ -1,20 +1,28 @@
 # Step 8: Multi-Kotlin-compiler-version support
 
-Status: **Phase 2 landed** (single shaded jar, Metro-style compiler-compat layer, Kotlin 2.3.20 + 2.4.0-Beta2 both work end-to-end, `smokeK24` task proves k240_beta2 at runtime). Phase 1's sibling-variant-module scheme is retired. The as-built state below supersedes the Phase 1 and Phase 2-plan sections further down — those are kept for historical context and future-version bring-up.
+Status: **Phase 2 landed, since widened** (single shaded jar, Metro-style compiler-compat layer, Kotlin 2.3.0 through 2.4.0-Beta2 all work end-to-end, `smokeK24` task proves k240_beta2 at runtime). Phase 1's sibling-variant-module scheme is retired. The as-built state below supersedes the Phase 1 and Phase 2-plan sections further down — those are kept for historical context and future-version bring-up.
 
 ## Phase 2 as-built (current state)
 
 ### Module layout
 
 ```
-fusio-compiler-plugin/             FIR checkers + IR MappedScopeTransformer
+fusio-compiler-plugin/             FIR checkers + IR FuseTransformer
   build.gradle.kts                shadow plugin shades the compat modules in
 fusio-compiler-compat/             host module
   src/.../CompatContext.kt        interface + Version/VersionRange + Factory
   src/.../CompatContextResolver.kt ServiceLoader-based runtime selection
+  k230/
+    CompatContextImpl.kt          Kotlin 2.3.0–2.3.19 impl (legacy
+                                  `referenceClass` / `referenceFunctions`
+                                  for the finder trio, same session-carrying
+                                  kclassArg as k2320 otherwise)
+    META-INF/services/…Factory    registers Factory for ServiceLoader
   k2320/
-    CompatContextImpl.kt          Kotlin 2.3.x impl (kclassArg with session,
-                                  list-access IrCall writes)
+    CompatContextImpl.kt          Kotlin 2.3.20+ impl (uses
+                                  `finderForBuiltins()` / `DeclarationFinder`,
+                                  kclassArg with session, list-access IrCall
+                                  writes)
     META-INF/services/…Factory    registers Factory for ServiceLoader
   k240_beta2/
     CompatContextImpl.kt          Kotlin 2.4.x impl (delegates to k2320,
@@ -25,12 +33,12 @@ fusio-compiler-compat/             host module
 
 ### How it works
 
-- `CompatContext` declares every API the plugin needs whose signature shifts between Kotlin versions (currently `kclassArg`, `setArg`, `setTypeArg`).
+- `CompatContext` declares every API the plugin needs whose signature shifts between Kotlin versions — currently `kclassArg`, `setArg`, `setTypeArg`, `registerFirExtension`, `registerIrGenerationExtension`, the finder trio (`findClass` / `findConstructors` / `findFunctions`), and `localFunctionForLambdaOrigin`.
 - Each k** subproject compiles against its pinned `kotlin-compiler-embeddable` version and registers a `CompatContext.Factory` with a `supportedRange: VersionRange`.
-- `fusio-compiler-plugin/build.gradle.kts` uses the `com.gradleup.shadow` plugin to bundle the three compat jars into a single artifact. A dedicated non-transitive `shaded` configuration keeps kotlin-stdlib and other transitive deps out of the final jar (~65 KB, 29 classes). `mergeServiceFiles()` stitches each subproject's `META-INF/services/.../CompatContext$Factory` into one.
+- `fusio-compiler-plugin/build.gradle.kts` uses the `com.gradleup.shadow` plugin to bundle the compat jars into a single artifact. A dedicated non-transitive `shaded` configuration keeps kotlin-stdlib and other transitive deps out of the final jar. `mergeServiceFiles()` stitches each subproject's `META-INF/services/.../CompatContext$Factory` into one.
 - At compiler runtime, `CompatContextResolver.resolve()` reads `KotlinCompilerVersion.VERSION`, loads every `Factory` via `ServiceLoader`, and instantiates the first whose `supportedRange` contains the running version.
 - `FusioIrGenerationExtension` and `FusioFirCheckersExtension` call `CompatContextResolver.resolve()` eagerly at construction, so a classpath missing a matching impl fails with a clear error before any analysis runs.
-- Checkers and `MappedScopeTransformer` delegate to the resolved context via Kotlin interface delegation (`: CompatContext by compat`), so call sites inside the plugin read like `annotation.kclassArg(...)` / `call.setArg(...)` with no version-sensitive API touched directly.
+- Checkers and `FuseTransformer` delegate to the resolved context via Kotlin interface delegation (`: CompatContext by compat`), so call sites inside the plugin read like `annotation.kclassArg(...)` / `call.setArg(...)` with no version-sensitive API touched directly.
 
 ### Published artifact
 
@@ -40,13 +48,15 @@ fusio-compiler-compat/             host module
 
 ### Composite-build compatibility
 
-The sample (`sample/`) consumes `:fusio-compiler-plugin` through Gradle's composite-build mechanism, which resolves via the project's `runtimeElements`/`apiElements` configurations rather than the published Maven artifact. `fusio-compiler-plugin/build.gradle.kts` explicitly swaps those configurations' outgoing artifact from the plain `jar` task output to `shadowJar`, so composite consumers see the same shaded jar that mavenLocal does.
+The `demo/` subproject consumes `:fusio-compiler-plugin` through Gradle's intra-build mechanism, which resolves via the project's `runtimeElements` / `apiElements` configurations rather than the published Maven artifact. `fusio-compiler-plugin/build.gradle.kts` explicitly swaps those configurations' outgoing artifact from the plain `jar` task output to `shadowJar`, so in-repo consumers see the same shaded jar that mavenLocal does.
 
 ### Validation
 
-- **`:fusio-compiler-plugin:test`** (Kotlin 2.3.21, primary): full box + diagnostics + IR text suite via `kotlin-compiler-internal-test-framework`. Covers the same pipeline end-to-end a user project would hit.
-- **`:fusio-compiler-plugin-k24-tests:test`** (Kotlin 2.4.0-Beta2): parallel lane running box + diagnostics + IR text against a 2.4-shaped `configure(NonGroupingPhaseTestConfigurationBuilder)` override. Shares the plugin classpath with the primary module; the `k240_beta2` compat impl kicks in at runtime via ServiceLoader. box / diagnostics share the primary lane's testData (behavioural contracts are version-independent). IR text tests live under `fusio-compiler-plugin-k24-tests/testData/ir/` with their own 2.4-pinned `.fir.ir.txt` / `.fir.kt.txt` goldens — the Kotlin IR dump format shifts across patches (2.4's Compose compiler expands `$stable` into a PROPERTY + getter where 2.3 emits a bare FIELD, for example), so each version gets its own snapshot.
-- **`:fusio-compiler-plugin:smokeK24`** (Kotlin 2.4.0-Beta2): still present. Forks a JVM, invokes `K2JVMCompiler` with the shaded plugin jar on `-Xplugin`, and compiles `src/smokeK24/kotlin/Sample.kt`. Different guarantee from the k24 test module: this one validates the shaded-jar-load-in-an-isolated-process path; the test module runs the plugin classes directly on the test JVM's classpath. Both are wired into `check`.
+- **`:fusio-compiler-plugin-tests:k2321:test`** (Kotlin 2.3.21, primary): full box + diagnostics + IR text suite via `kotlin-compiler-internal-test-framework`. Covers the same pipeline end-to-end a user project would hit.
+- **`:fusio-compiler-plugin-tests:k230:test` / `:k2310:test`** (Kotlin 2.3.0 / 2.3.10): box + diagnostics against the older patches. IR lane is omitted — `SKIP_NEW_KOTLIN_REFLECT_COMPATIBILITY_CHECK` wasn't available until 2.3.20. Exercises the `:fusio-compiler-compat:k230` legacy-finder impl.
+- **`:fusio-compiler-plugin-tests:tests-k2320:test`** (Kotlin 2.3.20): box + diagnostics, same shape as the k230 lanes.
+- **`:fusio-compiler-plugin-tests:tests-k240_beta2:test`** (Kotlin 2.4.0-Beta2): parallel lane running box + diagnostics + IR text against a 2.4-shaped `configure(NonGroupingPhaseTestConfigurationBuilder)` override. Shares the plugin classpath with the primary module; the `k240_beta2` compat impl kicks in at runtime via ServiceLoader. box / diagnostics share the shared testData at `fusio-compiler-plugin-tests/testData/` (behavioural contracts are version-independent). IR text tests live under `fusio-compiler-plugin-tests/k240_beta2/testData/ir/` with their own 2.4-pinned `.fir.ir.txt` / `.fir.kt.txt` goldens — the Kotlin IR dump format shifts across patches (2.4's Compose compiler expands `$stable` into a PROPERTY + getter where 2.3 emits a bare FIELD, for example), so each version gets its own snapshot.
+- **`:fusio-compiler-plugin:smokeK24`** (Kotlin 2.4.0-Beta2): still present. Forks a JVM, invokes `K2JVMCompiler` with the shaded plugin jar on `-Xplugin`, and compiles `src/smokeK24/kotlin/Sample.kt`. Different guarantee from the k240_beta2 test lane: this one validates the shaded-jar-load-in-an-isolated-process path; the test lane runs the plugin classes directly on the test JVM's classpath. Both are wired into `check`.
 - **demo**: composite-build runtime smoke — `cd demo && ../gradlew runJvm` under the primary Kotlin version exercises the whole state/effect plumbing and renders a Compose Desktop window.
 
 All of the above are wired into the root `check`, so `./gradlew build` exercises every Kotlin lane without extra invocations.
