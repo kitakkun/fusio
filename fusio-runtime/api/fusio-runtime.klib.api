@@ -14,9 +14,6 @@ final class <#A: kotlin/Any?, #B: kotlin/Any?> com.kitakkun.fusio/Presentation {
     final val state // com.kitakkun.fusio/Presentation.state|{}state[0]
         final fun <get-state>(): #A // com.kitakkun.fusio/Presentation.state.<get-state>|<get-state>(){}[0]
 
-    final fun component1(): #A // com.kitakkun.fusio/Presentation.component1|component1(){}[0]
-    final fun component2(): kotlinx.coroutines.flow/Flow<#B> // com.kitakkun.fusio/Presentation.component2|component2(){}[0]
-    final fun copy(#A = ..., kotlinx.coroutines.flow/Flow<#B> = ...): com.kitakkun.fusio/Presentation<#A, #B> // com.kitakkun.fusio/Presentation.copy|copy(1:0;kotlinx.coroutines.flow.Flow<1:1>){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.kitakkun.fusio/Presentation.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.kitakkun.fusio/Presentation.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.kitakkun.fusio/Presentation.toString|toString(){}[0]

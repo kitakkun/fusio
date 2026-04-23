@@ -698,7 +698,7 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
                           ARG other: CONST Int type=kotlin.Int value=14
                         ARG other: CONST Int type=kotlin.Int value=6
                       ARG arg1: CONST Int type=kotlin.Int value=4
-                    then: CALL 'public open fun changedInstance (value: kotlin.Any?): kotlin.Boolean declared in androidx.compose.runtime.Composer' type=kotlin.Boolean origin=null
+                    then: CALL 'public abstract fun changed (value: kotlin.Any?): kotlin.Boolean declared in androidx.compose.runtime.Composer' type=kotlin.Boolean origin=null
                       ARG <this>: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.child' type=androidx.compose.runtime.Composer? origin=null
                       ARG value: GET_VAR '<this>: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.child' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
                   BRANCH
@@ -731,11 +731,9 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
                                 CALL 'public final fun <get-id> (): kotlin.String declared in <root>.ChildEvent.Toggle' type=kotlin.String origin=GET_PROPERTY
                                   ARG <this>: GET_VAR 'event: <root>.ChildEvent.Toggle declared in <root>.child.<anonymous>.<anonymous>' type=<root>.ChildEvent.Toggle origin=null
         ARG $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.child' type=androidx.compose.runtime.Composer? origin=null
-        ARG $changed: CALL 'public final fun or (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
-          ARG <this>: GET_FIELD 'FIELD name:$stable type:kotlin.Int visibility:public [final,static] declared in com.kitakkun.fusio.PresenterScope' type=kotlin.Int origin=null
-          ARG other: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
-            ARG <this>: CONST Int type=kotlin.Int value=14
-            ARG other: GET_VAR '$changed: kotlin.Int declared in <root>.child' type=kotlin.Int origin=null
+        ARG $changed: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+          ARG <this>: CONST Int type=kotlin.Int value=14
+          ARG other: GET_VAR '$changed: kotlin.Int declared in <root>.child' type=kotlin.Int origin=null
       VAR IR_TEMPORARY_VARIABLE name:tmp_6 type:<root>.ChildState [val]
         CONSTRUCTOR_CALL 'public constructor <init> (toggled: kotlin.Boolean) declared in <root>.ChildState' type=<root>.ChildState origin=null
           ARG toggled: CALL 'local final fun <get-toggled> (): kotlin.Boolean declared in <root>.child' type=kotlin.Boolean origin=GET_LOCAL_PROPERTY
@@ -855,13 +853,7 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
                                               then: CONST Null type=<root>.ParentEffect? value=null
                       ARG $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
                       ARG $changed: CALL 'public final fun or (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
-                        ARG <this>: CALL 'public final fun or (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
-                          ARG <this>: CALL 'public final fun or (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
-                            ARG <this>: CONST Int type=kotlin.Int value=384
-                            ARG other: GET_FIELD 'FIELD name:$stable type:kotlin.Int visibility:public [final,static] declared in com.kitakkun.fusio.PresenterScope' type=kotlin.Int origin=null
-                          ARG other: CALL 'public final fun shl (bitCount: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
-                            ARG <this>: GET_FIELD 'FIELD name:$stable type:kotlin.Int visibility:public [final,static] declared in com.kitakkun.fusio.PresenterScope' type=kotlin.Int origin=null
-                            ARG bitCount: CONST Int type=kotlin.Int value=3
+                        ARG <this>: CONST Int type=kotlin.Int value=384
                         ARG other: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
                           ARG <this>: CONST Int type=kotlin.Int value=112
                           ARG other: CALL 'public final fun shl (bitCount: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
@@ -891,11 +883,9 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
                               CALL 'public final fun child (<this>: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): <root>.ChildState declared in <root>' type=<root>.ChildState origin=null
                                 ARG <this>: GET_VAR '$this$fuse: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=IMPLICIT_ARGUMENT
                                 ARG $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
-                                ARG $changed: CALL 'public final fun or (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
-                                  ARG <this>: GET_FIELD 'FIELD name:$stable type:kotlin.Int visibility:public [final,static] declared in com.kitakkun.fusio.PresenterScope' type=kotlin.Int origin=null
-                                  ARG other: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
-                                    ARG <this>: CONST Int type=kotlin.Int value=14
-                                    ARG other: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=kotlin.Int origin=null
+                                ARG $changed: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                                  ARG <this>: CONST Int type=kotlin.Int value=14
+                                  ARG other: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=kotlin.Int origin=null
                             WHEN type=kotlin.Unit origin=IF
                               BRANCH
                                 if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime' type=kotlin.Boolean origin=null
@@ -906,7 +896,7 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
                               GET_VAR 'val tmp_11: <root>.ChildState declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=<root>.ChildState origin=null
                       ARG p1: GET_VAR 'val tmp_10: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
                       ARG p2: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
-                      ARG p3: GET_FIELD 'FIELD name:$stable type:kotlin.Int visibility:public [final,static] declared in com.kitakkun.fusio.PresenterScope' type=kotlin.Int origin=null
+                      ARG p3: CONST Int type=kotlin.Int value=0
                 VAR IR_TEMPORARY_VARIABLE name:tmp_12 type:<root>.ScreenState [val]
                   CONSTRUCTOR_CALL 'public constructor <init> (child: <root>.ChildState) declared in <root>.ScreenState' type=<root>.ScreenState origin=null
                     ARG child: GET_VAR 'val childState: <root>.ChildState declared in <root>.screenPresenter.<anonymous>' type=<root>.ChildState origin=null
