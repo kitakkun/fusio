@@ -37,9 +37,13 @@ class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
         // rewritten before Compose injects $composer/$changed params into
         // @Composable lambdas. Registration order inside the Kotlin compiler is
         // determined by this CLI flag when both plugins are present.
-        kotlinCompilation.compilerOptions.options.freeCompilerArgs.add(
-            "-Xcompiler-plugin-order=$FUSIO_PLUGIN_ID>$COMPOSE_PLUGIN_ID",
-        )
+        // Configure via compileTaskProvider — the KotlinCompilation.compilerOptions
+        // shortcut is deprecated in KGP 2.3+.
+        kotlinCompilation.compileTaskProvider.configure { task ->
+            task.compilerOptions.freeCompilerArgs.add(
+                "-Xcompiler-plugin-order=$FUSIO_PLUGIN_ID>$COMPOSE_PLUGIN_ID",
+            )
+        }
 
         return kotlinCompilation.target.project.provider {
             listOf(SubpluginOption("enabled", "true"))

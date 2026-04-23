@@ -181,7 +181,8 @@ val smokeK24 by tasks.registering(JavaExec::class) {
     dependsOn(tasks.named("shadowJar"))
     dependsOn(smokeK24Compiler, smokeK24CompileClasspath)
 
-    inputs.dir(layout.projectDirectory.dir("src/smokeK24/kotlin"))
+    val sourceDirProvider = layout.projectDirectory.dir("src/smokeK24/kotlin")
+    inputs.dir(sourceDirProvider)
         .withPropertyName("smokeK24Sources")
         .withPathSensitivity(PathSensitivity.RELATIVE)
     inputs.files(tasks.named("shadowJar")).withPropertyName("shadowJar")
@@ -191,24 +192,37 @@ val smokeK24 by tasks.registering(JavaExec::class) {
     classpath = smokeK24Compiler
     mainClass.set("org.jetbrains.kotlin.cli.jvm.K2JVMCompiler")
 
+    // Capture every script-side reference as a local Provider so the doFirst
+    // lambda below doesn't reach into `tasks` / `layout` / `Configuration`
+    // instances at execution time — the configuration cache cannot serialize
+    // those live Gradle objects and the task would be marked incompatible.
+    val sourceDir = sourceDirProvider.asFile
+    val pluginJarProvider = tasks.named<Jar>("shadowJar").flatMap { it.archiveFile }
+    val compileClasspathProvider = smokeK24CompileClasspath.elements
+    val compilerFilesProvider = smokeK24Compiler.elements
+
     // Build up K2JVMCompiler argv. Using doFirst so layout/resolution happens
     // at execution time (shadowJar output path etc.).
     doFirst {
-        val sourceDir = layout.projectDirectory.dir("src/smokeK24/kotlin").asFile
         require(sourceDir.exists()) { "smoke source missing: $sourceDir" }
-        val pluginJar = tasks.named<Jar>("shadowJar").get().archiveFile.get().asFile
+        val pluginJar = pluginJarProvider.get().asFile
         val out = outDir.get().asFile.apply {
             deleteRecursively()
             mkdirs()
         }
-        val cp = smokeK24CompileClasspath.asPath
+        val cp = compileClasspathProvider.get().joinToString(File.pathSeparator) {
+            it.asFile.absolutePath
+        }
+        val composeJar = compilerFilesProvider.get()
+            .first { it.asFile.name.startsWith("kotlin-compose-compiler-plugin") }
+            .asFile
 
         args = listOf(
             sourceDir.absolutePath,
             "-d", out.absolutePath,
             "-classpath", cp,
             "-Xplugin=${pluginJar.absolutePath}",
-            "-Xplugin=${smokeK24Compiler.files.first { it.name.startsWith("kotlin-compose-compiler-plugin") }.absolutePath}",
+            "-Xplugin=${composeJar.absolutePath}",
             "-Xcompiler-plugin-order=com.kitakkun.fusio>androidx.compose.compiler.plugins.kotlin",
             // Match the JVM target the runtime deps were built against (21), else
             // `buildPresenter`'s @Composable inline body can't be inlined into
