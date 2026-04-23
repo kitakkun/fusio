@@ -40,8 +40,13 @@ jobs:
       # `build` runs assemble + check on every module, and check pulls in test.
       # That exercises:
       #   - :fusio-runtime:allTests (commonTest on 7 KMP variants)
-      #   - :fusio-compiler-plugin:test (diagnostics + box via internal test framework)
-      #   - :fusio-compiler-plugin:smokeK24 (shaded plugin on Kotlin 2.4.0-Beta2)
+      #   - :fusio-test:allTests (presenter test harness self-tests, 7 variants)
+      #   - :fusio-compiler-plugin-tests:{k230,k2310,tests-k2320,k2321,
+      #     tests-k240_beta2}:test (per-Kotlin-patch diagnostics + box via the
+      #     internal test framework; the k2321 / k240_beta2 lanes also cover IR)
+      #   - :fusio-compiler-plugin:smokeK24 (shaded plugin loaded as -Xplugin
+      #     into a forked 2.4.0-Beta2 compiler)
+      #   - :demo:jvmTest (TaskList / Filter / MyScreen presenter tests)
       # Splitting into separate gradle invocations buys nothing because Gradle
       # task graph would re-run the same work.
       - name: Build and test libraries

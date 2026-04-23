@@ -1,7 +1,7 @@
 /**
  * Parallel test lane that re-runs every fusio-compiler-plugin testData case
  * against the Kotlin 2.4.0-Beta2 compiler + test framework, instead of the
- * primary 2.3.21 lane that `:fusio-compiler-plugin:test` covers.
+ * primary 2.3.21 lane that `:fusio-compiler-plugin-tests:k2321:test` covers.
  *
  * Why a separate module at all: `kotlin-compiler-internal-test-framework`
  * split `TestConfigurationBuilder` into `NonGroupingPhaseTestConfigurationBuilder`
