@@ -1,6 +1,6 @@
 # Step 8: Multi-Kotlin-compiler-version support
 
-Status: **Phase 2 landed** (single shaded jar, Metro-style compiler-compat layer, Kotlin 2.3.20 + 2.4.0-Beta2 both work end-to-end). Phase 1's sibling-variant-module scheme is retired. The as-built state below supersedes the Phase 1 and Phase 2-plan sections further down — those are kept for historical context and future-version bring-up.
+Status: **Phase 2 landed** (single shaded jar, Metro-style compiler-compat layer, Kotlin 2.3.20 + 2.4.0-Beta2 both work end-to-end, `smokeK24` task proves k240_beta2 at runtime). Phase 1's sibling-variant-module scheme is retired. The as-built state below supersedes the Phase 1 and Phase 2-plan sections further down — those are kept for historical context and future-version bring-up.
 
 ## Phase 2 as-built (current state)
 
@@ -42,11 +42,18 @@ aria-compiler-compat/             host module
 
 The sample (`sample/`) consumes `:aria-compiler-plugin` through Gradle's composite-build mechanism, which resolves via the project's `runtimeElements`/`apiElements` configurations rather than the published Maven artifact. `aria-compiler-plugin/build.gradle.kts` explicitly swaps those configurations' outgoing artifact from the plain `jar` task output to `shadowJar`, so composite consumers see the same shaded jar that mavenLocal does.
 
-### Still to land (Phase 2 tail)
+### Validation
 
-- **Box tests against Kotlin 2.4.0-Beta2**: `kotlin-compiler-internal-test-framework` is published per-Kotlin-version and currently pinned to 2.3.20 in `libs.versions.toml`. Running the existing testData under 2.4 needs either (a) a second test task with a 2.4-pinned classpath (framework + stdlib + compose compiler plugin all at 2.4.0-Beta2), or (b) CI matrix that re-runs `./gradlew :aria-compiler-plugin:test` with catalog overrides per Kotlin version. Blocking question: does `kotlin-compose-compiler-plugin:2.4.0-Beta2` exist as a published artifact? testData exercises Compose, so that's on the critical path.
-- **CI workflow**: GitHub Actions or similar — run the full build (shadowJar + sample) against a Kotlin 2.3.20 JVM and a Kotlin 2.4.0-Beta2 JVM.
-- **Shaded jar class-loading probe on 2.4**: right now we have indirect evidence that k240_beta2 works (it compiles against the 2.4 compiler-embeddable, and the delegation-with-override pattern keeps link-failing methods out of the k2320 delegate's path). A direct runtime smoke test under an actual 2.4 compiler would close the remaining uncertainty.
+- **:test** (Kotlin 2.3.20): full 13-test box + diagnostics suite via `kotlin-compiler-internal-test-framework`. Covers the same pipeline end-to-end a user project would hit.
+- **:smokeK24** (Kotlin 2.4.0-Beta2): forks a JVM, invokes `K2JVMCompiler` with the shaded plugin jar on `-Xplugin`, and compiles `src/smokeK24/kotlin/Sample.kt`. The sample deliberately exercises every version-sensitive path — `@MapTo` / `@MapFrom` for `kclassArg`, `mappedScope { child() }` for `setArg`/`setTypeArg`, and plugin registration itself for `registerFirExtension` / `registerIrGenerationExtension` (the `ProjectExtensionDescriptor` → `ExtensionPointDescriptor` rename). Compile success = k240_beta2 resolves via ServiceLoader and runs without link errors.
+- **sample**: composite-build runtime smoke — `cd sample && ../gradlew runJvm` under Kotlin 2.3.20 exercises the whole state/effect plumbing and prints expected state transitions.
+
+Both `:test` and `:smokeK24` are wired into `check`, so `./gradlew build` exercises both Kotlin lanes without extra invocations.
+
+### Known gaps
+
+- **Box tests against Kotlin 2.4.0-Beta2**: `kotlin-compiler-internal-test-framework` had its own ABI break between 2.3 and 2.4 — `TestConfigurationBuilder` split into `GroupingPhaseTestConfigurationBuilder` and `NonGroupingPhaseTestConfigurationBuilder`. Same `testFixtures` bytecode can't drive both lanes. A full 2.4 box-test lane would need either a parallel testFixtures source set compiled against 2.4 OR matrix CI re-running the suite with the catalog's primary `kotlin` version bumped. `smokeK24` covers the bits we actually need to know work under 2.4 (`CompatContext` delegation + plugin registration + IR rewrite), which is why this isn't on the critical path.
+- **CI workflow**: no GitHub Actions config yet. Manual `./gradlew build` + sample only.
 
 ## Stress-test probe: Kotlin 2.0.21
 
