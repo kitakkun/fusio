@@ -22,7 +22,7 @@ Persistent notes that survive across sessions live in `~/.claude/projects/-Users
 | `demo/` | Composite-build Compose Desktop app demonstrating the full Fusio pipeline end-to-end (parent presenter, mapped sub-presenter, nested fuse, @MapTo/@MapFrom round-trip) |
 | `build-logic/` | `fusio.publish` convention plugin |
 
-Build: Gradle 9.3.0, shadow 9.4.1, Kotlin 2.3.20 (+ 2.4.0-Beta2 via smokeK24). Configuration cache is on by default in both root and sample — cold incremental runs are ~800 ms.
+Build: Gradle 9.3.0, shadow 9.4.1, Kotlin 2.3.21 (+ 2.4.0-Beta2 via smokeK24). Configuration cache is on by default in both root and sample — cold incremental runs are ~800 ms.
 
 ## Common commands
 

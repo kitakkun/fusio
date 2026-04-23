@@ -3,7 +3,11 @@
 # subprojects, which each pin their own kotlin-compiler-embeddable to compile
 # the version-specific CompatContext impl. `kotlin-k24` below is that pin for
 # the 2.4.0-Beta2 variant.
-kotlin = "2.3.20"
+kotlin = "2.3.21"
+# Oldest 2.3.x version fusio-compiler-compat/k2320 compiles against. Pinning
+# the compat impl to 2.3.0 makes the shaded bytecode forward-compatible with
+# every 2.3.x release the supportedRange declares.
+kotlin-k23 = "2.3.0"
 kotlin-k24 = "2.4.0-Beta2"
 compose-multiplatform = "1.10.3"
 coroutines = "1.10.2"
@@ -19,6 +23,7 @@ fusio = "0.1.0-SNAPSHOT"
 
 [libraries]
 kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
+kotlin-compiler-embeddable-k23 = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-k23" }
 kotlin-compiler-embeddable-k24 = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-k24" }
 kotlin-compiler = { module = "org.jetbrains.kotlin:kotlin-compiler", version.ref = "kotlin" }
 kotlin-compiler-k24 = { module = "org.jetbrains.kotlin:kotlin-compiler", version.ref = "kotlin-k24" }

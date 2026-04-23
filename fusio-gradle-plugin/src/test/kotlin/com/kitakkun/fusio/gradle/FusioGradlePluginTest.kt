@@ -40,7 +40,7 @@ class FusioGradlePluginTest {
         writeBuild(
             """
             plugins {
-                kotlin("multiplatform") version "2.3.20"
+                kotlin("multiplatform") version "2.3.21"
                 id("com.kitakkun.fusio")
             }
             repositories { mavenCentral() }

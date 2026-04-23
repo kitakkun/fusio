@@ -215,7 +215,7 @@ configuration required.
 
 | Your Kotlin | Supported |
 |-------------|-----------|
-| 2.3.x       | ✅ |
+| 2.3.0 – 2.3.x | ✅ (compat impl compiled against 2.3.0, forward-compatible to every patch) |
 | 2.4.0-Beta2+ | ✅ |
 
 A single `fusio-compiler-plugin` jar ships with a per-Kotlin-version
@@ -224,6 +224,12 @@ submodule pattern inspired by [ZacSweers/Metro](https://github.com/ZacSweers/met
 At compile time the plugin inspects the running Kotlin compiler and
 `ServiceLoader`-resolves the matching impl, so there's nothing to configure
 per Kotlin version.
+
+The 2.3.x compat impl is deliberately compiled against
+`kotlin-compiler-embeddable:2.3.0` — the oldest version it declares support
+for — so the shaded bytecode only references API members present in every
+2.3.x release. If you upgrade to a newer 2.3 patch the same jar keeps
+working; no Fusio release is required.
 
 ## License
 

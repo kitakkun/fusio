@@ -125,7 +125,7 @@ dependencies {
 }
 
 /**
- * Shared configuration for both :test (Kotlin 2.3.20) and :testK24 (2.4.0-Beta2)
+ * Shared configuration for both :test (Kotlin 2.3.21) and :testK24 (2.4.0-Beta2)
  * lanes. Paths that resolve jars by name look them up on the passed [runtimeJars]
  * configuration so the caller controls the Kotlin line.
  */
