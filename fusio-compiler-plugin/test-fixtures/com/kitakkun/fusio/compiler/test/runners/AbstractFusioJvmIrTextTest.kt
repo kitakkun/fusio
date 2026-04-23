@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.test.services.KotlinStandardLibrariesPathProvider
  *
  * Each testData/ir/foo.kt is compiled with the Fusio plugin, then its
  * post-transform IR is dumped and compared to a sibling `foo.ir.txt`. A
- * regression in `MappedScopeTransformer` — changed call sites, lost
+ * regression in `FuseTransformer` — changed call sites, lost
  * arguments, reordered blocks — shows up as a diff against the golden
  * file instead of just as a behavioural failure in the box tests.
  *

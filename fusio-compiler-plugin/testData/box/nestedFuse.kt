@@ -9,12 +9,12 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import fusio.test.runHeadless
-import com.kitakkun.fusio.Fusio
+import com.kitakkun.fusio.Presentation
 import com.kitakkun.fusio.MapFrom
 import com.kitakkun.fusio.MapTo
 import com.kitakkun.fusio.PresenterScope
 import com.kitakkun.fusio.buildPresenter
-import com.kitakkun.fusio.mappedScope
+import com.kitakkun.fusio.fuse
 import com.kitakkun.fusio.on
 
 // Three-level hierarchy: Screen -> Mid -> Leaf. Events propagate inward via two
@@ -60,14 +60,14 @@ fun PresenterScope<LeafEvent, LeafEffect>.leaf(): Int {
 
 @Composable
 fun PresenterScope<MidEvent, MidEffect>.mid(): MidState {
-    val leafCount = mappedScope { leaf() }
+    val leafCount = fuse { leaf() }
     return MidState(leafCount)
 }
 
 @Composable
-fun screen(events: kotlinx.coroutines.flow.Flow<ScreenEvent>): Fusio<ScreenState, ScreenEffect> =
+fun screen(events: kotlinx.coroutines.flow.Flow<ScreenEvent>): Presentation<ScreenState, ScreenEffect> =
     buildPresenter(events) {
-        val midState = mappedScope { mid() }
+        val midState = fuse { mid() }
         ScreenState(midState)
     }
 

@@ -9,16 +9,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import fusio.test.runHeadless
-import com.kitakkun.fusio.Fusio
+import com.kitakkun.fusio.Presentation
 import com.kitakkun.fusio.MapFrom
 import com.kitakkun.fusio.MapTo
 import com.kitakkun.fusio.PresenterScope
 import com.kitakkun.fusio.buildPresenter
-import com.kitakkun.fusio.mappedScope
+import com.kitakkun.fusio.fuse
 import com.kitakkun.fusio.on
 
 // Two independent child trees (A / B) under the same parent. Before the
-// mappedScope sibling-isolation fix, the parent event flow of the A-child
+// fuse sibling-isolation fix, the parent event flow of the A-child
 // would receive B-child's events cast to AEvent and crash at runtime.
 
 sealed interface AEvent {
@@ -70,9 +70,9 @@ fun PresenterScope<BEvent, BEffect>.bChild(): BState {
 @Composable
 fun screenPresenter(
     events: kotlinx.coroutines.flow.Flow<ParentEvent>,
-): Fusio<ScreenState, ParentEffect> = buildPresenter(events) {
-    val a = mappedScope { aChild() }
-    val b = mappedScope { bChild() }
+): Presentation<ScreenState, ParentEffect> = buildPresenter(events) {
+    val a = fuse { aChild() }
+    val b = fuse { bChild() }
     ScreenState(a, b)
 }
 

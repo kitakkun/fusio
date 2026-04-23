@@ -8,6 +8,6 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 class FusioIrGenerationExtension : IrGenerationExtension {
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
         val compat = CompatContextResolver.resolve()
-        moduleFragment.transform(MappedScopeTransformer(pluginContext, compat), null)
+        moduleFragment.transform(FuseTransformer(pluginContext, compat), null)
     }
 }

@@ -9,11 +9,11 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import fusio.test.runHeadless
-import com.kitakkun.fusio.Fusio
+import com.kitakkun.fusio.Presentation
 import com.kitakkun.fusio.MapTo
 import com.kitakkun.fusio.PresenterScope
 import com.kitakkun.fusio.buildPresenter
-import com.kitakkun.fusio.mappedScope
+import com.kitakkun.fusio.fuse
 import com.kitakkun.fusio.on
 
 // data object subtypes must be mapped with IrGetObjectValue, not a constructor
@@ -38,8 +38,8 @@ fun PresenterScope<ChildEvent, ChildEffect>.counter(): Int {
 }
 
 @Composable
-fun screen(events: kotlinx.coroutines.flow.Flow<ParentEvent>): Fusio<Int, ParentEffect> =
-    buildPresenter(events) { mappedScope { counter() } }
+fun screen(events: kotlinx.coroutines.flow.Flow<ParentEvent>): Presentation<Int, ParentEffect> =
+    buildPresenter(events) { fuse { counter() } }
 
 fun box(): String {
     var result = "uninitialised"

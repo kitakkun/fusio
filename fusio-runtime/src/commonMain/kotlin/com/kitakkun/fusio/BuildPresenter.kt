@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 public fun <Event, Effect, UiState> buildPresenter(
     eventFlow: Flow<Event>,
     block: @Composable PresenterScope<Event, Effect>.() -> UiState,
-): Fusio<UiState, Effect> {
+): Presentation<UiState, Effect> {
     val scope = remember { PresenterScope<Event, Effect>(eventFlow) }
 
     DisposableEffect(Unit) {
@@ -18,5 +18,5 @@ public fun <Event, Effect, UiState> buildPresenter(
 
     val uiState = scope.block()
 
-    return Fusio(uiState, scope.internalEffectFlow)
+    return Presentation(uiState, scope.internalEffectFlow)
 }

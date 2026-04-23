@@ -2,7 +2,7 @@
 // FULL_JDK
 // WITH_STDLIB
 
-import com.kitakkun.fusio.Fusio
+import com.kitakkun.fusio.Presentation
 import com.kitakkun.fusio.MapTo
 import kotlinx.coroutines.flow.emptyFlow
 
@@ -18,7 +18,7 @@ sealed interface Parent {
 }
 
 fun box(): String {
-    val fusio: Fusio<String, Child> = Fusio(state = "ready", effectFlow = emptyFlow())
+    val fusio: Presentation<String, Child> = Presentation(state = "ready", effectFlow = emptyFlow())
     if (fusio.state != "ready") return "FAIL: state=${fusio.state}"
 
     val parent = Parent.ToggleFavorite(id = "item-1")

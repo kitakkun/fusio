@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
  * TestKit coverage for the Fusio Gradle plugin.
  *
  * The sample composite build already exercises end-to-end behaviour (plugin
- * applies, compiler plugin runs, mappedScope gets rewritten, JVM smoke
+ * applies, compiler plugin runs, fuse gets rewritten, JVM smoke
  * produces expected output end-to-end). These tests pin the pieces that
  * aren't visible from a successful compile and that the sample doesn't
  * exercise:

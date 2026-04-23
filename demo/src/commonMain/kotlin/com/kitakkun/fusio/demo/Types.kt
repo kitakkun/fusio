@@ -51,7 +51,7 @@ data class FilterState(val current: TaskFilter)
 
 // ---------- MyScreen (root) ----------
 //
-// Binds TaskList + Filter as siblings via two `mappedScope { ... }` calls.
+// Binds TaskList + Filter as siblings via two `fuse { ... }` calls.
 // The filter is applied in the parent, which is where the two sub-states
 // first come together — neither child can see the other.
 

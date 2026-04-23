@@ -6,20 +6,20 @@
 // - Show declarations: true
 
 // Library unique name: <com.kitakkun.fusio:fusio-runtime>
-final class <#A: kotlin/Any?, #B: kotlin/Any?> com.kitakkun.fusio/Fusio { // com.kitakkun.fusio/Fusio|null[0]
-    constructor <init>(#A, kotlinx.coroutines.flow/Flow<#B>) // com.kitakkun.fusio/Fusio.<init>|<init>(1:0;kotlinx.coroutines.flow.Flow<1:1>){}[0]
+final class <#A: kotlin/Any?, #B: kotlin/Any?> com.kitakkun.fusio/Presentation { // com.kitakkun.fusio/Presentation|null[0]
+    constructor <init>(#A, kotlinx.coroutines.flow/Flow<#B>) // com.kitakkun.fusio/Presentation.<init>|<init>(1:0;kotlinx.coroutines.flow.Flow<1:1>){}[0]
 
-    final val effectFlow // com.kitakkun.fusio/Fusio.effectFlow|{}effectFlow[0]
-        final fun <get-effectFlow>(): kotlinx.coroutines.flow/Flow<#B> // com.kitakkun.fusio/Fusio.effectFlow.<get-effectFlow>|<get-effectFlow>(){}[0]
-    final val state // com.kitakkun.fusio/Fusio.state|{}state[0]
-        final fun <get-state>(): #A // com.kitakkun.fusio/Fusio.state.<get-state>|<get-state>(){}[0]
+    final val effectFlow // com.kitakkun.fusio/Presentation.effectFlow|{}effectFlow[0]
+        final fun <get-effectFlow>(): kotlinx.coroutines.flow/Flow<#B> // com.kitakkun.fusio/Presentation.effectFlow.<get-effectFlow>|<get-effectFlow>(){}[0]
+    final val state // com.kitakkun.fusio/Presentation.state|{}state[0]
+        final fun <get-state>(): #A // com.kitakkun.fusio/Presentation.state.<get-state>|<get-state>(){}[0]
 
-    final fun component1(): #A // com.kitakkun.fusio/Fusio.component1|component1(){}[0]
-    final fun component2(): kotlinx.coroutines.flow/Flow<#B> // com.kitakkun.fusio/Fusio.component2|component2(){}[0]
-    final fun copy(#A = ..., kotlinx.coroutines.flow/Flow<#B> = ...): com.kitakkun.fusio/Fusio<#A, #B> // com.kitakkun.fusio/Fusio.copy|copy(1:0;kotlinx.coroutines.flow.Flow<1:1>){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.kitakkun.fusio/Fusio.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.kitakkun.fusio/Fusio.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.kitakkun.fusio/Fusio.toString|toString(){}[0]
+    final fun component1(): #A // com.kitakkun.fusio/Presentation.component1|component1(){}[0]
+    final fun component2(): kotlinx.coroutines.flow/Flow<#B> // com.kitakkun.fusio/Presentation.component2|component2(){}[0]
+    final fun copy(#A = ..., kotlinx.coroutines.flow/Flow<#B> = ...): com.kitakkun.fusio/Presentation<#A, #B> // com.kitakkun.fusio/Presentation.copy|copy(1:0;kotlinx.coroutines.flow.Flow<1:1>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kitakkun.fusio/Presentation.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kitakkun.fusio/Presentation.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kitakkun.fusio/Presentation.toString|toString(){}[0]
 }
 
 final class <#A: kotlin/Any?, #B: kotlin/Any?> com.kitakkun.fusio/PresenterScope { // com.kitakkun.fusio/PresenterScope|null[0]
@@ -31,13 +31,13 @@ final class <#A: kotlin/Any?, #B: kotlin/Any?> com.kitakkun.fusio/PresenterScope
     final suspend fun emitEffect(#B) // com.kitakkun.fusio/PresenterScope.emitEffect|emitEffect(1:1){}[0]
 }
 
-final val com.kitakkun.fusio/com_kitakkun_fusio_Fusio$stableprop // com.kitakkun.fusio/com_kitakkun_fusio_Fusio$stableprop|#static{}com_kitakkun_fusio_Fusio$stableprop[0]
+final val com.kitakkun.fusio/com_kitakkun_fusio_Presentation$stableprop // com.kitakkun.fusio/com_kitakkun_fusio_Presentation$stableprop|#static{}com_kitakkun_fusio_Presentation$stableprop[0]
 final val com.kitakkun.fusio/com_kitakkun_fusio_PresenterScope$stableprop // com.kitakkun.fusio/com_kitakkun_fusio_PresenterScope$stableprop|#static{}com_kitakkun_fusio_PresenterScope$stableprop[0]
 
-final fun <#A: kotlin/Any?, #B: kotlin/Any?, #C: kotlin/Any?> com.kitakkun.fusio/buildPresenter(kotlinx.coroutines.flow/Flow<#A>, kotlin/Function3<com.kitakkun.fusio/PresenterScope<#A, #B>, androidx.compose.runtime/Composer, kotlin/Int, #C>, androidx.compose.runtime/Composer?, kotlin/Int): com.kitakkun.fusio/Fusio<#C, #B> // com.kitakkun.fusio/buildPresenter|buildPresenter(kotlinx.coroutines.flow.Flow<0:0>;kotlin.Function3<com.kitakkun.fusio.PresenterScope<0:0,0:1>,androidx.compose.runtime.Composer,kotlin.Int,0:2>;androidx.compose.runtime.Composer?;kotlin.Int){0§<kotlin.Any?>;1§<kotlin.Any?>;2§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?, #B: kotlin/Any?, #C: kotlin/Any?> com.kitakkun.fusio/buildPresenter(kotlinx.coroutines.flow/Flow<#A>, kotlin/Function3<com.kitakkun.fusio/PresenterScope<#A, #B>, androidx.compose.runtime/Composer, kotlin/Int, #C>, androidx.compose.runtime/Composer?, kotlin/Int): com.kitakkun.fusio/Presentation<#C, #B> // com.kitakkun.fusio/buildPresenter|buildPresenter(kotlinx.coroutines.flow.Flow<0:0>;kotlin.Function3<com.kitakkun.fusio.PresenterScope<0:0,0:1>,androidx.compose.runtime.Composer,kotlin.Int,0:2>;androidx.compose.runtime.Composer?;kotlin.Int){0§<kotlin.Any?>;1§<kotlin.Any?>;2§<kotlin.Any?>}[0]
 final fun <#A: kotlin/Any?, #B: kotlin/Any?> (kotlinx.coroutines.flow/Flow<#A>).com.kitakkun.fusio/mapEvents(kotlin/Function1<#A, #B?>): kotlinx.coroutines.flow/Flow<#B> // com.kitakkun.fusio/mapEvents|mapEvents@kotlinx.coroutines.flow.Flow<0:0>(kotlin.Function1<0:0,0:1?>){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
 final fun <#A: kotlin/Any?, #B: kotlin/Any?> com.kitakkun.fusio/forwardEffects(com.kitakkun.fusio/PresenterScope<*, #A>, com.kitakkun.fusio/PresenterScope<*, #B>, kotlin/Function1<#A, #B?>, androidx.compose.runtime/Composer?, kotlin/Int) // com.kitakkun.fusio/forwardEffects|forwardEffects(com.kitakkun.fusio.PresenterScope<*,0:0>;com.kitakkun.fusio.PresenterScope<*,0:1>;kotlin.Function1<0:0,0:1?>;androidx.compose.runtime.Composer?;kotlin.Int){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
-final fun com.kitakkun.fusio/com_kitakkun_fusio_Fusio$stableprop_getter(): kotlin/Int // com.kitakkun.fusio/com_kitakkun_fusio_Fusio$stableprop_getter|com_kitakkun_fusio_Fusio$stableprop_getter(){}[0]
+final fun com.kitakkun.fusio/com_kitakkun_fusio_Presentation$stableprop_getter(): kotlin/Int // com.kitakkun.fusio/com_kitakkun_fusio_Presentation$stableprop_getter|com_kitakkun_fusio_Presentation$stableprop_getter(){}[0]
 final fun com.kitakkun.fusio/com_kitakkun_fusio_PresenterScope$stableprop_getter(): kotlin/Int // com.kitakkun.fusio/com_kitakkun_fusio_PresenterScope$stableprop_getter|com_kitakkun_fusio_PresenterScope$stableprop_getter(){}[0]
-final inline fun <#A: kotlin/Any?, #B: kotlin/Any?, #C: kotlin/Any?> (com.kitakkun.fusio/PresenterScope<*, *>).com.kitakkun.fusio/mappedScope(kotlin/Function3<com.kitakkun.fusio/PresenterScope<#A, #B>, androidx.compose.runtime/Composer, kotlin/Int, #C>): #C // com.kitakkun.fusio/mappedScope|mappedScope@com.kitakkun.fusio.PresenterScope<*,*>(kotlin.Function3<com.kitakkun.fusio.PresenterScope<0:0,0:1>,androidx.compose.runtime.Composer,kotlin.Int,0:2>){0§<kotlin.Any?>;1§<kotlin.Any?>;2§<kotlin.Any?>}[0]
+final inline fun <#A: kotlin/Any?, #B: kotlin/Any?, #C: kotlin/Any?> (com.kitakkun.fusio/PresenterScope<*, *>).com.kitakkun.fusio/fuse(kotlin/Function3<com.kitakkun.fusio/PresenterScope<#A, #B>, androidx.compose.runtime/Composer, kotlin/Int, #C>): #C // com.kitakkun.fusio/fuse|fuse@com.kitakkun.fusio.PresenterScope<*,*>(kotlin.Function3<com.kitakkun.fusio.PresenterScope<0:0,0:1>,androidx.compose.runtime.Composer,kotlin.Int,0:2>){0§<kotlin.Any?>;1§<kotlin.Any?>;2§<kotlin.Any?>}[0]
 final inline fun <#A: reified kotlin/Any?> (com.kitakkun.fusio/PresenterScope<*, *>).com.kitakkun.fusio/on(noinline kotlin.coroutines/SuspendFunction1<#A, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int) // com.kitakkun.fusio/on|on@com.kitakkun.fusio.PresenterScope<*,*>(kotlin.coroutines.SuspendFunction1<0:0,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int){0§<kotlin.Any?>}[0]

@@ -2,12 +2,12 @@
 // FULL_JDK
 // WITH_STDLIB
 
-import com.kitakkun.fusio.Fusio
+import com.kitakkun.fusio.Presentation
 import kotlinx.coroutines.flow.emptyFlow
 
-// Pin the generated data-class shape of Fusio<S, E>: equals / copy / componentN.
+// Pin the generated data-class shape of Presentation<S, E>: equals / copy / componentN.
 fun box(): String {
-    val a = Fusio(state = 42, effectFlow = emptyFlow<String>())
+    val a = Presentation(state = 42, effectFlow = emptyFlow<String>())
     val b = a.copy(state = 42)
     if (a != b) return "FAIL: copy not equal: $a vs $b"
 

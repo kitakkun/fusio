@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Measures the throughput of event-mapping pipelines that the Fusio compiler
- * plugin generates for `mappedScope { subPresenter() }`. The plugin rewrites
+ * plugin generates for `fuse { subPresenter() }`. The plugin rewrites
  * the call site into `parentFlow.mapNotNull { when(event) { ... } }` — we
  * bench the exact shape here so regressions in Flow cold-path cost land
  * visibly.

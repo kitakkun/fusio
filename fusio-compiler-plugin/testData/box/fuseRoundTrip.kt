@@ -1,19 +1,20 @@
 // TARGET_BACKEND: JVM_IR
 // FULL_JDK
 // WITH_STDLIB
-// DUMP_IR
+// WITH_FUSIO_HEADLESS
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.kitakkun.fusio.Fusio
+import fusio.test.runHeadless
+import com.kitakkun.fusio.Presentation
 import com.kitakkun.fusio.MapFrom
 import com.kitakkun.fusio.MapTo
 import com.kitakkun.fusio.PresenterScope
 import com.kitakkun.fusio.buildPresenter
-import com.kitakkun.fusio.mappedScope
+import com.kitakkun.fusio.fuse
 import com.kitakkun.fusio.on
 
 sealed interface ChildEvent {
@@ -47,7 +48,20 @@ fun PresenterScope<ChildEvent, ChildEffect>.child(): ChildState {
 @Composable
 fun screenPresenter(
     events: kotlinx.coroutines.flow.Flow<ParentEvent>,
-): Fusio<ScreenState, ParentEffect> = buildPresenter(events) {
-    val childState = mappedScope { child() }
+): Presentation<ScreenState, ParentEffect> = buildPresenter(events) {
+    val childState = fuse { child() }
     ScreenState(childState)
+}
+
+fun box(): String {
+    var result = "uninitialised"
+    runHeadless<ParentEvent, ScreenState, ParentEffect>(::screenPresenter) {
+        emit(ParentEvent.Flip("a"))
+        result = when {
+            state?.child?.toggled != true -> "FAIL state: $state"
+            effects.singleOrNull() != ParentEffect.Echo(message = "toggled=a") -> "FAIL effects: $effects"
+            else -> "OK"
+        }
+    }
+    return result
 }

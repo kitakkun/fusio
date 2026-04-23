@@ -16,7 +16,7 @@ The name isn't decorative. Every screen Fusio produces is literally a **fusion**
 - the children's effect flows back into the parent's single effect channel
 - the parent's event flow routed into each child's scope via declared mappings
 
-The library's core data type, `Fusio<State, Effect>`, *is* that fusion expressed as a pair — a state value and the effect stream the presenter produced alongside it.
+The library's core data type, `Presentation<State, Effect>`, *is* that fusion expressed as a pair — a state value and the effect stream the presenter produced alongside it.
 
 ## The problem
 
@@ -48,11 +48,11 @@ effect plumbing between them by hand. Fusio turns that plumbing into annotations
 ## The fusion point
 
 ```kotlin
-val tasks  = mappedScope { taskList() }   // <── child presenter 1
-val filter = mappedScope { filter() }     // <── child presenter 2
+val tasks  = fuse { taskList() }   // <── child presenter 1
+val filter = fuse { filter() }     // <── child presenter 2
 ```
 
-Each `mappedScope { subPresenter() }` is where a sub-presenter's scope fuses
+Each `fuse { subPresenter() }` is where a sub-presenter's scope fuses
 into the parent's. The Fusio compiler plugin rewrites each call site at IR
 time into:
 
@@ -64,14 +64,14 @@ time into:
 4. an invocation of the sub-presenter lambda, whose return value is the
    child's `State`.
 
-Sibling `mappedScope` calls don't see each other's events or effects: each gets
+Sibling `fuse` calls don't see each other's events or effects: each gets
 a narrow, typed slice of the parent's flows.
 
 ## What you write
 
-- `buildPresenter(eventFlow) { … }` — screen-level entry, returns `Fusio<State, Effect>`
+- `buildPresenter(eventFlow) { … }` — screen-level entry, returns `Presentation<State, Effect>`
 - `on<Event> { … }` — typed handler reading from the current scope's event flow
-- `mappedScope { subPresenter() }` — the fusion point above
+- `fuse { subPresenter() }` — the fusion point above
 - `@MapTo(ChildEvent::class)` on a *parent-event* sealed subtype — "route me into this child"
 - `@MapFrom(ChildEffect::class)` on a *parent-effect* sealed subtype — "lift this child effect up as me"
 
@@ -133,10 +133,10 @@ The screen-level presenter fuses them:
 
 ```kotlin
 @Composable
-fun myScreenPresenter(eventFlow: Flow<MyScreenEvent>): Fusio<MyScreenUiState, MyScreenEffect> =
+fun myScreenPresenter(eventFlow: Flow<MyScreenEvent>): Presentation<MyScreenUiState, MyScreenEffect> =
     buildPresenter(eventFlow) {
-        val tasks  = mappedScope { taskList() }
-        val filter = mappedScope { filter() }
+        val tasks  = fuse { taskList() }
+        val filter = fuse { filter() }
 
         val visible = when (filter.current) {
             TaskFilter.All       -> tasks.tasks
@@ -162,7 +162,7 @@ See `demo/` for the runnable version — launch with `cd demo && ../gradlew runJ
 
 ```
 fusio-annotations/      @MapTo, @MapFrom                    (Kotlin Multiplatform)
-fusio-runtime/          Fusio, PresenterScope, buildPresenter, on, mappedScope stub
+fusio-runtime/          Presentation, PresenterScope, buildPresenter, on, fuse stub
                                                              (Kotlin Multiplatform + Compose Multiplatform)
 fusio-compiler-plugin/  FIR checkers + IR transformer        (JVM, single shaded jar)
 fusio-gradle-plugin/    KotlinCompilerPluginSupportPlugin integration (included build)

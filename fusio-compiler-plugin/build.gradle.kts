@@ -75,7 +75,7 @@ dependencies {
     testFixturesApi(libs.kotlin.test.junit5)
     testFixturesApi(libs.kotlin.reflect)
     // Compose compiler plugin — registered explicitly in FusioExtensionRegistrarConfigurator
-    // so @Composable usage in testData (mappedScope round-trip) actually gets Compose
+    // so @Composable usage in testData (fuse round-trip) actually gets Compose
     // IR treatment.
     testFixturesApi(libs.kotlin.compose.compiler.plugin)
     testFixturesRuntimeOnly(libs.junit.jupiter.engine)
@@ -163,7 +163,7 @@ tasks.test {
 // the shaded fusio-compiler-plugin.jar on its -Xplugin classpath. The run
 // compiles src/smokeK24/kotlin/Sample.kt, which exercises every version-
 // sensitive helper on CompatContext (@MapTo annotation -> kclassArg,
-// mappedScope { ... } -> setArg/setTypeArg). Compile success proves:
+// fuse { ... } -> setArg/setTypeArg). Compile success proves:
 //
 //   1. CompatContextResolver selected the k240_beta2 impl via ServiceLoader
 //      against the 2.4 compiler.

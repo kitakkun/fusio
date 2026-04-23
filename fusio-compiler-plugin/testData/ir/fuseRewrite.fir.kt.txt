@@ -285,7 +285,7 @@ sealed interface ParentEvent {
 @Composable
 fun PresenterScope<ChildEvent, ChildEffect>.child(/* var */ $composer: Composer?, $changed: Int): ChildState {
   when {
-    isTraceInProgress() -> traceEventStart(key = 1088036184, dirty1 = $changed, dirty2 = -1, info = "child (mappedScopeRewrite.kt:37)")
+    isTraceInProgress() -> traceEventStart(key = -1813312704, dirty1 = $changed, dirty2 = -1, info = "child (fuseRewrite.kt:37)")
   }
   var toggled: Boolean
     val toggled$delegate: MutableState<Boolean> = { // BLOCK
@@ -325,15 +325,15 @@ fun PresenterScope<ChildEvent, ChildEffect>.child(/* var */ $composer: Composer?
 }
 
 @Composable
-fun screenPresenter(events: Flow<ParentEvent>, /* var */ $composer: Composer?, $changed: Int): Fusio<ScreenState, ParentEffect> {
+fun screenPresenter(events: Flow<ParentEvent>, /* var */ $composer: Composer?, $changed: Int): Presentation<ScreenState, ParentEffect> {
   when {
-    isTraceInProgress() -> traceEventStart(key = -1219356829, dirty1 = $changed, dirty2 = -1, info = "screenPresenter (mappedScopeRewrite.kt:49)")
+    isTraceInProgress() -> traceEventStart(key = -1226651325, dirty1 = $changed, dirty2 = -1, info = "screenPresenter (fuseRewrite.kt:49)")
   }
-  val tmp_7: Fusio<ScreenState, ParentEffect> = buildPresenter<ParentEvent, ParentEffect, ScreenState>(eventFlow = events, block =   @Composable
+  val tmp_7: Presentation<ScreenState, ParentEffect> = buildPresenter<ParentEvent, ParentEffect, ScreenState>(eventFlow = events, block =   @Composable
 local fun PresenterScope<ParentEvent, ParentEffect>.<anonymous>(/* var */ $composer: Composer?, $changed: Int): ScreenState {
-    $composer.startReplaceGroup(key = -1504671504)
+    $composer.startReplaceGroup(key = -1511966000)
     when {
-      isTraceInProgress() -> traceEventStart(key = -1504671504, dirty1 = $changed, dirty2 = -1, info = "screenPresenter.<anonymous> (mappedScopeRewrite.kt:50)")
+      isTraceInProgress() -> traceEventStart(key = -1511966000, dirty1 = $changed, dirty2 = -1, info = "screenPresenter.<anonymous> (fuseRewrite.kt:50)")
     }
     val childState: ChildState = { // BLOCK
       val tmp_8: PresenterScope<ParentEvent, ParentEffect> = $this$buildPresenter
@@ -364,11 +364,11 @@ local fun PresenterScope<ParentEvent, ParentEffect>.<anonymous>(/* var */ $compo
       }, $composer = $composer, $changed = 384.or(other = #$stable).or(other = #$stable.shl(bitCount = 3)).or(other = 112.and(other = $changed.shl(bitCount = 3))))
             @Composable
 local fun PresenterScope<ChildEvent, ChildEffect>.<anonymous>(/* var */ $composer: Composer?, $changed: Int): ChildState {
-        $composer.startReplaceGroup(key = -2104066473)
+        $composer.startReplaceGroup(key = -2111360969)
         when {
-          isTraceInProgress() -> traceEventStart(key = -2104066473, dirty1 = $changed, dirty2 = -1, info = "screenPresenter.<anonymous>.<anonymous> (mappedScopeRewrite.kt:50)")
+          isTraceInProgress() -> traceEventStart(key = -2111360969, dirty1 = $changed, dirty2 = -1, info = "screenPresenter.<anonymous>.<anonymous> (fuseRewrite.kt:50)")
         }
-        val tmp_11: ChildState = child(/* <this> = $this$mappedScope, */ $composer = $composer, $changed = #$stable.or(other = 14.and(other = $changed)))
+        val tmp_11: ChildState = child(/* <this> = $this$fuse, */ $composer = $composer, $changed = #$stable.or(other = 14.and(other = $changed)))
         when {
           isTraceInProgress() -> traceEventEnd()
         }
@@ -390,4 +390,3 @@ local fun PresenterScope<ChildEvent, ChildEffect>.<anonymous>(/* var */ $compose
   }
   return tmp_7
 }
-

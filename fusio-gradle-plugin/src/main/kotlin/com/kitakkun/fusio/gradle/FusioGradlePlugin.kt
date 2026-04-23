@@ -39,7 +39,7 @@ class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
     )
 
     override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
-        // Ensure Fusio's IR transformer runs BEFORE Compose's so `mappedScope` is
+        // Ensure Fusio's IR transformer runs BEFORE Compose's so `fuse` is
         // rewritten before Compose injects $composer/$changed params into
         // @Composable lambdas. Registration order inside the Kotlin compiler is
         // determined by this CLI flag when both plugins are present.

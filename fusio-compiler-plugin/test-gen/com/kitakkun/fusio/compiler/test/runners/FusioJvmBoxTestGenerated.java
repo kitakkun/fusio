@@ -33,27 +33,27 @@ public class FusioJvmBoxTestGenerated extends AbstractFusioJvmBoxTest {
   }
 
   @Test
-  @TestMetadata("fusioDataClass.kt")
-  public void testFusioDataClass() {
-    runTest("fusio-compiler-plugin/testData/box/fusioDataClass.kt");
+  @TestMetadata("fuseRoundTrip.kt")
+  public void testFuseRoundTrip() {
+    runTest("fusio-compiler-plugin/testData/box/fuseRoundTrip.kt");
   }
 
   @Test
-  @TestMetadata("mappedScopeRoundTrip.kt")
-  public void testMappedScopeRoundTrip() {
-    runTest("fusio-compiler-plugin/testData/box/mappedScopeRoundTrip.kt");
+  @TestMetadata("nestedFuse.kt")
+  public void testNestedFuse() {
+    runTest("fusio-compiler-plugin/testData/box/nestedFuse.kt");
   }
 
   @Test
-  @TestMetadata("nestedMappedScope.kt")
-  public void testNestedMappedScope() {
-    runTest("fusio-compiler-plugin/testData/box/nestedMappedScope.kt");
+  @TestMetadata("presentationDataClass.kt")
+  public void testPresentationDataClass() {
+    runTest("fusio-compiler-plugin/testData/box/presentationDataClass.kt");
   }
 
   @Test
-  @TestMetadata("siblingMappedScope.kt")
-  public void testSiblingMappedScope() {
-    runTest("fusio-compiler-plugin/testData/box/siblingMappedScope.kt");
+  @TestMetadata("siblingFuse.kt")
+  public void testSiblingFuse() {
+    runTest("fusio-compiler-plugin/testData/box/siblingFuse.kt");
   }
 
   @Test

@@ -75,7 +75,7 @@ class FusioHeadlessRunnerSourceProvider(testServices: TestServices) : Additional
             import androidx.compose.runtime.Recomposer
             import androidx.compose.runtime.mutableStateOf
             import androidx.compose.runtime.snapshots.Snapshot
-            import com.kitakkun.fusio.Fusio
+            import com.kitakkun.fusio.Presentation
             import kotlinx.coroutines.CoroutineScope
             import kotlinx.coroutines.Job
             import kotlinx.coroutines.delay
@@ -99,7 +99,7 @@ class FusioHeadlessRunnerSourceProvider(testServices: TestServices) : Additional
              * Composition/Recomposer/Job before returning.
              */
             fun <E, S, Eff> runHeadless(
-                present: @Composable (Flow<E>) -> Fusio<S, Eff>,
+                present: @Composable (Flow<E>) -> Presentation<S, Eff>,
                 block: suspend Inputs<E, S, Eff>.() -> Unit,
             ) = runBlocking {
                 val events = MutableSharedFlow<E>(extraBufferCapacity = 64)

@@ -19,7 +19,7 @@ fun TestConfigurationBuilder.configureFusioPlugin() {
 }
 
 /**
- * Registers Fusio BEFORE Compose so `mappedScope { ... }` is rewritten
+ * Registers Fusio BEFORE Compose so `fuse { ... }` is rewritten
  * before Compose injects `$composer`/`$changed` parameters into @Composable
  * lambdas — same ordering constraint the Gradle plugin enforces in production
  * via `-Xcompiler-plugin-order=com.kitakkun.fusio>androidx.compose.compiler...`.

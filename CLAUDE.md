@@ -1,6 +1,6 @@
 # Fusio — Claude's project map
 
-Kotlin compiler plugin + runtime that decomposes fat Composable Presenters. Users write `mappedScope { subPresenter() }` and `@MapTo` / `@MapFrom` annotations; the plugin rewrites the call site into event/effect plumbing at IR time.
+Kotlin compiler plugin + runtime that decomposes fat Composable Presenters. Users write `fuse { subPresenter() }` and `@MapTo` / `@MapFrom` annotations; the plugin rewrites the call site into event/effect plumbing at IR time.
 
 ## Start here (in order)
 
@@ -15,11 +15,11 @@ Persistent notes that survive across sessions live in `~/.claude/projects/-Users
 | Module | Role |
 |---|---|
 | `fusio-annotations` | `@MapTo`, `@MapFrom` (KMP: jvm, iosArm64/SimArm64, macosArm64, js(IR), wasmJs) |
-| `fusio-runtime` | `Fusio`, `PresenterScope`, `buildPresenter`, `on<>`, `mappedScope` (inline stub), `mapEvents`, `forwardEffects` — same KMP targets |
-| `fusio-compiler-plugin` | FIR checkers + IR `MappedScopeTransformer`; shades `fusio-compiler-compat` and every `kXXX` impl into a single jar (JVM only) |
+| `fusio-runtime` | `Presentation`, `PresenterScope`, `buildPresenter`, `on<>`, `fuse` (inline stub), `mapEvents`, `forwardEffects` — same KMP targets |
+| `fusio-compiler-plugin` | FIR checkers + IR `FuseTransformer`; shades `fusio-compiler-compat` and every `kXXX` impl into a single jar (JVM only) |
 | `fusio-compiler-compat/` | `CompatContext` interface + `CompatContextResolver` (ServiceLoader); `kXXX/` subprojects hold per-Kotlin-version impls |
 | `fusio-gradle-plugin` | Auto-injects `-Xcompiler-plugin-order` so Fusio runs before Compose |
-| `demo/` | Composite-build Compose Desktop app demonstrating the full Fusio pipeline end-to-end (parent presenter, mapped sub-presenter, nested mappedScope, @MapTo/@MapFrom round-trip) |
+| `demo/` | Composite-build Compose Desktop app demonstrating the full Fusio pipeline end-to-end (parent presenter, mapped sub-presenter, nested fuse, @MapTo/@MapFrom round-trip) |
 | `build-logic/` | `fusio.publish` convention plugin |
 
 Build: Gradle 9.3.0, shadow 9.4.1, Kotlin 2.3.20 (+ 2.4.0-Beta2 via smokeK24). Configuration cache is on by default in both root and sample — cold incremental runs are ~800 ms.
@@ -40,8 +40,8 @@ mavenLocal is content-filtered to `com.kitakkun.fusio` in settings so external K
 
 ## Rules of thumb
 
-- Sub-presenters return `State`, **not** `Fusio<State, Effect>`. Effects flow through `emitEffect`.
-- `mappedScope` is `inline` (not `@Composable`); inline carries caller's Composable context.
+- Sub-presenters return `State`, **not** `Presentation<State, Effect>`. Effects flow through `emitEffect`.
+- `fuse` is `inline` (not `@Composable`); inline carries caller's Composable context.
 - Diagnostic types use `org.jetbrains.kotlin.psi.KtElement`, not IntelliJ `PsiElement` (shading mismatch between embeddable / non-embeddable kotlin-compiler).
 - IR transformer registers BEFORE Compose (insertion order in `ExtensionStorage`).
 - When touching compiler-plugin internals, read `reference_fusio_gotchas.md` in memory first.

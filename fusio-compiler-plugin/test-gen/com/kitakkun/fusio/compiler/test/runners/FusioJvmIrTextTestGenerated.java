@@ -21,8 +21,8 @@ public class FusioJvmIrTextTestGenerated extends AbstractFusioJvmIrTextTest {
   }
 
   @Test
-  @TestMetadata("mappedScopeRewrite.kt")
-  public void testMappedScopeRewrite() {
-    runTest("fusio-compiler-plugin/testData/ir/mappedScopeRewrite.kt");
+  @TestMetadata("fuseRewrite.kt")
+  public void testFuseRewrite() {
+    runTest("fusio-compiler-plugin/testData/ir/fuseRewrite.kt");
   }
 }

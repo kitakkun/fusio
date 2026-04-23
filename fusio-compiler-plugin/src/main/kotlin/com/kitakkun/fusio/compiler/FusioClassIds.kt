@@ -11,9 +11,9 @@ object FusioClassIds {
     val MAP_TO = ClassId(FUSIO_PACKAGE, Name.identifier("MapTo"))
     val MAP_FROM = ClassId(FUSIO_PACKAGE, Name.identifier("MapFrom"))
     val PRESENTER_SCOPE = ClassId(FUSIO_PACKAGE, Name.identifier("PresenterScope"))
-    val FUSIO = ClassId(FUSIO_PACKAGE, Name.identifier("Fusio"))
+    val PRESENTATION = ClassId(FUSIO_PACKAGE, Name.identifier("Presentation"))
 
-    val MAPPED_SCOPE = CallableId(FUSIO_PACKAGE, Name.identifier("mappedScope"))
+    val FUSE = CallableId(FUSIO_PACKAGE, Name.identifier("fuse"))
     val BUILD_PRESENTER = CallableId(FUSIO_PACKAGE, Name.identifier("buildPresenter"))
     val EMIT_EFFECT = CallableId(PRESENTER_SCOPE, Name.identifier("emitEffect"))
     val MAP_EVENTS = CallableId(FUSIO_PACKAGE, Name.identifier("mapEvents"))

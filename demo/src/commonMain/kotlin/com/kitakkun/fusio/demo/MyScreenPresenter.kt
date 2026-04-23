@@ -1,14 +1,14 @@
 package com.kitakkun.fusio.demo
 
 import androidx.compose.runtime.Composable
-import com.kitakkun.fusio.Fusio
+import com.kitakkun.fusio.Presentation
 import com.kitakkun.fusio.buildPresenter
-import com.kitakkun.fusio.mappedScope
+import com.kitakkun.fusio.fuse
 import kotlinx.coroutines.flow.Flow
 
 /**
  * Root presenter for the Todo demo. Composes the TaskList and Filter
- * sub-presenters side by side via two `mappedScope { ... }` calls and
+ * sub-presenters side by side via two `fuse { ... }` calls and
  * derives the UI-shaped state by intersecting the two.
  *
  * What this function owns:
@@ -23,9 +23,9 @@ import kotlinx.coroutines.flow.Flow
 @Composable
 fun myScreenPresenter(
     eventFlow: Flow<MyScreenEvent>,
-): Fusio<MyScreenUiState, MyScreenEffect> = buildPresenter(eventFlow) {
-    val tasks = mappedScope { taskList() }
-    val filter = mappedScope { filter() }
+): Presentation<MyScreenUiState, MyScreenEffect> = buildPresenter(eventFlow) {
+    val tasks = fuse { taskList() }
+    val filter = fuse { filter() }
 
     val visible = when (filter.current) {
         TaskFilter.All -> tasks.tasks

@@ -53,7 +53,7 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 
 /**
- * Rewrites every `mappedScope<CE, CEff, CS> { block }` call site into inline
+ * Rewrites every `fuse<CE, CEff, CS> { block }` call site into inline
  * IR that plumbs events in and effects out between the parent [PresenterScope]
  * and the child one that [block] runs against.
  *
@@ -71,7 +71,7 @@ import org.jetbrains.kotlin.name.Name
  * `@MapTo` / `@MapFrom` annotations on the parent event/effect sealed subtypes.
  */
 @OptIn(UnsafeDuringIrConstructionAPI::class)
-class MappedScopeTransformer(
+class FuseTransformer(
     private val pluginContext: IrPluginContext,
     compat: CompatContext,
 ) : IrElementTransformerVoidWithContext(), CompatContext by compat {
@@ -98,12 +98,12 @@ class MappedScopeTransformer(
 
     override fun visitCall(expression: IrCall): IrExpression {
         val callee = expression.symbol.owner
-        if (callee.name != MAPPED_SCOPE_NAME) return super.visitCall(expression)
+        if (callee.name != FUSE_NAME) return super.visitCall(expression)
         if (callee.parent.kotlinFqName != FusioClassIds.FUSIO_PACKAGE) return super.visitCall(expression)
-        return transformMappedScope(expression)
+        return transformFuse(expression)
     }
 
-    private fun transformMappedScope(call: IrCall): IrExpression {
+    private fun transformFuse(call: IrCall): IrExpression {
         val childEventType = call.typeArguments[0]!!
         val childEffectType = call.typeArguments[1]!!
         val childStateType = call.typeArguments[2]!!
@@ -111,7 +111,7 @@ class MappedScopeTransformer(
         val parentScopeExpr = call.arguments[0]!!
         val lambdaExpr = call.arguments[1]!! as IrFunctionExpression
 
-        // mappedScope is declared on PresenterScope<*, *>, so its extension receiver's
+        // fuse is declared on PresenterScope<*, *>, so its extension receiver's
         // declared type is star-projected. But the concrete type at the call site
         // carries the real ParentEvent/ParentEffect arguments — we read them here.
         val parentScopeType = parentScopeExpr.type as? IrSimpleType
@@ -162,7 +162,7 @@ class MappedScopeTransformer(
                     parent = parentDecl,
                     annotationClassId = FusioClassIds.MAP_TO,
                     fromClass = pEvent.classOrNull?.owner,
-                    // Filter by the child event root so sibling mappedScope
+                    // Filter by the child event root so sibling fuse
                     // calls don't poach each other's @MapTo annotations.
                     expectedOtherClass = childEventType.classOrNull?.owner,
                 )
@@ -216,7 +216,7 @@ class MappedScopeTransformer(
             reverseDirection = true,
             // Same sibling-isolation filter as the event side — a parent's
             // @MapFrom that points at a different child-effect tree is not
-            // this mappedScope's concern.
+            // this fuse's concern.
             expectedOtherClass = childEffectType.classOrNull?.owner,
         ) ?: return
 
@@ -320,7 +320,7 @@ class MappedScopeTransformer(
             // Siblings at the same parent level can @MapTo / @MapFrom different
             // child trees (Favorite's subtypes vs Wallet's subtypes, for
             // example). Skip annotations whose "other side" lives in a tree
-            // this mappedScope doesn't own — otherwise the generated when-
+            // this fuse doesn't own — otherwise the generated when-
             // lambda tries to return Wallet* from a Favorite?-typed branch
             // and JVM checkcast-fails at runtime.
             if (expectedOtherClass != null &&
@@ -408,6 +408,6 @@ class MappedScopeTransformer(
     )
 
     private companion object {
-        val MAPPED_SCOPE_NAME: Name = FusioClassIds.MAPPED_SCOPE.callableName
+        val FUSE_NAME: Name = FusioClassIds.FUSE.callableName
     }
 }
