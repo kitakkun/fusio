@@ -1,6 +1,6 @@
 # Step 7: Compiler Plugin Test Infrastructure (Design)
 
-Status: **design doc, not yet implemented**
+Status: **implemented, since restructured.** The original layout (`fusio-compiler-plugin/{test-fixtures,test-gen,testData}`) landed as planned here; later work in step 8 moved everything into per-Kotlin-patch subprojects under `fusio-compiler-plugin-tests/` (`k230`, `k2310`, `tests-k2320`, `k2321`, `tests-k240_beta2`) with shared box / diagnostics testData at the umbrella root and per-lane IR goldens. The Gradle wiring and key fixture classes below are retained as-written for historical context — consult the actual test lane build files for the current shape.
 
 ## Problem
 

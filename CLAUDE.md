@@ -50,7 +50,7 @@ mavenLocal is content-filtered to `com.kitakkun.fusio` in settings so external K
 - `fuse` is `inline` (not `@Composable`); inline carries caller's Composable context.
 - Diagnostic types use `org.jetbrains.kotlin.psi.KtElement`, not IntelliJ `PsiElement` (shading mismatch between embeddable / non-embeddable kotlin-compiler).
 - IR transformer registers BEFORE Compose (insertion order in `ExtensionStorage`).
-- When touching compiler-plugin internals, read `reference_fusio_gotchas.md` in memory first.
+- When touching compiler-plugin internals, check `~/.claude/projects/-Users-kitakkun-Documents-GitHub-fusio/memory/MEMORY.md` for "tried, didn't work" entries (currently: the 2.3.x testFixtures consolidation footgun).
 
 ## Multi-Kotlin-version support
 

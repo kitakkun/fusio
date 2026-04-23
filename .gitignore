@@ -18,5 +18,7 @@ local.properties
 # Logs
 *.log
 
-# Claude Code local settings
+# Claude Code local settings / scheduled-task scratch
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
+.claude/scheduled_tasks.json
