@@ -11,11 +11,27 @@ import java.util.Properties
 class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
 
     override fun apply(target: Project) {
-        // Auto-add runtime dependency. Version is baked from this plugin's own
-        // build — consumers' `project.version` is unrelated to ours.
+        // Auto-add runtime dependency. Version is baked from this plugin's
+        // own build — consumers' `project.version` is unrelated to ours.
         target.afterEvaluate {
+            // The configuration name that accepts "main" code dependencies
+            // depends on which Kotlin plugin flavour the consumer applied.
+            // KMP projects (including the Android KMP library variant, which
+            // applies `org.jetbrains.kotlin.multiplatform` under the hood)
+            // expose `commonMainImplementation`; plain `kotlin-jvm` /
+            // `kotlin-android` consumers don't have that configuration but
+            // DO have `implementation`. Picking the right one at apply time
+            // lets Fusio work on both layouts — relying on
+            // `commonMainImplementation` unconditionally crashes JVM-only
+            // consumers with UnknownConfigurationException before they
+            // write a single line of Fusio code.
+            val configName = if (target.plugins.hasPlugin(KMP_PLUGIN_ID)) {
+                "commonMainImplementation"
+            } else {
+                "implementation"
+            }
             target.dependencies.add(
-                "commonMainImplementation",
+                configName,
                 "com.kitakkun.fusio:fusio-runtime:$FUSIO_VERSION",
             )
         }
@@ -59,6 +75,7 @@ class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
     private companion object {
         const val FUSIO_PLUGIN_ID = "com.kitakkun.fusio"
         const val COMPOSE_PLUGIN_ID = "androidx.compose.compiler.plugins.kotlin"
+        const val KMP_PLUGIN_ID = "org.jetbrains.kotlin.multiplatform"
 
         /**
          * Read from a `version.properties` resource baked by the

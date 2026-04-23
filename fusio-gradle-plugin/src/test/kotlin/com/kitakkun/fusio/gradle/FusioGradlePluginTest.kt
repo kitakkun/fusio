@@ -61,6 +61,36 @@ class FusioGradlePluginTest {
     }
 
     @Test
+    fun `applies cleanly on a plain kotlin-jvm consumer`() {
+        // Regression guard: the plugin used to unconditionally add its
+        // runtime dep to `commonMainImplementation`, which blows up on
+        // non-KMP consumers (kotlin-jvm / kotlin-android) because that
+        // configuration only exists when the multiplatform plugin is
+        // applied. This test pins the fallback branch to `implementation`.
+        writeSettings()
+        writeBuild(
+            """
+            plugins {
+                kotlin("jvm") version "2.3.21"
+                id("com.kitakkun.fusio")
+            }
+            repositories { mavenCentral() }
+            """.trimIndent(),
+        )
+
+        val result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments("help", "--stacktrace")
+            .withPluginClasspath()
+            .build()
+
+        assertTrue(
+            result.output.contains("BUILD SUCCESSFUL"),
+            "plugin apply should succeed on plain kotlin-jvm. full output:\n${result.output}",
+        )
+    }
+
+    @Test
     fun `plugin id matches implementationClass mapping`() {
         // Simple metadata check — catches the "plugin id declared but no
         // implementationClass" mismatch that breaks apply lazily.
