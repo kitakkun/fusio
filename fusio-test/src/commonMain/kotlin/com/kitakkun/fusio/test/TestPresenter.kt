@@ -93,8 +93,12 @@ public fun <Event, State, Effect> testPresenter(
     val errorRef = ErrorRef()
 
     // Recomposer runs in its own coroutine so the scenario body can
-    // interleave with it. The exception handler routes presenter crashes
-    // into [errorRef] instead of letting them tear down the TestScope.
+    // interleave with it. The exception handler catches crashes *inside
+    // the recomposer loop itself* — things that throw during Compose's
+    // change-apply phase. Crashes inside a `LaunchedEffect` body (e.g. an
+    // `on<Event>` handler that throws) propagate through their own scope
+    // and surface at the scenario body's `send`/`await` call site instead;
+    // see memory/project_fusio_test_error_surfacing.md for the full story.
     val recomposer = Recomposer(coroutineContext + clock)
     val recomposerJob = launch(
         clock + CoroutineExceptionHandler { _, t -> errorRef.value = t },
