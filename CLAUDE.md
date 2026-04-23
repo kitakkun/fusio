@@ -14,24 +14,29 @@ Persistent notes that survive across sessions live in `~/.claude/projects/-Users
 
 | Module | Role |
 |---|---|
-| `fusio-annotations` | `@MapTo`, `@MapFrom` (pure KMP) |
-| `fusio-runtime` | `Fusio`, `PresenterScope`, `buildPresenter`, `on<>`, `mappedScope` (inline stub), `mapEvents`, `forwardEffects` |
-| `fusio-compiler-plugin` | FIR checkers + IR `MappedScopeTransformer`; shades `fusio-compiler-compat` and every `kXXX` impl into a single jar |
+| `fusio-annotations` | `@MapTo`, `@MapFrom` (KMP: jvm, iosArm64/SimArm64, macosArm64, js(IR), wasmJs) |
+| `fusio-runtime` | `Fusio`, `PresenterScope`, `buildPresenter`, `on<>`, `mappedScope` (inline stub), `mapEvents`, `forwardEffects` — same KMP targets |
+| `fusio-compiler-plugin` | FIR checkers + IR `MappedScopeTransformer`; shades `fusio-compiler-compat` and every `kXXX` impl into a single jar (JVM only) |
 | `fusio-compiler-compat/` | `CompatContext` interface + `CompatContextResolver` (ServiceLoader); `kXXX/` subprojects hold per-Kotlin-version impls |
 | `fusio-gradle-plugin` | Auto-injects `-Xcompiler-plugin-order` so Fusio runs before Compose |
-| `sample/` | Composite-build, headless Compose runner smoke test |
+| `sample/` | Composite-build, JVM headless Compose runner smoke test (other targets not yet wired) |
 | `build-logic/` | `fusio.publish` convention plugin |
+
+Build: Gradle 9.3.0, shadow 9.4.1, Kotlin 2.3.20 (+ 2.4.0-Beta2 via smokeK24). Configuration cache is on by default in both root and sample — cold incremental runs are ~800 ms.
 
 ## Common commands
 
 ```
-./gradlew build                                  # compiles + runs all tests
+./gradlew build                                  # compiles + runs all tests (7 platforms × commonTest)
 ./gradlew :fusio-compiler-plugin:test             # diagnostics + box tests (13/13)
-./gradlew :fusio-runtime:jvmTest                  # runtime unit tests (6/6)
+./gradlew :fusio-runtime:allTests                 # runtime tests on every KMP target
+./gradlew :fusio-runtime:jvmTest                  # JVM only — fastest feedback
 cd sample && ../gradlew runJvm                   # end-to-end smoke
 ./gradlew :fusio-compiler-plugin:test -Pkotlin.test.update.test.data=true  # auto-update expected diagnostic markers
 ./gradlew publishToMavenLocal                    # seed ~/.m2
 ```
+
+mavenLocal is content-filtered to `com.kitakkun.fusio` in settings so external KMP deps always resolve from mavenCentral with proper `.module` metadata. Don't remove that filter — doing so will silently pin kotlinx-coroutines-core to its JVM variant in commonMain compile.
 
 ## Rules of thumb
 

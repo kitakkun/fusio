@@ -15,7 +15,12 @@ concurrency:
 jobs:
   library:
     name: Library build + tests
-    runs-on: ubuntu-latest
+    # macos-latest covers every KMP target we declare: JVM, JS, WasmJs, and the
+    # Apple native targets (iosArm64, iosSimulatorArm64, macosArm64). The Apple
+    # ones need the Xcode toolchain, which isn't available on Linux runners —
+    # `./gradlew build` on ubuntu would fail at compileKotlinIosArm64. One
+    # macOS runner is simpler than splitting into linux + apple jobs.
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -28,13 +33,15 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          # Cache downloaded deps, wrapper distribution, and local build cache.
+          # Cache downloaded deps, wrapper distribution, local build cache, and
+          # the configuration cache store under ~/.gradle/.
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       # `build` runs assemble + check on every module, and check pulls in test.
-      # That already exercises:
-      #   - :fusio-runtime:jvmTest (runtime unit tests)
+      # That exercises:
+      #   - :fusio-runtime:allTests (commonTest on 7 KMP variants)
       #   - :fusio-compiler-plugin:test (diagnostics + box via internal test framework)
+      #   - :fusio-compiler-plugin:smokeK24 (shaded plugin on Kotlin 2.4.0-Beta2)
       # Splitting into separate gradle invocations buys nothing because Gradle
       # task graph would re-run the same work.
       - name: Build and test libraries

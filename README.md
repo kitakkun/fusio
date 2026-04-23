@@ -100,23 +100,41 @@ All of this is generated at compile time with no reflection.
 ## Project layout
 
 ```
-fusio-annotations/      @MapTo, @MapFrom
+fusio-annotations/      @MapTo, @MapFrom                    (Kotlin Multiplatform)
 fusio-runtime/          Fusio, PresenterScope, buildPresenter, on, mappedScope stub
-fusio-compiler-plugin/  FIR checkers + IR transformer
+                                                             (Kotlin Multiplatform + Compose Multiplatform)
+fusio-compiler-plugin/  FIR checkers + IR transformer        (JVM, single shaded jar)
 fusio-gradle-plugin/    KotlinCompilerPluginSupportPlugin integration
 sample/                Headless Compose runner exercising the full pipeline (composite build)
 ```
 
+### Platform targets
+
+`fusio-annotations` and `fusio-runtime` publish to:
+
+| Target | Status |
+|---|---|
+| JVM | ✅ |
+| iOS (`iosArm64`, `iosSimulatorArm64`) | ✅ |
+| macOS (`macosArm64`) | ✅ |
+| JS (`js(IR)` — browser & node) | ✅ |
+| Wasm (`wasmJs` — browser & node) | ✅ |
+
+`commonTest` runs on all of the above. Android, watchOS, tvOS, Linux, and Windows aren't configured yet but pose no fundamental obstacle — see `fusio-runtime/build.gradle.kts` to add more.
+
 ## Build
 
 ```
-./gradlew build
-./gradlew :fusio-runtime:jvmTest
+./gradlew build                       # compile + test every target
+./gradlew :fusio-runtime:allTests     # runtime tests on every platform
+./gradlew :fusio-runtime:jvmTest      # JVM only (fastest feedback)
 
 # Run the sample
 cd sample
 ../gradlew runJvm
 ```
+
+Builds run with Gradle 9 configuration cache enabled; incremental rebuilds complete in under a second after the first run.
 
 ### Plugin ordering
 
