@@ -36,5 +36,15 @@ kotlin {
                 implementation(compose.desktop.currentOs)
             }
         }
+        // Tests live on jvmTest only — the demo app is desktop-only, and
+        // covering `taskList` / `filter` / `myScreenPresenter` on JVM is
+        // enough to prove the fusio-test harness drives real-world presenter
+        // code (the whole point of this test source set).
+        jvmTest {
+            dependencies {
+                implementation(project(":fusio-test"))
+                implementation(libs.kotlin.test)
+            }
+        }
     }
 }

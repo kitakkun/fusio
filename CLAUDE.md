@@ -36,6 +36,7 @@ Build: Gradle 9.3.0, shadow 9.4.1, Kotlin 2.3.21 (+ 2.4.0-Beta2 via smokeK24). C
 ./gradlew :fusio-runtime:allTests                           # runtime tests on every KMP target
 ./gradlew :fusio-runtime:jvmTest                            # JVM only — fastest feedback
 ./gradlew :fusio-test:allTests                              # self-tests for the presenter testing harness
+./gradlew :demo:jvmTest                                     # demo's own tests (TaskList / Filter / MyScreen) — doubles as fusio-test showcase
 cd demo && ../gradlew runJvm                               # launch Compose Desktop demo
 ./gradlew :fusio-compiler-plugin-tests:k2321:test -Pkotlin.test.update.test.data=true  # auto-update diagnostic markers
 ./gradlew publishToMavenLocal                              # seed ~/.m2
