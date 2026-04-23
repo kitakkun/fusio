@@ -8,14 +8,26 @@ import androidx.compose.runtime.setValue
 import com.kitakkun.fusio.PresenterScope
 import com.kitakkun.fusio.on
 
+private const val MAX = 5
+
 @Composable
 fun PresenterScope<CounterEvent, CounterEffect>.counter(): CounterState {
     var value by remember { mutableStateOf(0) }
 
     on<CounterEvent.Increment> {
-        value += 1
-        emitEffect(CounterEffect.Value(value))
+        if (value >= MAX) {
+            // Clamp and notify — the bound is a counter-internal concern,
+            // not something the parent or the sibling Wallet should know
+            // about directly.
+            emitEffect(CounterEffect.MaxReached)
+        } else {
+            value += 1
+        }
     }
 
-    return CounterState(value)
+    on<CounterEvent.Reset> {
+        value = 0
+    }
+
+    return CounterState(value = value, isAtMax = value >= MAX)
 }

@@ -12,6 +12,13 @@ import com.kitakkun.fusio.mappedScope
 import com.kitakkun.fusio.on
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Root presenter for the demo screen. The state of Favorite (and its nested
+ * Counter) and Wallet is assembled from two sibling `mappedScope { ... }`
+ * calls — no parent-side glue beyond the annotations on each MyScreenEvent /
+ * MyScreenEffect subtype. Remove the `mappedScope` lines and the parent
+ * would have to re-implement both feature rulesets inline.
+ */
 @Composable
 fun myScreenPresenter(
     eventFlow: Flow<MyScreenEvent>,
@@ -23,9 +30,11 @@ fun myScreenPresenter(
     }
 
     val favoriteState = mappedScope { favorite() }
+    val walletState = mappedScope { wallet() }
 
     MyScreenUiState(
-        favoriteState = favoriteState,
         searchQuery = searchQuery,
+        favoriteState = favoriteState,
+        walletState = walletState,
     )
 }
