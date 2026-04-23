@@ -1,0 +1,8 @@
+public abstract interface annotation class com/kitakkun/fusio/MapFrom : java/lang/annotation/Annotation {
+	public abstract fun source ()Ljava/lang/Class;
+}
+
+public abstract interface annotation class com/kitakkun/fusio/MapTo : java/lang/annotation/Annotation {
+	public abstract fun target ()Ljava/lang/Class;
+}
+

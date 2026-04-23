@@ -1,0 +1,21 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, js, macosArm64, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kitakkun.fusio:fusio-annotations>
+open annotation class com.kitakkun.fusio/MapFrom : kotlin/Annotation { // com.kitakkun.fusio/MapFrom|null[0]
+    constructor <init>(kotlin.reflect/KClass<*>) // com.kitakkun.fusio/MapFrom.<init>|<init>(kotlin.reflect.KClass<*>){}[0]
+
+    final val source // com.kitakkun.fusio/MapFrom.source|{}source[0]
+        final fun <get-source>(): kotlin.reflect/KClass<*> // com.kitakkun.fusio/MapFrom.source.<get-source>|<get-source>(){}[0]
+}
+
+open annotation class com.kitakkun.fusio/MapTo : kotlin/Annotation { // com.kitakkun.fusio/MapTo|null[0]
+    constructor <init>(kotlin.reflect/KClass<*>) // com.kitakkun.fusio/MapTo.<init>|<init>(kotlin.reflect.KClass<*>){}[0]
+
+    final val target // com.kitakkun.fusio/MapTo.target|{}target[0]
+        final fun <get-target>(): kotlin.reflect/KClass<*> // com.kitakkun.fusio/MapTo.target.<get-target>|<get-target>(){}[0]
+}

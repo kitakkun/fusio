@@ -3,9 +3,36 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.compose.compiler) apply false
     alias(libs.plugins.compose.multiplatform) apply false
+    alias(libs.plugins.binary.compatibility.validator)
 }
 
 allprojects {
     group = "com.kitakkun.fusio"
     version = "0.1.0-SNAPSHOT"
+}
+
+// Publishable library surface gets its public ABI dumped into `<module>/api/`
+// via `./gradlew apiDump`. Regenerate intentionally; the `:apiCheck` lane
+// (already wired into `check`) fails if a PR changes the public API without
+// refreshing the dump. Non-publishable modules — the compiler plugin, its
+// compat jars, the gradle plugin, the sample, benchmarks — are excluded
+// since their surface is either internal tooling or auto-evolved.
+apiValidation {
+    ignoredProjects += listOf(
+        "fusio-compiler-plugin",
+        "fusio-compiler-compat",
+        "k2320",
+        "k240_beta2",
+        "fusio-gradle-plugin",
+        "benchmarks",
+    )
+
+    // Dump klib ABI for the non-JVM targets too. Without this, only the
+    // .jar ABI is tracked and an accidental signature change in iOS /
+    // Wasm / JS surfaces wouldn't break :apiCheck. Experimental API
+    // but this is the point of pulling in BCV for a KMP library.
+    @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
+    klib {
+        enabled = true
+    }
 }

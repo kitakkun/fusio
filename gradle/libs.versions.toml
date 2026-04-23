@@ -9,6 +9,7 @@ compose-multiplatform = "1.10.3"
 coroutines = "1.10.2"
 junit-jupiter = "5.11.3"
 kotlinx-benchmark = "0.4.15"
+binary-compatibility-validator = "0.18.1"
 # gradleup/shadow — 9.x is required for Gradle 9. See fusio-compiler-plugin
 # for usage.
 shadow = "9.4.1"
@@ -46,3 +47,4 @@ compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-m
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
 kotlin-allopen = { id = "org.jetbrains.kotlin.plugin.allopen", version.ref = "kotlin" }
+binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
