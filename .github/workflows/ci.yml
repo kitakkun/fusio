@@ -56,8 +56,8 @@ jobs:
             **/build/reports/tests/**
             **/build/test-results/**
 
-  sample:
-    name: Sample smoke test (composite build)
+  demo:
+    name: Demo build (composite)
     needs: library
     runs-on: ubuntu-latest
     steps:
@@ -74,16 +74,18 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
-      # Sample is a separate composite build that pulls the plugin via
-      # includeBuild("../"), so it must build after the library job seeds
-      # the Gradle cache.
-      - name: Run sample
-        working-directory: sample
-        run: ../gradlew runJvm
+      # demo/ is a Compose Desktop application wired to Fusio via
+      # `includeBuild("../")`. `build` exercises the composite resolution
+      # and compiles the real Presenter + Compose UI without actually
+      # launching a window — it's the closest we have to a downstream
+      # consumer smoke test.
+      - name: Build demo
+        working-directory: demo
+        run: ../gradlew build
 
-      - name: Upload sample logs on failure
+      - name: Upload demo logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: sample-logs
-          path: sample/build/reports/**
+          name: demo-logs
+          path: demo/build/reports/**

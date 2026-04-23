@@ -47,7 +47,7 @@ FIR checkers:
   Exhaustive mappings over child sealed subtypes  ✔
 ```
 
-See `sample/src/jvmMain` for a runnable example (`../gradlew runJvm` from within `sample/`).
+See `demo/` for a runnable Compose Desktop example (`../gradlew runJvm` from within `demo/`).
 
 ## Example
 
@@ -105,7 +105,7 @@ fusio-runtime/          Fusio, PresenterScope, buildPresenter, on, mappedScope s
                                                              (Kotlin Multiplatform + Compose Multiplatform)
 fusio-compiler-plugin/  FIR checkers + IR transformer        (JVM, single shaded jar)
 fusio-gradle-plugin/    KotlinCompilerPluginSupportPlugin integration
-sample/                Headless Compose runner exercising the full pipeline (composite build)
+demo/                  Compose Desktop app using Fusio end-to-end (composite build)
 ```
 
 ### Platform targets
@@ -129,8 +129,8 @@ sample/                Headless Compose runner exercising the full pipeline (com
 ./gradlew :fusio-runtime:allTests     # runtime tests on every platform
 ./gradlew :fusio-runtime:jvmTest      # JVM only (fastest feedback)
 
-# Run the sample
-cd sample
+# Run the demo (Compose Desktop window)
+cd demo
 ../gradlew runJvm
 ```
 

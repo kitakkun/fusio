@@ -19,7 +19,7 @@ Persistent notes that survive across sessions live in `~/.claude/projects/-Users
 | `fusio-compiler-plugin` | FIR checkers + IR `MappedScopeTransformer`; shades `fusio-compiler-compat` and every `kXXX` impl into a single jar (JVM only) |
 | `fusio-compiler-compat/` | `CompatContext` interface + `CompatContextResolver` (ServiceLoader); `kXXX/` subprojects hold per-Kotlin-version impls |
 | `fusio-gradle-plugin` | Auto-injects `-Xcompiler-plugin-order` so Fusio runs before Compose |
-| `sample/` | Composite-build, JVM headless Compose runner smoke test (other targets not yet wired) |
+| `demo/` | Composite-build Compose Desktop app demonstrating the full Fusio pipeline end-to-end (parent presenter, mapped sub-presenter, nested mappedScope, @MapTo/@MapFrom round-trip) |
 | `build-logic/` | `fusio.publish` convention plugin |
 
 Build: Gradle 9.3.0, shadow 9.4.1, Kotlin 2.3.20 (+ 2.4.0-Beta2 via smokeK24). Configuration cache is on by default in both root and sample — cold incremental runs are ~800 ms.
@@ -31,7 +31,7 @@ Build: Gradle 9.3.0, shadow 9.4.1, Kotlin 2.3.20 (+ 2.4.0-Beta2 via smokeK24). C
 ./gradlew :fusio-compiler-plugin:test             # diagnostics + box tests (13/13)
 ./gradlew :fusio-runtime:allTests                 # runtime tests on every KMP target
 ./gradlew :fusio-runtime:jvmTest                  # JVM only — fastest feedback
-cd sample && ../gradlew runJvm                   # end-to-end smoke
+cd demo && ../gradlew runJvm                     # launch Compose Desktop demo
 ./gradlew :fusio-compiler-plugin:test -Pkotlin.test.update.test.data=true  # auto-update expected diagnostic markers
 ./gradlew publishToMavenLocal                    # seed ~/.m2
 ```

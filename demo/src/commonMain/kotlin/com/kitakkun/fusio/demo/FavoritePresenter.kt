@@ -1,4 +1,4 @@
-package com.kitakkun.fusio.sample
+package com.kitakkun.fusio.demo
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -9,8 +9,6 @@ import com.kitakkun.fusio.PresenterScope
 import com.kitakkun.fusio.mappedScope
 import com.kitakkun.fusio.on
 
-// Sub-presenter — completely independent, reusable.
-// Demonstrates nested mappedScope: favorite() itself delegates to counter().
 @Composable
 fun PresenterScope<FavoriteEvent, FavoriteEffect>.favorite(): FavoriteState {
     var isFavorited by remember { mutableStateOf(false) }
@@ -20,9 +18,14 @@ fun PresenterScope<FavoriteEvent, FavoriteEffect>.favorite(): FavoriteState {
         emitEffect(FavoriteEffect.ShowMessage("Favorite toggled for ${event.id}"))
     }
 
-    // Nested mappedScope — Fusio maps FavoriteEvent.IncrementCounter -> CounterEvent.Increment
-    // and forwards CounterEffect.CounterChanged -> FavoriteEffect.CounterUpdated.
+    // Nested sub-presenter — CounterEvent/Effect are remapped to/from
+    // FavoriteEvent.IncrementCounter / FavoriteEffect.CounterValue via the
+    // @MapTo / @MapFrom annotations on those subtypes. The Fusio compiler
+    // plugin rewrites this call site at IR time.
     val counterState = mappedScope { counter() }
 
-    return FavoriteState(isFavorited = isFavorited, counter = counterState)
+    return FavoriteState(
+        isFavorited = isFavorited,
+        counter = counterState,
+    )
 }
