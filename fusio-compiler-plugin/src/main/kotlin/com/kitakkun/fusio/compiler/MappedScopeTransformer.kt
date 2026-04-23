@@ -162,6 +162,9 @@ class MappedScopeTransformer(
                     parent = parentDecl,
                     annotationClassId = FusioClassIds.MAP_TO,
                     fromClass = pEvent.classOrNull?.owner,
+                    // Filter by the child event root so sibling mappedScope
+                    // calls don't poach each other's @MapTo annotations.
+                    expectedOtherClass = childEventType.classOrNull?.owner,
                 )
                 if (mapper != null) {
                     irCall(mapEventsFn).also { mc ->
@@ -211,6 +214,10 @@ class MappedScopeTransformer(
             annotationClassId = FusioClassIds.MAP_FROM,
             fromClass = parentEffectType.classOrNull?.owner,
             reverseDirection = true,
+            // Same sibling-isolation filter as the event side — a parent's
+            // @MapFrom that points at a different child-effect tree is not
+            // this mappedScope's concern.
+            expectedOtherClass = childEffectType.classOrNull?.owner,
         ) ?: return
 
         +irCall(forwardEffectsFn).also { fc ->
@@ -265,10 +272,11 @@ class MappedScopeTransformer(
         annotationClassId: ClassId,
         fromClass: IrClass?,
         reverseDirection: Boolean = false,
+        expectedOtherClass: IrClass? = null,
     ): IrFunctionExpression? {
         if (fromClass == null) return null
 
-        val mappings = collectMappings(fromClass, annotationClassId, reverseDirection)
+        val mappings = collectMappings(fromClass, annotationClassId, reverseDirection, expectedOtherClass)
         if (mappings.isEmpty()) return null
 
         val nullableToType = toType.makeNullable()
@@ -300,6 +308,7 @@ class MappedScopeTransformer(
         fromClass: IrClass,
         annotationClassId: ClassId,
         reverseDirection: Boolean,
+        expectedOtherClass: IrClass?,
     ): List<Mapping> = buildList {
         for (annotatedSubSymbol in fromClass.sealedSubclasses) {
             val annotation = annotatedSubSymbol.owner.annotations.firstOrNull {
@@ -308,9 +317,36 @@ class MappedScopeTransformer(
             val kclassRef = annotation.arguments.firstOrNull() as? IrClassReference ?: continue
             val otherSymbol = kclassRef.classType.classOrNull ?: continue
 
+            // Siblings at the same parent level can @MapTo / @MapFrom different
+            // child trees (Favorite's subtypes vs Wallet's subtypes, for
+            // example). Skip annotations whose "other side" lives in a tree
+            // this mappedScope doesn't own — otherwise the generated when-
+            // lambda tries to return Wallet* from a Favorite?-typed branch
+            // and JVM checkcast-fails at runtime.
+            if (expectedOtherClass != null &&
+                !otherSymbol.owner.isSubclassOfOrEqual(expectedOtherClass)
+            ) {
+                continue
+            }
+
             val (fromSub, toSub) = if (reverseDirection) otherSymbol to annotatedSubSymbol
                                    else annotatedSubSymbol to otherSymbol
             add(Mapping(fromSub, toSub))
+        }
+    }
+
+    /**
+     * Walks the [IrClass.superTypes] graph looking for [target]. Sealed
+     * hierarchies in Fusio use both classes and interfaces as parent types,
+     * so a plain instanceof check isn't enough — we recurse through each
+     * supertype's class symbol until we hit [target] or run out of parents.
+     */
+    private fun IrClass.isSubclassOfOrEqual(target: IrClass): Boolean {
+        if (this == target) return true
+        if (classId == target.classId) return true
+        return superTypes.any { st ->
+            val owner = st.classOrNull?.owner ?: return@any false
+            owner.isSubclassOfOrEqual(target)
         }
     }
 

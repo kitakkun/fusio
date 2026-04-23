@@ -51,6 +51,12 @@ public class FusioJvmBoxTestGenerated extends AbstractFusioJvmBoxTest {
   }
 
   @Test
+  @TestMetadata("siblingMappedScope.kt")
+  public void testSiblingMappedScope() {
+    runTest("fusio-compiler-plugin/testData/box/siblingMappedScope.kt");
+  }
+
+  @Test
   @TestMetadata("validMapToCompiles.kt")
   public void testValidMapToCompiles() {
     runTest("fusio-compiler-plugin/testData/box/validMapToCompiles.kt");
