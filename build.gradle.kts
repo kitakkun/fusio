@@ -53,7 +53,7 @@ allprojects {
 // via `./gradlew apiDump`. Regenerate intentionally; the `:apiCheck` lane
 // (already wired into `check`) fails if a PR changes the public API without
 // refreshing the dump. Non-publishable modules — the compiler plugin, its
-// compat jars, the gradle plugin, the sample, benchmarks — are excluded
+// compat jars, the per-patch test lanes, benchmarks, demo — are excluded
 // since their surface is either internal tooling or auto-evolved.
 apiValidation {
     ignoredProjects += listOf(

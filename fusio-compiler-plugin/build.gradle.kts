@@ -42,11 +42,11 @@ dependencies {
 }
 
 // Classpath for the :smokeK24 task below: Kotlin 2.4.0-Beta2 compiler +
-// Compose compiler plugin + stdlib/runtime the sample source compiles against.
-// smokeK24 lives here (not in the tests umbrella) because it's a test of the
-// shaded jar's LOAD path — ServiceLoader + classloader — rather than a
-// testData regression guard. See fusio-compiler-plugin-tests/ for the
-// behavioural lanes.
+// Compose compiler plugin + stdlib/runtime the `src/smokeK24/kotlin/Sample.kt`
+// source compiles against. smokeK24 lives here (not in the tests umbrella)
+// because it's a test of the shaded jar's LOAD path — ServiceLoader +
+// classloader — rather than a testData regression guard. See
+// fusio-compiler-plugin-tests/ for the behavioural lanes.
 val smokeK24Compiler: Configuration by configurations.creating {
     isCanBeResolved = true
     isCanBeConsumed = false

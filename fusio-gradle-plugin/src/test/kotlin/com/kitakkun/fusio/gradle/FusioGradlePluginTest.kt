@@ -10,24 +10,24 @@ import kotlin.test.assertTrue
 /**
  * TestKit coverage for the Fusio Gradle plugin.
  *
- * The sample composite build already exercises end-to-end behaviour (plugin
- * applies, compiler plugin runs, fuse gets rewritten, JVM smoke
- * produces expected output end-to-end). These tests pin the pieces that
- * aren't visible from a successful compile and that the sample doesn't
- * exercise:
+ * The `demo/` subproject already exercises end-to-end behaviour (plugin
+ * applies, compiler plugin runs, fuse gets rewritten, JVM smoke produces
+ * expected output end-to-end). These tests pin the pieces that aren't
+ * visible from a successful compile and that demo doesn't exercise:
  *
- * - apply() doesn't throw when the plugin lands on a bare KMP project with
- *   no fusio sources yet. Without this, a regression in `afterEvaluate` /
- *   `applyToCompilation` would only surface the first time a consumer
- *   writes a presenter, not at plugin-apply time.
+ * - apply() doesn't throw when the plugin lands on a bare KMP or plain
+ *   kotlin-jvm consumer with no fusio sources yet. Without this, a
+ *   regression in `afterEvaluate` / `applyToCompilation` would only
+ *   surface the first time a consumer writes a presenter, not at
+ *   plugin-apply time.
  * - the plugin-id → implementation-class mapping declared in
  *   META-INF/gradle-plugins is intact, so `id("com.kitakkun.fusio")`
  *   actually resolves to FusioGradlePlugin.
  *
  * The actual `-Xcompiler-plugin-order` flag wiring is covered transparently
- * by the sample build and by smokeK24 — re-testing it here would require
+ * by the demo build and by smokeK24 — re-testing it here would require
  * fighting TestKit's classloader isolation against KGP's task types, and
- * any regression would also break the sample.
+ * any regression would also break demo.
  */
 class FusioGradlePluginTest {
 
