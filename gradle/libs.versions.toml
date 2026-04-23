@@ -8,9 +8,9 @@ kotlin-k24 = "2.4.0-Beta2"
 compose-multiplatform = "1.10.3"
 coroutines = "1.10.2"
 junit-jupiter = "5.11.3"
-# gradleup/shadow — 8.3.x is the current stable line that works with Gradle 8.
-# Bumped when Gradle 9 lands. See fusio-compiler-plugin for usage.
-shadow = "8.3.5"
+# gradleup/shadow — 9.x is required for Gradle 9. See fusio-compiler-plugin
+# for usage.
+shadow = "9.4.1"
 fusio = "0.1.0-SNAPSHOT"
 
 [libraries]
@@ -23,6 +23,7 @@ kotlin-compiler-internal-test-framework-k24 = { module = "org.jetbrains.kotlin:k
 kotlin-compose-compiler-plugin = { module = "org.jetbrains.kotlin:kotlin-compose-compiler-plugin", version.ref = "kotlin" }
 kotlin-compose-compiler-plugin-k24 = { module = "org.jetbrains.kotlin:kotlin-compose-compiler-plugin", version.ref = "kotlin-k24" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime-desktop", version.ref = "compose-multiplatform" }
+compose-runtime-multiplatform = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 kotlin-gradle-plugin-api = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin-api", version.ref = "kotlin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }

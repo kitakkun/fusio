@@ -8,11 +8,26 @@ plugins {
 kotlin {
     jvm()
 
+    iosArm64()
+    iosSimulatorArm64()
+    macosArm64()
+
+    js(IR) {
+        browser()
+        nodejs()
+    }
+
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+    wasmJs {
+        browser()
+        nodejs()
+    }
+
     sourceSets {
         commonMain {
             dependencies {
                 api(project(":fusio-annotations"))
-                implementation(compose.runtime)
+                implementation(libs.compose.runtime.multiplatform)
                 implementation(libs.kotlinx.coroutines.core)
             }
         }

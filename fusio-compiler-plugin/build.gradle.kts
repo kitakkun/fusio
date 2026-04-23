@@ -272,10 +272,17 @@ tasks.named<ShadowJar>("shadowJar") {
     // stdlib and any other transitive runtime deps are already present in
     // kotlin-compiler-embeddable at the user's build time.
     configurations = listOf(shaded)
-    // ServiceLoader needs every CompatContext.Factory entry from every k**
-    // subproject present in the final jar; without this the last-wins default
-    // would silently drop all but one version's registration.
+    // Shadow 9.x defaults duplicatesStrategy to EXCLUDE at the Copy layer,
+    // which drops duplicate entries BEFORE mergeServiceFiles() sees them.
+    // Allow INCLUDE so the transformer receives every copy, then re-exclude
+    // non-service duplicates so we don't bloat the jar with dupes of other
+    // resources. Without this, only one k** subproject's CompatContext.Factory
+    // entry survives and ServiceLoader can't resolve the non-primary version.
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles()
+    filesNotMatching("META-INF/services/**") {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
 }
 
 // The unshaded jar keeps building but under a classifier so the shaded output

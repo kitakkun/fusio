@@ -10,7 +10,14 @@ pluginManagement {
 @Suppress("UnstableApiUsage")
 dependencyResolutionManagement {
     repositories {
-        mavenLocal()
+        // Restrict mavenLocal to our own artifacts — see root settings for
+        // the rationale (missing .module files for external KMP libs break
+        // variant-aware resolution).
+        mavenLocal {
+            content {
+                includeGroup("com.kitakkun.fusio")
+            }
+        }
         mavenCentral()
         google()
     }
