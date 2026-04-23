@@ -25,7 +25,6 @@ agp = "9.0.1"
 # gradleup/shadow — 9.x is required for Gradle 9. See fusio-compiler-plugin
 # for usage.
 shadow = "9.4.1"
-fusio = "0.1.0-SNAPSHOT"
 
 [libraries]
 kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
