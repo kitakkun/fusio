@@ -29,7 +29,7 @@ import kotlin.contracts.contract
  * code. AT_MOST_ONCE is the strongest the stub body can honestly claim.
  */
 @OptIn(ExperimentalContracts::class)
-inline fun <ChildEvent, ChildEffect, ChildState> PresenterScope<*, *>.mappedScope(
+public inline fun <ChildEvent, ChildEffect, ChildState> PresenterScope<*, *>.mappedScope(
     block: @Composable PresenterScope<ChildEvent, ChildEffect>.() -> ChildState,
 ): ChildState {
     contract { callsInPlace(block, InvocationKind.AT_MOST_ONCE) }

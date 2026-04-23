@@ -16,7 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
  * collect / emit plumbing.
  */
 @Composable
-fun <ChildEffect, ParentEffect> forwardEffects(
+public fun <ChildEffect, ParentEffect> forwardEffects(
     childScope: PresenterScope<*, ChildEffect>,
     parentScope: PresenterScope<*, ParentEffect>,
     mapper: (ChildEffect) -> ParentEffect?,

@@ -4,6 +4,8 @@ plugins {
 }
 
 kotlin {
+    explicitApi()
+
     jvm()
 
     iosArm64()

@@ -6,7 +6,7 @@ import androidx.compose.runtime.remember
 import kotlinx.coroutines.flow.Flow
 
 @Composable
-fun <Event, Effect, UiState> buildPresenter(
+public fun <Event, Effect, UiState> buildPresenter(
     eventFlow: Flow<Event>,
     block: @Composable PresenterScope<Event, Effect>.() -> UiState,
 ): Fusio<UiState, Effect> {

@@ -5,7 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.flow.filterIsInstance
 
 @Composable
-inline fun <reified E> PresenterScope<*, *>.on(
+public inline fun <reified E> PresenterScope<*, *>.on(
     noinline handler: suspend (E) -> Unit,
 ) {
     val flow = eventFlow

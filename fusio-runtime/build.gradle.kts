@@ -74,6 +74,8 @@ val verifyComposeMetrics by tasks.registering {
 tasks.named("check") { dependsOn(verifyComposeMetrics) }
 
 kotlin {
+    explicitApi()
+
     jvm()
 
     iosArm64()

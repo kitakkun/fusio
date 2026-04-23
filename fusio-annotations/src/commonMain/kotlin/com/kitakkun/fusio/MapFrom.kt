@@ -4,4 +4,4 @@ import kotlin.reflect.KClass
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
-annotation class MapFrom(val source: KClass<*>)
+public annotation class MapFrom(public val source: KClass<*>)
