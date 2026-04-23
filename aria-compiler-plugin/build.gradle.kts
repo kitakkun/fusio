@@ -98,20 +98,51 @@ dependencies {
     testArtifacts(libs.kotlinx.coroutines.core)
 }
 
-tasks.test {
-    dependsOn(testArtifacts)
+// Classpath for the :smokeK24 task below: Kotlin 2.4.0-Beta2 compiler +
+// Compose compiler plugin + stdlib/runtime the sample source compiles against.
+// Intentionally NOT the full test framework — that had a breaking internal-API
+// rename between 2.3 and 2.4 (TestConfigurationBuilder split into Grouping /
+// NonGrouping variants) so the same testFixtures bytecode can't drive both
+// lanes. smokeK24 sidesteps the framework entirely by invoking K2JVMCompiler
+// programmatically.
+val smokeK24Compiler: Configuration by configurations.creating {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+}
+val smokeK24CompileClasspath: Configuration by configurations.creating {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+}
+dependencies {
+    smokeK24Compiler(libs.kotlin.compiler.k24)
+    smokeK24Compiler(libs.kotlin.compose.compiler.plugin.k24)
+
+    smokeK24CompileClasspath("org.jetbrains.kotlin:kotlin-stdlib:${libs.versions.kotlin.k24.get()}")
+    smokeK24CompileClasspath(project(":aria-annotations"))
+    smokeK24CompileClasspath(project(":aria-runtime"))
+    smokeK24CompileClasspath(libs.compose.runtime)
+    smokeK24CompileClasspath(libs.kotlinx.coroutines.core)
+}
+
+/**
+ * Shared configuration for both :test (Kotlin 2.3.20) and :testK24 (2.4.0-Beta2)
+ * lanes. Paths that resolve jars by name look them up on the passed [runtimeJars]
+ * configuration so the caller controls the Kotlin line.
+ */
+fun Test.configureAriaCompilerPluginTest(runtimeJars: Configuration) {
+    dependsOn(runtimeJars)
     useJUnitPlatform()
     workingDir = rootDir
 
-    setLibraryProperty("org.jetbrains.kotlin.test.kotlin-stdlib", "kotlin-stdlib")
-    setLibraryProperty("org.jetbrains.kotlin.test.kotlin-stdlib-jdk8", "kotlin-stdlib-jdk8")
-    setLibraryProperty("org.jetbrains.kotlin.test.kotlin-reflect", "kotlin-reflect")
-    setLibraryProperty("org.jetbrains.kotlin.test.kotlin-test", "kotlin-test")
-    setLibraryProperty("org.jetbrains.kotlin.test.kotlin-script-runtime", "kotlin-script-runtime")
-    setLibraryProperty("org.jetbrains.kotlin.test.kotlin-annotations-jvm", "kotlin-annotations-jvm")
+    setLibraryProperty(runtimeJars, "org.jetbrains.kotlin.test.kotlin-stdlib", "kotlin-stdlib")
+    setLibraryProperty(runtimeJars, "org.jetbrains.kotlin.test.kotlin-stdlib-jdk8", "kotlin-stdlib-jdk8")
+    setLibraryProperty(runtimeJars, "org.jetbrains.kotlin.test.kotlin-reflect", "kotlin-reflect")
+    setLibraryProperty(runtimeJars, "org.jetbrains.kotlin.test.kotlin-test", "kotlin-test")
+    setLibraryProperty(runtimeJars, "org.jetbrains.kotlin.test.kotlin-script-runtime", "kotlin-script-runtime")
+    setLibraryProperty(runtimeJars, "org.jetbrains.kotlin.test.kotlin-annotations-jvm", "kotlin-annotations-jvm")
 
     // Surface Aria's own jars to testData sources that import com.kitakkun.aria.*.
-    systemProperty("ariaRuntime.classpath", testArtifacts.asPath)
+    systemProperty("ariaRuntime.classpath", runtimeJars.asPath)
 
     systemProperty("idea.ignore.disabled.plugins", "true")
     systemProperty("idea.home.path", rootDir)
@@ -122,6 +153,76 @@ tasks.test {
         systemProperty("kotlin.test.update.test.data", it.toString())
     }
 }
+
+tasks.test {
+    configureAriaCompilerPluginTest(testArtifacts)
+}
+
+// --- smokeK24 ---
+// Invokes the Kotlin 2.4.0-Beta2 compiler (K2JVMCompiler) in a forked JVM with
+// the shaded aria-compiler-plugin.jar on its -Xplugin classpath. The run
+// compiles src/smokeK24/kotlin/Sample.kt, which exercises every version-
+// sensitive helper on CompatContext (@MapTo annotation -> kclassArg,
+// mappedScope { ... } -> setArg/setTypeArg). Compile success proves:
+//
+//   1. CompatContextResolver selected the k240_beta2 impl via ServiceLoader
+//      against the 2.4 compiler.
+//   2. k240_beta2's kclassArg override + delegated setArg/setTypeArg both
+//      link-resolve under 2.4 bytecode.
+//   3. The shaded jar's META-INF/services stitching survives being loaded
+//      into a 2.4 compiler plugin classloader.
+//
+// Much narrower than a full box-test matrix, but the bits we actually need
+// to know work under 2.4 are covered.
+val smokeK24 by tasks.registering(JavaExec::class) {
+    description = "Compiles src/smokeK24/kotlin/ with Kotlin 2.4.0-Beta2 + the shaded Aria plugin."
+    group = "verification"
+
+    dependsOn(tasks.named("shadowJar"))
+    dependsOn(smokeK24Compiler, smokeK24CompileClasspath)
+
+    inputs.dir(layout.projectDirectory.dir("src/smokeK24/kotlin"))
+        .withPropertyName("smokeK24Sources")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.files(tasks.named("shadowJar")).withPropertyName("shadowJar")
+    val outDir = layout.buildDirectory.dir("smokeK24-out")
+    outputs.dir(outDir).withPropertyName("smokeK24Out")
+
+    classpath = smokeK24Compiler
+    mainClass.set("org.jetbrains.kotlin.cli.jvm.K2JVMCompiler")
+
+    // Build up K2JVMCompiler argv. Using doFirst so layout/resolution happens
+    // at execution time (shadowJar output path etc.).
+    doFirst {
+        val sourceDir = layout.projectDirectory.dir("src/smokeK24/kotlin").asFile
+        require(sourceDir.exists()) { "smoke source missing: $sourceDir" }
+        val pluginJar = tasks.named<Jar>("shadowJar").get().archiveFile.get().asFile
+        val out = outDir.get().asFile.apply {
+            deleteRecursively()
+            mkdirs()
+        }
+        val cp = smokeK24CompileClasspath.asPath
+
+        args = listOf(
+            sourceDir.absolutePath,
+            "-d", out.absolutePath,
+            "-classpath", cp,
+            "-Xplugin=${pluginJar.absolutePath}",
+            "-Xplugin=${smokeK24Compiler.files.first { it.name.startsWith("kotlin-compose-compiler-plugin") }.absolutePath}",
+            "-Xcompiler-plugin-order=com.kitakkun.aria>androidx.compose.compiler.plugins.kotlin",
+            // Match the JVM target the runtime deps were built against (21), else
+            // `buildPresenter`'s @Composable inline body can't be inlined into
+            // our Sample.kt's bytecode built at the default 1.8 target.
+            "-jvm-target", "21",
+            "-no-reflect",
+            "-no-stdlib", // stdlib is already on -classpath
+        )
+    }
+}
+
+// Keep smokeK24 included in the aggregate `check` lifecycle so it fails CI if
+// the shaded jar stops loading cleanly under 2.4.
+tasks.named("check") { dependsOn(smokeK24) }
 
 val generateTests by tasks.registering(JavaExec::class) {
     // testFixtures.runtimeClasspath transitively references the project's
@@ -144,8 +245,8 @@ tasks.compileTestKotlin {
     dependsOn(generateTests)
 }
 
-fun Test.setLibraryProperty(propName: String, jarName: String) {
-    val path = testArtifacts.files
+fun Test.setLibraryProperty(runtimeJars: Configuration, propName: String, jarName: String) {
+    val path = runtimeJars.files
         .find { """$jarName-\d.*""".toRegex().matches(it.name) }
         ?.absolutePath
         ?: return

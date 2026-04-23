@@ -1,7 +1,10 @@
 package com.kitakkun.aria.compiler.compat
 
+import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
+import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
+import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
@@ -51,6 +54,30 @@ interface CompatContext {
      * - Kotlin 2.1–2.2: `call.putTypeArgument(index, type)`
      */
     fun IrFunctionAccessExpression.setTypeArg(index: Int, type: IrType)
+
+    /**
+     * Registers a FIR extension registrar against the current compiler's
+     * plugin storage.
+     *
+     * - Kotlin 2.3.x: `FirExtensionRegistrarAdapter.registerExtension(registrar)` —
+     *   Companion object extends `ProjectExtensionDescriptor<FirExtensionRegistrar>`,
+     *   and `ExtensionStorage.registerExtension` takes `ProjectExtensionDescriptor<T>`.
+     * - Kotlin 2.4.x: same call site, but `ProjectExtensionDescriptor` has been
+     *   renamed to `ExtensionPointDescriptor` (different class FQN in the
+     *   companion hierarchy and the ExtensionStorage method signature), so
+     *   bytecode compiled against 2.3 NoSuchMethodError's under 2.4.
+     *
+     * Routed through CompatContext so each k** impl's bytecode references the
+     * type its compiler jar actually ships.
+     */
+    fun CompilerPluginRegistrar.ExtensionStorage.registerFirExtension(registrar: FirExtensionRegistrar)
+
+    /**
+     * Sister of [registerFirExtension] for IR-generation extensions. Same
+     * underlying `ProjectExtensionDescriptor` → `ExtensionPointDescriptor`
+     * break, same fix: per-k**-impl bytecode.
+     */
+    fun CompilerPluginRegistrar.ExtensionStorage.registerIrGenerationExtension(extension: IrGenerationExtension)
 
     /**
      * Registered per subproject via META-INF/services. [CompatContextResolver]

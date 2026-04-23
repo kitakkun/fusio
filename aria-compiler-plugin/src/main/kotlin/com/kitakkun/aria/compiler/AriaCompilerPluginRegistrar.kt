@@ -1,10 +1,9 @@
 package com.kitakkun.aria.compiler
 
-import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
+import com.kitakkun.aria.compiler.compat.CompatContextResolver
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
-import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 
 @OptIn(ExperimentalCompilerApi::class)
 class AriaCompilerPluginRegistrar : CompilerPluginRegistrar() {
@@ -14,7 +13,15 @@ class AriaCompilerPluginRegistrar : CompilerPluginRegistrar() {
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
         if (configuration.get(AriaConfigurationKeys.ENABLED, true).not()) return
 
-        FirExtensionRegistrarAdapter.registerExtension(AriaFirExtensionRegistrar())
-        IrGenerationExtension.registerExtension(AriaIrGenerationExtension())
+        // Direct FirExtensionRegistrarAdapter.registerExtension / IrGenerationExtension
+        // .registerExtension calls would bind to the 2.3 bytecode shape (ProjectExtension-
+        // Descriptor), which NoSuchMethodError's under Kotlin 2.4 (ExtensionPointDescriptor
+        // rename). Route through CompatContext so each k** impl's bytecode targets the
+        // right signature for its Kotlin version.
+        val compat = CompatContextResolver.resolve()
+        with(compat) {
+            registerFirExtension(AriaFirExtensionRegistrar())
+            registerIrGenerationExtension(AriaIrGenerationExtension())
+        }
     }
 }

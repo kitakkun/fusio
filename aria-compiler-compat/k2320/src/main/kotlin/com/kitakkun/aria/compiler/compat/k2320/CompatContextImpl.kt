@@ -3,9 +3,13 @@ package com.kitakkun.aria.compiler.compat.k2320
 import com.kitakkun.aria.compiler.compat.CompatContext
 import com.kitakkun.aria.compiler.compat.Version
 import com.kitakkun.aria.compiler.compat.VersionRange
+import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
+import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.declarations.getKClassArgument
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
+import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
+import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
@@ -32,6 +36,14 @@ class CompatContextImpl : CompatContext {
 
     override fun IrFunctionAccessExpression.setTypeArg(index: Int, type: IrType) {
         typeArguments[index] = type
+    }
+
+    override fun CompilerPluginRegistrar.ExtensionStorage.registerFirExtension(registrar: FirExtensionRegistrar) {
+        FirExtensionRegistrarAdapter.registerExtension(registrar)
+    }
+
+    override fun CompilerPluginRegistrar.ExtensionStorage.registerIrGenerationExtension(extension: IrGenerationExtension) {
+        IrGenerationExtension.registerExtension(extension)
     }
 
     /**
