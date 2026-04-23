@@ -44,16 +44,16 @@ The sample (`sample/`) consumes `:fusio-compiler-plugin` through Gradle's compos
 
 ### Validation
 
-- **:test** (Kotlin 2.3.20): full 13-test box + diagnostics suite via `kotlin-compiler-internal-test-framework`. Covers the same pipeline end-to-end a user project would hit.
-- **:smokeK24** (Kotlin 2.4.0-Beta2): forks a JVM, invokes `K2JVMCompiler` with the shaded plugin jar on `-Xplugin`, and compiles `src/smokeK24/kotlin/Sample.kt`. The sample deliberately exercises every version-sensitive path — `@MapTo` / `@MapFrom` for `kclassArg`, `mappedScope { child() }` for `setArg`/`setTypeArg`, and plugin registration itself for `registerFirExtension` / `registerIrGenerationExtension` (the `ProjectExtensionDescriptor` → `ExtensionPointDescriptor` rename). Compile success = k240_beta2 resolves via ServiceLoader and runs without link errors.
-- **sample**: composite-build runtime smoke — `cd sample && ../gradlew runJvm` under Kotlin 2.3.20 exercises the whole state/effect plumbing and prints expected state transitions.
+- **`:fusio-compiler-plugin:test`** (Kotlin 2.3.21, primary): full box + diagnostics + IR text suite via `kotlin-compiler-internal-test-framework`. Covers the same pipeline end-to-end a user project would hit.
+- **`:fusio-compiler-plugin-k24-tests:test`** (Kotlin 2.4.0-Beta2): parallel lane running box + diagnostics against the same testData directory with a 2.4-shaped `configure(NonGroupingPhaseTestConfigurationBuilder)` override. Shares the plugin classpath with the primary module; the `k240_beta2` compat impl kicks in at runtime via ServiceLoader. IR-text tests are deliberately skipped in this lane because IR dump format shifts across compiler versions and sharing goldens isn't meaningful.
+- **`:fusio-compiler-plugin:smokeK24`** (Kotlin 2.4.0-Beta2): still present. Forks a JVM, invokes `K2JVMCompiler` with the shaded plugin jar on `-Xplugin`, and compiles `src/smokeK24/kotlin/Sample.kt`. Different guarantee from the k24 test module: this one validates the shaded-jar-load-in-an-isolated-process path; the test module runs the plugin classes directly on the test JVM's classpath. Both are wired into `check`.
+- **demo**: composite-build runtime smoke — `cd demo && ../gradlew runJvm` under the primary Kotlin version exercises the whole state/effect plumbing and renders a Compose Desktop window.
 
-Both `:test` and `:smokeK24` are wired into `check`, so `./gradlew build` exercises both Kotlin lanes without extra invocations.
+All of the above are wired into the root `check`, so `./gradlew build` exercises every Kotlin lane without extra invocations.
 
 ### Known gaps
 
-- **Box tests against Kotlin 2.4.0-Beta2**: `kotlin-compiler-internal-test-framework` had its own ABI break between 2.3 and 2.4 — `TestConfigurationBuilder` split into `GroupingPhaseTestConfigurationBuilder` and `NonGroupingPhaseTestConfigurationBuilder`. Same `testFixtures` bytecode can't drive both lanes. A full 2.4 box-test lane would need either a parallel testFixtures source set compiled against 2.4 OR matrix CI re-running the suite with the catalog's primary `kotlin` version bumped. `smokeK24` covers the bits we actually need to know work under 2.4 (`CompatContext` delegation + plugin registration + IR rewrite), which is why this isn't on the critical path.
-- **CI workflow**: no GitHub Actions config yet. Manual `./gradlew build` + sample only.
+- **IR-text snapshots on 2.4**: the `fuseRewrite.fir.ir.txt` / `.fir.kt.txt` goldens track a specific compiler's rendering and aren't stable across patches. The 2.4 lane would need its own parallel goldens that drift per Beta. Not done; the box lane on 2.4 catches behavioural changes, which is what we actually care about.
 
 ## Stress-test probe: Kotlin 2.0.21
 

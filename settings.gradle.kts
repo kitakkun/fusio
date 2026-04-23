@@ -44,6 +44,7 @@ rootProject.name = "fusio"
 include(":fusio-annotations")
 include(":fusio-runtime")
 include(":fusio-compiler-plugin")
+include(":fusio-compiler-plugin-k24-tests")
 include(":fusio-compiler-compat")
 include(":fusio-compiler-compat:k2320")
 include(":fusio-compiler-compat:k240_beta2")

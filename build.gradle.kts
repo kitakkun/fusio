@@ -57,6 +57,7 @@ allprojects {
 apiValidation {
     ignoredProjects += listOf(
         "fusio-compiler-plugin",
+        "fusio-compiler-plugin-k24-tests",
         "fusio-compiler-compat",
         "k2320",
         "k240_beta2",
