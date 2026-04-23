@@ -247,10 +247,12 @@ Post-round-3 additions folded into the main proposal above:
 - Uniform failure-message builder: every `await*` / `assertState` / `expectNoEffects` failure now renders the observed-state trace (`[0] … [1] …`) plus any pending effects left in the queue. This traded a one-line "timeout" for a paragraph that usually pinpoints the presenter bug without re-running under a debugger.
 - Dropped the originally-proposed `assertEffect<T>()` fail-fast variant — its non-pop semantics would have confused against `awaitEffect`'s pop semantics. Users who want fail-fast read `pendingEffects` directly.
 
-## Open questions
+## Open questions (resolved)
 
-1. **Module name.** `fusio-test` (symmetry with `fusio-runtime`, `fusio-annotations`) vs `fusio-testing` (convention in some Android libs). Leaning `fusio-test`.
-2. **Default timeout.** `1.seconds` for `awaitState` / `awaitEffect` matches Turbine's `3.seconds` pragma but shaves it — our virtual time means 1s is generous. Up for debate.
-3. **Should `testPresenter` return `TestResult` or `Unit`?** `runTest` returns `TestResult` (opaque `suspend () -> Unit` wrapper on Wasm/JS); if we return it, the caller has to `return testPresenter { … }` in the `@Test` function. Matching `runTest`'s shape is the most honest option even if it reads oddly on JVM.
-4. **Should effect assertions fail-fast on type mismatch?** `awaitEffect<Toast>()` when the next effect is `Navigate` — fail immediately, or skip and look for the next `Toast`? Current proposal: fail (strict). Turbine's precedent is also strict.
-5. **Public or `@InternalFusioApi` on `HeadlessApplier`, `FrameDriver`?** They're useful for power users building custom scenarios, but exposing them commits us to their shape. Proposal: ship `@InternalFusioApi` in v1, promote to public in v2 once we see actual usage patterns.
+All five were settled by the time Phase 2 landed. Notes kept so future revisits see the reasoning, not just the outcome.
+
+1. **Module name** — settled as `fusio-test`. Symmetry with `fusio-runtime` / `fusio-annotations` won; `fusio-testing` suggested Android-specific intent that didn't match the KMP-wide scope.
+2. **Default timeout** — settled as `1.seconds`. Under the virtual-time dispatcher the framework installs, timeouts cost microseconds of wall-clock regardless of the declared value, so picking a shorter default than Turbine's 3s didn't introduce flake in practice across Phase 1/2 self-tests.
+3. **`TestResult` vs `Unit` return** — settled as `TestResult`, matching `runTest`'s shape. The `fun myTest() = testPresenter(...)` call-site ergonomics are the same as `fun myTest() = runTest { ... }`, and on JS/Wasm it's actually required for the `Promise`-backed run to complete.
+4. **Effect assertions on type mismatch** — settled as strict fail-fast. `awaitEffect<Toast>()` throws immediately if the next effect is `Navigate` rather than skipping. Matches Turbine; the alternative (skip until match) would silently absorb "wrong effect emitted first" bugs.
+5. **HeadlessApplier / frame-driver visibility** — settled by going with Kotlin `internal` rather than an `@InternalFusioApi` opt-in. No user has asked for custom-scenario extension points yet; promoting to public when one does is additive. The `FrameDriver` name wasn't needed in the final shape — frame-advance logic folded into `PresenterScenarioImpl.advance()`.
