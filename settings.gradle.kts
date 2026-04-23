@@ -43,6 +43,7 @@ rootProject.name = "fusio"
 
 include(":fusio-annotations")
 include(":fusio-runtime")
+include(":fusio-test")
 include(":fusio-compiler-plugin")
 // One test lane per supported Kotlin patch — each runs the full box +
 // diagnostics suite against its pinned compiler. The compat/k2320 module

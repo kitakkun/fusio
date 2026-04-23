@@ -1,0 +1,157 @@
+package com.kitakkun.fusio.test
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.kitakkun.fusio.Presentation
+import com.kitakkun.fusio.buildPresenter
+import com.kitakkun.fusio.on
+import kotlinx.coroutines.flow.Flow
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
+
+/**
+ * Self-tests for the `testPresenter` / `testSubPresenter` harness. We
+ * reuse real fusio-runtime primitives (`buildPresenter`, `on<>`) rather
+ * than stand-ins so these tests double as smoke coverage for the runtime
+ * under the test framework's headless Compose setup.
+ */
+class TestPresenterTest {
+
+    // ---- Fixtures -----------------------------------------------------
+
+    private sealed interface CounterEvent {
+        data object Increment : CounterEvent
+        data object Reset : CounterEvent
+    }
+
+    private sealed interface CounterEffect {
+        data class Toast(val message: String) : CounterEffect
+        data object Navigated : CounterEffect
+    }
+
+    /**
+     * A realistic presenter: takes extra arguments (the [initial] seed)
+     * alongside the event flow, so this exercises the "bind your own
+     * dependencies inside the lambda" path documented in the design doc.
+     */
+    @Composable
+    private fun counterPresenter(
+        events: Flow<CounterEvent>,
+        initial: Int,
+    ): Presentation<Int, CounterEffect> = buildPresenter(events) {
+        var count by remember { mutableStateOf(initial) }
+        on<CounterEvent.Increment> { count += 1 }
+        on<CounterEvent.Reset> {
+            count = initial
+            emitEffect(CounterEffect.Toast("reset"))
+        }
+        count
+    }
+
+    // ---- Scenario API -------------------------------------------------
+
+    @Test
+    fun initial_state_is_visible_before_any_event() = testPresenter(
+        presenter = { events -> counterPresenter(events, initial = 42) },
+    ) {
+        assertEquals(42, state)
+    }
+
+    @Test
+    fun send_advances_state_and_awaitState_unblocks() = testPresenter(
+        presenter = { events -> counterPresenter(events, initial = 0) },
+    ) {
+        awaitState { it == 0 }
+        send(CounterEvent.Increment)
+        awaitState { it == 1 }
+        send(CounterEvent.Increment)
+        awaitState { it == 2 }
+    }
+
+    @Test
+    fun stateHistory_records_every_distinct_state() = testPresenter(
+        presenter = { events -> counterPresenter(events, initial = 0) },
+    ) {
+        // Event -> LaunchedEffect collector -> state write -> next frame is
+        // async, so `awaitState` between sends makes sure each intermediate
+        // value actually lands before the next send overwrites it.
+        awaitState { it == 0 }
+        send(CounterEvent.Increment); awaitState { it == 1 }
+        send(CounterEvent.Increment); awaitState { it == 2 }
+        send(CounterEvent.Reset); awaitState { it == 0 }
+        assertTrue(
+            stateHistory.containsAll(listOf(0, 1, 2)),
+            "stateHistory=$stateHistory",
+        )
+    }
+
+    @Test
+    fun awaitEffect_returns_emitted_effect() = testPresenter(
+        presenter = { events -> counterPresenter(events, initial = 5) },
+    ) {
+        send(CounterEvent.Reset)
+        val toast = awaitEffect<CounterEffect.Toast>()
+        assertEquals("reset", toast.message)
+    }
+
+    @Test
+    fun awaitEffect_fails_on_type_mismatch() = testPresenter(
+        presenter = { events -> counterPresenter(events, initial = 0) },
+    ) {
+        send(CounterEvent.Reset) // emits Toast
+        assertFailsWith<AssertionError> {
+            awaitEffect<CounterEffect.Navigated>()
+        }
+    }
+
+    @Test
+    fun expectNoEffects_passes_when_quiet() = testPresenter(
+        presenter = { events -> counterPresenter(events, initial = 0) },
+    ) {
+        send(CounterEvent.Increment) // no effect emitted
+        expectNoEffects(within = 20.milliseconds)
+    }
+
+    @Test
+    fun expectNoEffects_fails_when_effect_is_queued() = testPresenter(
+        presenter = { events -> counterPresenter(events, initial = 0) },
+    ) {
+        send(CounterEvent.Reset) // emits Toast
+        assertFailsWith<AssertionError> {
+            expectNoEffects()
+        }
+    }
+
+    @Test
+    fun awaitState_times_out_when_predicate_never_matches() = testPresenter(
+        presenter = { events -> counterPresenter(events, initial = 0) },
+    ) {
+        assertFailsWith<AssertionError> {
+            awaitState(timeout = 50.milliseconds) { it == 99 }
+        }
+    }
+
+    // ---- testSubPresenter ---------------------------------------------
+
+    @Test
+    fun testSubPresenter_wraps_a_sub_presenter_in_buildPresenter() =
+        // Explicit <E, S, Eff> — this sub-presenter doesn't emit any effect,
+        // so the compiler has nothing to infer the Effect type from.
+        testSubPresenter<CounterEvent, Int, CounterEffect>(
+            subPresenter = {
+                var count by remember { mutableStateOf(0) }
+                on<CounterEvent.Increment> { count += 1 }
+                count
+            },
+        ) {
+            assertEquals(0, state)
+            send(CounterEvent.Increment)
+            awaitState { it == 1 }
+        }
+}

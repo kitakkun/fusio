@@ -14,6 +14,7 @@ plugins {
 dependencies {
     dokka(project(":fusio-annotations"))
     dokka(project(":fusio-runtime"))
+    dokka(project(":fusio-test"))
 }
 
 // fusio-gradle-plugin is an included build (see settings.gradle.kts'

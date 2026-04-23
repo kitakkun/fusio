@@ -16,6 +16,7 @@ Persistent notes that survive across sessions live in `~/.claude/projects/-Users
 |---|---|
 | `fusio-annotations` | `@MapTo`, `@MapFrom` (KMP: jvm, iosArm64/SimArm64, macosArm64, js(IR), wasmJs) |
 | `fusio-runtime` | `Presentation`, `PresenterScope`, `buildPresenter`, `on<>`, `fuse` (inline stub), `mapEvents`, `forwardEffects` — same KMP targets |
+| `fusio-test` | `testPresenter` / `testSubPresenter` headless Compose runner + `PresenterScenario` DSL (send / awaitState / awaitEffect / expectNoEffects). Same KMP targets as `fusio-runtime` |
 | `fusio-compiler-plugin` | FIR checkers + IR `FuseTransformer`; shades `fusio-compiler-compat` and every `kXXX` impl into a single jar (JVM only) |
 | `fusio-compiler-plugin-tests/` | Per-Kotlin-patch test lanes — one subproject per supported compiler (`k230`, `k2310`, `tests-k2320`, `k2321`, `tests-k240_beta2`). Shared box + diagnostics testData lives at `fusio-compiler-plugin-tests/testData/`; IR goldens are per-lane |
 | `fusio-compiler-compat/` | `CompatContext` interface + `CompatContextResolver` (ServiceLoader); `kXXX/` subprojects hold per-Kotlin-version impls |
@@ -34,6 +35,7 @@ Build: Gradle 9.3.0, shadow 9.4.1, Kotlin 2.3.21 (+ 2.4.0-Beta2 via smokeK24). C
 ./gradlew :fusio-compiler-plugin-tests:k230:test            # Kotlin 2.3.0 — box + diagnostics via :compat:k230
 ./gradlew :fusio-runtime:allTests                           # runtime tests on every KMP target
 ./gradlew :fusio-runtime:jvmTest                            # JVM only — fastest feedback
+./gradlew :fusio-test:allTests                              # self-tests for the presenter testing harness
 cd demo && ../gradlew runJvm                               # launch Compose Desktop demo
 ./gradlew :fusio-compiler-plugin-tests:k2321:test -Pkotlin.test.update.test.data=true  # auto-update diagnostic markers
 ./gradlew publishToMavenLocal                              # seed ~/.m2
