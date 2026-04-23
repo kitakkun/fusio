@@ -18,13 +18,33 @@ kotlin {
         }
     }
 
+    // Non-JVM targets exist purely to prove that the Fusio compiler plugin
+    // applies correctly to every KMP compilation — the Presenter / mappedScope
+    // code in commonMain must compile on all of them. No platform-specific
+    // Main entry; only jvmMain runs the headless smoke.
+    iosArm64()
+    iosSimulatorArm64()
+    macosArm64()
+
+    js(IR) {
+        browser()
+        nodejs()
+    }
+
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+    wasmJs {
+        browser()
+        nodejs()
+    }
+
     sourceSets {
-        jvmMain {
+        commonMain {
             dependencies {
-                implementation(compose.runtime)
+                implementation("org.jetbrains.compose.runtime:runtime:1.10.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-                // fusio-runtime is auto-added by the Gradle plugin,
-                // but for composite build we reference it explicitly
+                // fusio-runtime is auto-added by the Gradle plugin, but for
+                // composite-build consumption we reference it explicitly so
+                // the KMP umbrella module metadata is picked up.
                 implementation("com.kitakkun.fusio:fusio-runtime:0.1.0-SNAPSHOT")
                 implementation("com.kitakkun.fusio:fusio-annotations:0.1.0-SNAPSHOT")
             }
