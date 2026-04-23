@@ -219,13 +219,13 @@ fun main() = generateTestGroupSuiteWithJUnit5 {
 | `diagnostics/mapToInvalidTarget.kt` | MAP_TO_INVALID_TARGET for unresolved class reference | ⚠️ not triggerable in practice — Kotlin frontend reports UNRESOLVED_REFERENCE on the KClass argument before our checker runs, so the `targetClass == null` branch in FusioMapToChecker never fires in realistic code. Leaving the diagnostic defined as a defensive fallback for typealias / serialization edge cases. |
 | `diagnostics/missingEventMappings.kt` | MISSING_EVENT_MAPPINGS when parent sealed omits a child subtype | ✅ landed |
 | `diagnostics/missingEffectMappings.kt` | MISSING_EFFECT_MAPPINGS symmetric case | ✅ landed |
-| `box/mappedScopeRoundTrip.kt` | Driving a parent event → child handler → parent effect returns OK | ✅ landed |
-| `box/nestedMappedScope.kt` | Three-level (screen / mid / leaf) nesting from the sample | ✅ landed |
+| `box/fuseRoundTrip.kt` | Driving a parent event → child handler → parent effect returns OK | ✅ landed |
+| `box/nestedFuse.kt` | Three-level (screen / mid / leaf) nesting from the sample | ✅ landed |
 | `box/dataObjectSubtype.kt` | `data object` target uses `irGetObject`, not a constructor call | ✅ landed |
-| `box/fusioDataClass.kt` | Runtime Fusio<S, E> data-class shape is stable | ✅ landed (bonus) |
+| `box/presentationDataClass.kt` | Runtime Presentation<S, E> data-class shape is stable | ✅ landed (bonus) |
 | `box/composableCompiles.kt` | Compose plugin is live in the test harness | ✅ landed (bonus) |
 | `box/validMapToCompiles.kt` | Valid @MapTo usage emits bytecode without regressions | ✅ landed (bonus) |
-| `ir/mappedScopeRewrite.kt` | Golden-file IR dump for the full @MapTo/@MapFrom round-trip — regression sentinel for `MappedScopeTransformer` | ✅ landed (post-Phase 2) |
+| `ir/fuseRewrite.kt` | Golden-file IR dump for the full @MapTo/@MapFrom round-trip — regression sentinel for `FuseTransformer` | ✅ landed (post-Phase 2) |
 
 These replace most of what the sample manually demonstrates today and can run headless in CI in ~seconds instead of the current ~30s+ Gradle sample loop.
 
@@ -240,11 +240,11 @@ After the Phase 2 landing, an IR text dump lane runs alongside diagnostics and b
   blows up on Compose / plugin-generated types before it gets to our IR.
 - **Golden files**: `testData/ir/<case>.kt` paired with
   `<case>.fir.ir.txt` (and `.fir.kt.txt`). Regenerate with
-  `./gradlew :fusio-compiler-plugin:test -Pkotlin.test.update.test.data=true`.
+  `./gradlew :fusio-compiler-plugin-tests:k2321:test -Pkotlin.test.update.test.data=true`.
 - **What it catches**: behavioural box tests still pass even if the
   transformer drops an argument or reorders blocks as long as the net
   runtime effect is the same. The IR lane locks in the structure — the
-  `mapEvents` call, the `forwardEffects` call, and the `$this$mappedScope`
+  `mapEvents` call, the `forwardEffects` call, and the `$this$fuse`
   extension-receiver wiring are pinned exactly where the transformer
   places them.
 
@@ -258,16 +258,16 @@ bucket.
 ## Risks / unknowns
 
 - **Kotlin 2.x internal test API churn**: the framework is marked "internal" and the DSL has moved (e.g. `configureDiagnosticTest`, `baseFirDiagnosticTestConfiguration`) between 2.0 / 2.1 / 2.2 / 2.3. Template currently targets a recent stable; pinning to Kotlin 2.3.20 should work but verify against the template's own `kotlin` version.
-- **Compose plugin ordering in tests** (RESOLVED): FusioExtensionRegistrarConfigurator now constructs `ComposePluginRegistrar` and calls its `registerExtensions` after Fusio's. `IrGenerationExtension.registerExtension` dispatches in insertion order, so registering Fusio first reproduces the production `-Xcompiler-plugin-order=com.kitakkun.fusio>androidx.compose.compiler...` constraint. No CLI flag required in tests.
+- **Compose plugin ordering in tests** (RESOLVED): `FusioExtensionRegistrarConfigurator` now constructs `ComposePluginRegistrar` and calls its `registerExtensions` after Fusio's. `IrGenerationExtension.registerExtension` dispatches in insertion order, so registering Fusio first reproduces the production `-Xcompiler-plugin-order=com.kitakkun.fusio>androidx.compose.compiler...` constraint. No CLI flag required in tests. (Historical note: this design doc predates the `fuse` rename — older drafts called the same transformer `MappedScopeTransformer`.)
 - **Generated `test-gen/` files**: keeping them committed vs. pure-generated is a trade-off. Commit them for now (template does) so IDEs resolve test classes without a build first.
 - **Performance**: first run of the internal framework pulls in `kotlin-compiler`, `intellijCore`, JDK discovery — expect ~15s cold startup per `./gradlew :fusio-compiler-plugin:test` invocation. Subsequent incremental runs are fast.
 
-## Incremental rollout
+## Incremental rollout (as landed)
 
-1. **Day 1**: add Gradle/catalog wiring, test-fixtures skeleton, one passing `diagnostics/mapToPropertyNameMismatch.kt` case. Land in one commit that is green.
-2. **Day 2**: port the remaining diagnostics cases from the table above. Fail-fast wins (now we can red-green without editing sample).
-3. **Day 3**: add box tests for the round-trip, nested, and data-object cases. Eventually remove the ad-hoc sample assertions and make the sample purely a manual demo.
-4. **Day 4**: wire `./gradlew :fusio-compiler-plugin:test` into CI alongside `:fusio-runtime:jvmTest`.
+1. **Day 1**: added Gradle/catalog wiring + test-fixtures skeleton + one passing `diagnostics/mapToPropertyNameMismatch.kt` case.
+2. **Day 2**: ported the remaining diagnostics cases from the table above.
+3. **Day 3**: added box tests for the round-trip, nested, and data-object cases. Sample app eventually retired in favour of `demo/`.
+4. **Day 4**: wired `./gradlew :fusio-compiler-plugin-tests:k2321:test` (the then-current path; later step 8 factored out per-Kotlin-patch subprojects under the `fusio-compiler-plugin-tests/` umbrella) alongside `:fusio-runtime:jvmTest` in CI.
 
 ## References
 
