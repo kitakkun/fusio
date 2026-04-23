@@ -43,11 +43,11 @@ fun App() {
     val eventFlow = remember { MutableSharedFlow<MyScreenEvent>(extraBufferCapacity = 64) }
     val effects = remember { mutableStateListOf<MyScreenEffect>() }
 
-    val fusio = myScreenPresenter(eventFlow)
-    val state = fusio.state
+    val presentation = myScreenPresenter(eventFlow)
+    val state = presentation.state
 
-    LaunchedEffect(fusio.effectFlow) {
-        fusio.effectFlow.collect { effects += it }
+    LaunchedEffect(presentation.effectFlow) {
+        presentation.effectFlow.collect { effects += it }
     }
 
     MaterialTheme {

@@ -114,10 +114,10 @@ class FusioHeadlessRunnerSourceProvider(testServices: TestServices) : Additional
 
                 val composition = Composition(HeadlessApplier(), recomposer)
                 composition.setContent {
-                    val fusio = present(events)
-                    currentState.value = fusio.state
-                    LaunchedEffect(fusio.effectFlow) {
-                        fusio.effectFlow.collect { collectedEffects.add(it) }
+                    val presentation = present(events)
+                    currentState.value = presentation.state
+                    LaunchedEffect(presentation.effectFlow) {
+                        presentation.effectFlow.collect { collectedEffects.add(it) }
                     }
                 }
 

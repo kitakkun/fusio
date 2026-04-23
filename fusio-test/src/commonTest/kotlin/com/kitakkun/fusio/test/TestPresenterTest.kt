@@ -211,4 +211,5 @@ class TestPresenterTest {
         assertEquals(2, state)
         assertEquals(emptyList(), stateHistory)
     }
+
 }

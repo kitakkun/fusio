@@ -7,7 +7,7 @@ import com.kitakkun.fusio.MapTo
 import kotlinx.coroutines.flow.emptyFlow
 
 // Smoke test: valid @MapTo usage passes the FIR checkers, bytecode is emitted,
-// and the runtime Fusio data class behaves as expected.
+// and the runtime Presentation data class behaves as expected.
 sealed interface Child {
     data class Toggle(val id: String) : Child
 }
@@ -18,8 +18,8 @@ sealed interface Parent {
 }
 
 fun box(): String {
-    val fusio: Presentation<String, Child> = Presentation(state = "ready", effectFlow = emptyFlow())
-    if (fusio.state != "ready") return "FAIL: state=${fusio.state}"
+    val presentation: Presentation<String, Child> = Presentation(state = "ready", effectFlow = emptyFlow())
+    if (presentation.state != "ready") return "FAIL: state=${presentation.state}"
 
     val parent = Parent.ToggleFavorite(id = "item-1")
     if (parent.id != "item-1") return "FAIL: parent.id=${parent.id}"
