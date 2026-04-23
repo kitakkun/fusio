@@ -45,12 +45,21 @@ val signingKey: String? = providers.gradleProperty("signingKey").orNull
 val signingPassword: String? = providers.gradleProperty("signingPassword").orNull
     ?: System.getenv("SIGNING_PASSWORD")
 
-// A single empty javadoc jar shared across every publication in this project.
-// Dokka integration can replace this later without changing the publication
-// wiring — the task name stays stable.
+// A single javadoc jar shared across every publication in this project.
+// When the Dokka plugin is applied (fusio-annotations / fusio-runtime), we
+// bundle Dokka's HTML output into it. Modules without Dokka — the Gradle
+// plugin and any future JVM-only internal modules that still want to be
+// published — fall back to an empty jar, which is enough for Sonatype to
+// accept the publication.
 val javadocJar = tasks.register<Jar>("javadocJar") {
     archiveClassifier.set("javadoc")
-    // No from(...) — Sonatype only checks for presence, not contents.
+}
+plugins.withId("org.jetbrains.dokka") {
+    val dokkaGenerate = tasks.named("dokkaGeneratePublicationHtml")
+    javadocJar.configure {
+        dependsOn(dokkaGenerate)
+        from(dokkaGenerate.map { it.outputs.files })
+    }
 }
 
 publishing {
