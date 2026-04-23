@@ -1,6 +1,6 @@
 # Step 9: `fusio-test` — Presenter testing framework (Design)
 
-Status: **design doc, not yet implemented**
+Status: **Phase 1 + 2 landed.** `fusio-test` module ships with `testPresenter` / `testSubPresenter` on every KMP target `fusio-runtime` covers. Phase 2 added `assertState { }` fail-fast, a `recordStateHistory = false` opt-out, and richer failure messages (observed-state trace + pending-effect list on every timeout). The sections below kept the original design intent; per-phase as-built notes sit at the bottom under "Implementation log".
 
 ## Problem
 
@@ -230,6 +230,22 @@ Post-round-3 additions folded into the main proposal above:
 | **1 — minimal runner** | `testPresenter`, `testSubPresenter`, `PresenterScenario` with the seven methods above. JVM + Android targets first, then iOS/macOS, then JS/Wasm. BCV dump, Dokka docs, README sections on "How to test your presenter". | `fusio-test:0.2.0` |
 | **2 — ergonomic polish** | Scenario DSL helpers (`assertState { … }` expectation builder, `recordStateHistory = false` opt-out), explicit `TestDispatcher` injection, failure-message improvements (diff rendering for state snapshots). | `fusio-test:0.3.0` |
 | **3 — integrations** | Optional artifact `fusio-test-turbine` that bridges the effect stream to Turbine's `ReceiveTurbine<Eff>` for shops already using Turbine. Optional `fusio-test-kotest` for `withData` + scenario-per-row ergonomics. | `fusio-test-*:0.4.0` |
+
+## Implementation log
+
+### Phase 1 — landed
+
+- Module `fusio-test` created on every fusio-runtime KMP target (jvm, androidLibrary, iosArm64/SimArm64, macosArm64, js(IR), wasmJs).
+- `testPresenter` / `testSubPresenter` take a `@Composable` lambda (not a function reference) so real presenters with extra dependencies bind inline — see round 4 of the design iterations above.
+- `runTest(UnconfinedTestDispatcher())` drives the scope; each `advance()` calls `delay(16ms)` on the test scheduler so virtual-time deadlines actually make progress (plain `yield()` spun the loop forever). That cycle was the "why is gradle stuck" finding during Phase 1 wiring — `awaitState` with a never-matching predicate wouldn't ever hit its timeout until `advance()` also moved the scheduler clock.
+- `awaitEffect<T>()` uses `PresenterScenario<*, *, *>` star projections + `reified T : Any` so the one-arg narrowing shape works without colliding with the bare `awaitEffect(timeout)` interface method.
+
+### Phase 2 — landed
+
+- `PresenterScenario.assertState(message?, predicate)` — fail-fast variant of `awaitState`. Checks the current snapshot once, no suspension, and threads the caller-supplied `message` into the failure text for predicate-source-less builds.
+- `testPresenter(recordStateHistory = true)` / `testSubPresenter(recordStateHistory = true)` — opt-out knob. Long-running scenarios (or memory-sensitive targets) can disable history accumulation; `state` is unaffected.
+- Uniform failure-message builder: every `await*` / `assertState` / `expectNoEffects` failure now renders the observed-state trace (`[0] … [1] …`) plus any pending effects left in the queue. This traded a one-line "timeout" for a paragraph that usually pinpoints the presenter bug without re-running under a debugger.
+- Dropped the originally-proposed `assertEffect<T>()` fail-fast variant — its non-pop semantics would have confused against `awaitEffect`'s pop semantics. Users who want fail-fast read `pendingEffects` directly.
 
 ## Open questions
 

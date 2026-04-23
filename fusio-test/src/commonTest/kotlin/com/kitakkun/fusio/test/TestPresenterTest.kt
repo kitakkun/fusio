@@ -154,4 +154,61 @@ class TestPresenterTest {
             send(CounterEvent.Increment)
             awaitState { it == 1 }
         }
+
+    // ---- Phase 2: assertState (fail-fast predicate) -------------------
+
+    @Test
+    fun assertState_returns_current_state_when_predicate_matches() = testPresenter(
+        presenter = { events -> counterPresenter(events, initial = 7) },
+    ) {
+        val snapshot = assertState { it == 7 }
+        assertEquals(7, snapshot)
+    }
+
+    @Test
+    fun assertState_fails_fast_without_waiting() = testPresenter(
+        presenter = { events -> counterPresenter(events, initial = 0) },
+    ) {
+        val err = assertFailsWith<AssertionError> {
+            assertState(message = "expected 99") { it == 99 }
+        }
+        // The failure message threads through the caller-supplied label,
+        // the current state, and the observed-history trace.
+        val msg = err.message ?: ""
+        assertTrue("expected 99" in msg, "missing label in: $msg")
+        assertTrue("Current state" in msg, "missing state in: $msg")
+        assertTrue("Observed states" in msg, "missing history in: $msg")
+    }
+
+    // ---- Phase 2: improved failure messages --------------------------
+
+    @Test
+    fun awaitState_timeout_message_includes_history_and_pending_effects() = testPresenter(
+        presenter = { events -> counterPresenter(events, initial = 0) },
+    ) {
+        send(CounterEvent.Reset) // emits Toast into the effect queue
+        val err = assertFailsWith<AssertionError> {
+            awaitState(timeout = 30.milliseconds) { it == 99 }
+        }
+        val msg = err.message ?: ""
+        assertTrue("Observed states" in msg, "missing history in: $msg")
+        assertTrue("Pending effects" in msg, "missing pending effects in: $msg")
+    }
+
+    // ---- Phase 2: recordStateHistory = false -------------------------
+
+    @Test
+    fun recordStateHistory_false_leaves_history_empty() = testPresenter(
+        recordStateHistory = false,
+        presenter = { events -> counterPresenter(events, initial = 0) },
+    ) {
+        send(CounterEvent.Increment)
+        awaitState { it == 1 }
+        send(CounterEvent.Increment)
+        awaitState { it == 2 }
+        // `state` still reflects the latest value — only the accumulated
+        // history list is suppressed.
+        assertEquals(2, state)
+        assertEquals(emptyList(), stateHistory)
+    }
 }

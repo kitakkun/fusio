@@ -60,6 +60,17 @@ public interface PresenterScenario<Event, State, Effect> {
     ): State
 
     /**
+     * Fail-fast sibling of [awaitState]: checks [predicate] against the
+     * current [state] once and throws [AssertionError] if it doesn't match.
+     * Use this after a [send] + [awaitState] pair when you want to layer
+     * additional assertions on the landed state without re-waiting.
+     *
+     * [message] gets prepended to the failure description to preserve the
+     * call-site intent — predicate source text isn't otherwise recoverable.
+     */
+    public fun assertState(message: String? = null, predicate: (State) -> Boolean): State
+
+    /**
      * Suspends until an effect is available and returns it. Fails if none
      * arrives within [timeout].
      */

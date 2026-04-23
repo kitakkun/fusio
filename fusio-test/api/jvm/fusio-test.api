@@ -1,5 +1,7 @@
 public abstract interface class com/kitakkun/fusio/test/PresenterScenario {
 	public abstract fun advance (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun assertState (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static synthetic fun assertState$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun awaitEffect-VtjQ1oo (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun awaitEffect-VtjQ1oo$default (Lcom/kitakkun/fusio/test/PresenterScenario;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun awaitState-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -13,15 +15,16 @@ public abstract interface class com/kitakkun/fusio/test/PresenterScenario {
 }
 
 public final class com/kitakkun/fusio/test/PresenterScenario$DefaultImpls {
+	public static synthetic fun assertState$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun awaitEffect-VtjQ1oo$default (Lcom/kitakkun/fusio/test/PresenterScenario;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun awaitState-KLykuaI$default (Lcom/kitakkun/fusio/test/PresenterScenario;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun expectNoEffects-VtjQ1oo$default (Lcom/kitakkun/fusio/test/PresenterScenario;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class com/kitakkun/fusio/test/TestPresenterKt {
-	public static final fun testPresenter (Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;)V
-	public static synthetic fun testPresenter$default (Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
-	public static final fun testSubPresenter (Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;)V
-	public static synthetic fun testSubPresenter$default (Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
+	public static final fun testPresenter (Lkotlin/coroutines/CoroutineContext;ZLkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;)V
+	public static synthetic fun testPresenter$default (Lkotlin/coroutines/CoroutineContext;ZLkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
+	public static final fun testSubPresenter (Lkotlin/coroutines/CoroutineContext;ZLkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;)V
+	public static synthetic fun testSubPresenter$default (Lkotlin/coroutines/CoroutineContext;ZLkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
 }
 

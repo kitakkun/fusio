@@ -80,6 +80,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 @OptIn(ExperimentalCoroutinesApi::class)
 public fun <Event, State, Effect> testPresenter(
     context: CoroutineContext = EmptyCoroutineContext,
+    recordStateHistory: Boolean = true,
     presenter: @Composable (Flow<Event>) -> Presentation<State, Effect>,
     scenario: suspend PresenterScenario<Event, State, Effect>.() -> Unit,
 ): TestResult = runTest(context = UnconfinedTestDispatcher() + context) {
@@ -87,7 +88,7 @@ public fun <Event, State, Effect> testPresenter(
     val clock = BroadcastFrameClock()
     val effectChannel = Channel<Effect>(Channel.UNLIMITED)
     val stateHolder = StateHolder<State>()
-    val history = mutableListOf<State>()
+    val history: MutableList<State> = mutableListOf()
     val errorRef = ErrorRef()
 
     // Recomposer runs in its own coroutine so the scenario body can
@@ -110,7 +111,10 @@ public fun <Event, State, Effect> testPresenter(
         val nextState = presentation.state
         if (stateHolder.current != nextState) {
             stateHolder.current = nextState
-            history += nextState
+            // Opt-out short-circuits the append so long-running tests
+            // don't accumulate a huge list. Failure messages adapt by
+            // just rendering the empty history.
+            if (recordStateHistory) history += nextState
         }
         LaunchedEffect(presentation.effectFlow) {
             presentation.effectFlow.collect { effectChannel.send(it) }
@@ -168,10 +172,12 @@ public fun <Event, State, Effect> testPresenter(
  */
 public fun <Event, State, Effect> testSubPresenter(
     context: CoroutineContext = EmptyCoroutineContext,
+    recordStateHistory: Boolean = true,
     subPresenter: @Composable PresenterScope<Event, Effect>.() -> State,
     scenario: suspend PresenterScenario<Event, State, Effect>.() -> Unit,
 ): TestResult = testPresenter(
     context = context,
+    recordStateHistory = recordStateHistory,
     presenter = { events -> buildPresenter(events, subPresenter) },
     scenario = scenario,
 )

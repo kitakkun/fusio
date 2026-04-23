@@ -94,11 +94,31 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
             }
             if (scheduler.currentTime >= deadline) {
                 throw AssertionError(
-                    "awaitState timed out after $timeout. Latest state: ${stateHolder.current}",
+                    buildFailureMessage(
+                        header = "awaitState timed out after $timeout.",
+                        extras = mapOf("Latest state" to "${stateHolder.current}"),
+                    ),
                 )
             }
             advance()
         }
+    }
+
+    override fun assertState(message: String?, predicate: (State) -> Boolean): State {
+        checkError()
+        val current = stateHolder.current
+            ?: throw AssertionError(
+                "assertState: no state observed yet. Call `advance()` or await first.",
+            )
+        if (!predicate(current)) {
+            throw AssertionError(
+                buildFailureMessage(
+                    header = "assertState failed${message?.let { " ($it)" } ?: ""}.",
+                    extras = mapOf("Current state" to "$current"),
+                ),
+            )
+        }
+        return current
     }
 
     override suspend fun awaitEffect(timeout: Duration): Effect {
@@ -108,21 +128,69 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
         checkError()
         return withTimeoutOrNull(timeout) {
             effectChannel.receive()
-        } ?: throw AssertionError("awaitEffect timed out after $timeout.")
+        } ?: throw AssertionError(
+            buildFailureMessage(
+                header = "awaitEffect timed out after $timeout.",
+                extras = mapOf(
+                    "No effect emitted during the window" to "",
+                    "Current state" to "${stateHolder.current}",
+                ),
+            ),
+        )
     }
 
     override suspend fun expectNoEffects(within: Duration) {
         drainEffectChannel()
         if (_pendingEffects.isNotEmpty()) {
             throw AssertionError(
-                "expectNoEffects: ${_pendingEffects.size} effect(s) already queued: $_pendingEffects",
+                buildFailureMessage(
+                    header = "expectNoEffects: ${_pendingEffects.size} effect(s) already queued.",
+                    extras = mapOf("Queued" to "$_pendingEffects"),
+                ),
             )
         }
         val received = withTimeoutOrNull(within) { effectChannel.receive() }
         if (received != null) {
-            throw AssertionError("expectNoEffects: received $received within $within.")
+            throw AssertionError(
+                buildFailureMessage(
+                    header = "expectNoEffects: received $received within $within.",
+                    extras = emptyMap(),
+                ),
+            )
         }
     }
+
+    /**
+     * Builds a multi-line failure message that includes scenario context
+     * (state history, pending effects) under the given [header]. Every
+     * `await*` / `assertState` / `expectNoEffects` failure funnels through
+     * here so the error text is uniform and actually informative — bare
+     * "awaitState timed out" was hiding what the presenter was doing.
+     */
+    private fun buildFailureMessage(
+        header: String,
+        extras: Map<String, String>,
+    ): String = buildString {
+        appendLine(header)
+        extras.forEach { (label, value) ->
+            if (value.isEmpty()) appendLine("  $label")
+            else appendLine("  $label: $value")
+        }
+        // Snapshot these before rendering so a concurrent mutation (in
+        // principle impossible under our single-threaded dispatcher, but
+        // cheap insurance) can't tear the output.
+        val history = stateHistory.toList()
+        if (history.isNotEmpty()) {
+            appendLine("  Observed states (oldest first):")
+            history.forEachIndexed { i, s ->
+                appendLine("    [$i] $s")
+            }
+        }
+        drainEffectChannel()
+        if (_pendingEffects.isNotEmpty()) {
+            appendLine("  Pending effects: $_pendingEffects")
+        }
+    }.trimEnd()
 
     private fun drainEffectChannel() {
         while (true) {
