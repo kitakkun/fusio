@@ -390,3 +390,4 @@ local fun PresenterScope<ChildEvent, ChildEffect>.<anonymous>(/* var */ $compose
   }
   return tmp_7
 }
+

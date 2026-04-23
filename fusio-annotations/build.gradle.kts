@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.dokka)
     id("fusio.publish")
 }
@@ -8,6 +9,17 @@ kotlin {
     explicitApi()
 
     jvm()
+
+    // `com.android.kotlin.multiplatform.library` (AGP 8.10+) replaces the
+    // legacy `com.android.library` + top-level `android { }` extension with
+    // a target block nested inside `kotlin { }`. Single-variant, no
+    // flavors, no Android resources — a pure KMP annotation / library
+    // artifact, nothing else.
+    androidLibrary {
+        namespace = "com.kitakkun.fusio"
+        compileSdk = 36
+        minSdk = 24
+    }
 
     iosArm64()
     iosSimulatorArm64()

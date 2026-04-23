@@ -1,9 +1,16 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.compose.compiler)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.dokka)
     id("fusio.publish")
+    // Deliberately NOT applying `org.jetbrains.compose`. Its compose-resources
+    // feature reaches into AGP's KotlinMultiplatformAndroidComponentsExtension
+    // from the compose-multiplatform-gradle-plugin classloader and blows up
+    // on AGP 9.0.x. We don't use compose-resources or the compose.runtime DSL
+    // accessor — the runtime pulls compose artifacts via
+    // libs.compose.runtime.multiplatform directly — so dropping the plugin
+    // is equivalent apart from losing that incompatible hook.
 }
 
 // Emit Compose stability / skippability reports for every JVM compilation
@@ -78,6 +85,15 @@ kotlin {
     explicitApi()
 
     jvm()
+
+    // See fusio-annotations for the Android target rationale. Runtime
+    // consumers on Android get the same `androidx.compose.runtime:runtime`
+    // jar as JVM, just compiled against the Android bootclasspath.
+    androidLibrary {
+        namespace = "com.kitakkun.fusio.runtime"
+        compileSdk = 36
+        minSdk = 24
+    }
 
     iosArm64()
     iosSimulatorArm64()
