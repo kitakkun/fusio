@@ -33,7 +33,9 @@ plugins {
 }
 
 group = "com.kitakkun.fusio"
-version = "0.1.0-SNAPSHOT"
+// `version` is pinned by the root build's allprojects{} block, which honors
+// -PVERSION_NAME from the release workflow. Don't re-assign here — that
+// would clobber the property for modules applying this convention.
 
 val sonatypeUsername: String? = providers.gradleProperty("sonatypeUsername").orNull
     ?: System.getenv("SONATYPE_USERNAME")

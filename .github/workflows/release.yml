@@ -1,0 +1,50 @@
+name: Release
+
+# Fires when a tag matching `v*` is pushed (e.g., `v0.1.0`, `v1.2.3`). The tag
+# name minus its `v` prefix becomes the published version, so creating a Git
+# tag is literally the release trigger — no extra click on GitHub Releases
+# needed. Snapshots (`v0.1.0-SNAPSHOT` style) route to Sonatype's snapshot repo
+# via the release/snapshot URL toggle already in fusio.publish.
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    name: Publish to Sonatype
+    # macOS runner so Apple klib targets (iosArm64, iosSimulatorArm64,
+    # macosArm64) build. See the `library` job in ci.yml for the same choice.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Extract version from tag
+        id: version
+        # refs/tags/v1.2.3  ->  1.2.3
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      # Go through the same `build` lane CI runs on every PR — no point
+      # publishing a release that fails its own test suite. Keeps the signed
+      # upload gated on apiCheck / verifyComposeMetrics / IR snapshot etc.
+      - name: Build + verify
+        run: ./gradlew build -PVERSION_NAME=${{ steps.version.outputs.version }}
+
+      - name: Publish
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          ./gradlew publishAllPublicationsToSonatypeRepository \
+            -PVERSION_NAME=${{ steps.version.outputs.version }}

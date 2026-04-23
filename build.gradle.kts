@@ -4,11 +4,23 @@ plugins {
     alias(libs.plugins.kotlin.compose.compiler) apply false
     alias(libs.plugins.compose.multiplatform) apply false
     alias(libs.plugins.binary.compatibility.validator)
+    alias(libs.plugins.dokka)
+}
+
+// Aggregate HTML documentation. `./gradlew :dokkaGenerate` produces a
+// single cross-linked site at build/dokka/html/ covering every
+// library module that applies the Dokka plugin. The per-module HTML
+// that ships in each artifact's javadoc jar is unchanged.
+dependencies {
+    dokka(project(":fusio-annotations"))
+    dokka(project(":fusio-runtime"))
 }
 
 allprojects {
     group = "com.kitakkun.fusio"
-    version = "0.1.0-SNAPSHOT"
+    // Release workflow passes `-PVERSION_NAME=1.2.3` to produce non-SNAPSHOT
+    // artifacts. Default stays SNAPSHOT for day-to-day publishToMavenLocal.
+    version = providers.gradleProperty("VERSION_NAME").orNull ?: "0.1.0-SNAPSHOT"
 }
 
 // Publishable library surface gets its public ABI dumped into `<module>/api/`
