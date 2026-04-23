@@ -1,0 +1,422 @@
+@StabilityInferred(parameters = 1)
+data class ChildState {
+  val toggled: Boolean
+    field = toggled
+    get
+
+  /* static */ val $stable: Int
+    field = 0
+    get(): Int {
+      return #$stable
+    }
+
+  constructor(toggled: Boolean) /* primary */ {
+    super/*Any*/()
+    /* <init>() */
+
+  }
+
+  operator fun component1(): Boolean {
+    return <this>.#toggled
+  }
+
+  fun copy(toggled: Boolean = <this>.#toggled): ChildState {
+    return ChildState(toggled = toggled)
+  }
+
+  override operator fun equals(other: Any?): Boolean {
+    when {
+      EQEQEQ(arg0 = <this>, arg1 = other) -> return true
+    }
+    when {
+      other !is ChildState -> return false
+    }
+    val tmp_0: ChildState = other /*as ChildState */
+    when {
+      EQEQ(arg0 = <this>.#toggled, arg1 = tmp_0.#toggled).not() -> return false
+    }
+    return true
+  }
+
+  override fun hashCode(): Int {
+    return <this>.#toggled.hashCode()
+  }
+
+  override fun toString(): String {
+    return "ChildState(" + "toggled=" + <this>.#toggled + ")"
+  }
+
+}
+
+@StabilityInferred(parameters = 1)
+data class ScreenState {
+  val child: ChildState
+    field = child
+    get
+
+  /* static */ val $stable: Int
+    field = 0
+    get(): Int {
+      return #$stable
+    }
+
+  constructor(child: ChildState) /* primary */ {
+    super/*Any*/()
+    /* <init>() */
+
+  }
+
+  operator fun component1(): ChildState {
+    return <this>.#child
+  }
+
+  fun copy(child: ChildState = <this>.#child): ScreenState {
+    return ScreenState(child = child)
+  }
+
+  override operator fun equals(other: Any?): Boolean {
+    when {
+      EQEQEQ(arg0 = <this>, arg1 = other) -> return true
+    }
+    when {
+      other !is ScreenState -> return false
+    }
+    val tmp_1: ScreenState = other /*as ScreenState */
+    when {
+      EQEQ(arg0 = <this>.#child, arg1 = tmp_1.#child).not() -> return false
+    }
+    return true
+  }
+
+  override fun hashCode(): Int {
+    return <this>.#child.hashCode()
+  }
+
+  override fun toString(): String {
+    return "ScreenState(" + "child=" + <this>.#child + ")"
+  }
+
+}
+
+sealed interface ChildEffect {
+  @StabilityInferred(parameters = 1)
+  data class Reply : ChildEffect {
+    val message: String
+      field = message
+      get
+
+    /* static */ val $stable: Int
+      field = 0
+      get(): Int {
+        return #$stable
+      }
+
+    constructor(message: String) /* primary */ {
+      super/*Any*/()
+      /* <init>() */
+
+    }
+
+    operator fun component1(): String {
+      return <this>.#message
+    }
+
+    fun copy(message: String = <this>.#message): Reply {
+      return Reply(message = message)
+    }
+
+    override operator fun equals(other: Any?): Boolean {
+      when {
+        EQEQEQ(arg0 = <this>, arg1 = other) -> return true
+      }
+      when {
+        other !is Reply -> return false
+      }
+      val tmp_2: Reply = other /*as Reply */
+      when {
+        EQEQ(arg0 = <this>.#message, arg1 = tmp_2.#message).not() -> return false
+      }
+      return true
+    }
+
+    override fun hashCode(): Int {
+      return <this>.#message.hashCode()
+    }
+
+    override fun toString(): String {
+      return "Reply(" + "message=" + <this>.#message + ")"
+    }
+
+  }
+
+}
+
+sealed interface ChildEvent {
+  @StabilityInferred(parameters = 1)
+  data class Toggle : ChildEvent {
+    val id: String
+      field = id
+      get
+
+    /* static */ val $stable: Int
+      field = 0
+      get(): Int {
+        return #$stable
+      }
+
+    constructor(id: String) /* primary */ {
+      super/*Any*/()
+      /* <init>() */
+
+    }
+
+    operator fun component1(): String {
+      return <this>.#id
+    }
+
+    fun copy(id: String = <this>.#id): Toggle {
+      return Toggle(id = id)
+    }
+
+    override operator fun equals(other: Any?): Boolean {
+      when {
+        EQEQEQ(arg0 = <this>, arg1 = other) -> return true
+      }
+      when {
+        other !is Toggle -> return false
+      }
+      val tmp_3: Toggle = other /*as Toggle */
+      when {
+        EQEQ(arg0 = <this>.#id, arg1 = tmp_3.#id).not() -> return false
+      }
+      return true
+    }
+
+    override fun hashCode(): Int {
+      return <this>.#id.hashCode()
+    }
+
+    override fun toString(): String {
+      return "Toggle(" + "id=" + <this>.#id + ")"
+    }
+
+  }
+
+}
+
+sealed interface ParentEffect {
+  @MapFrom(source = Reply::class)
+  @StabilityInferred(parameters = 1)
+  data class Echo : ParentEffect {
+    val message: String
+      field = message
+      get
+
+    /* static */ val $stable: Int
+      field = 0
+      get(): Int {
+        return #$stable
+      }
+
+    constructor(message: String) /* primary */ {
+      super/*Any*/()
+      /* <init>() */
+
+    }
+
+    operator fun component1(): String {
+      return <this>.#message
+    }
+
+    fun copy(message: String = <this>.#message): Echo {
+      return Echo(message = message)
+    }
+
+    override operator fun equals(other: Any?): Boolean {
+      when {
+        EQEQEQ(arg0 = <this>, arg1 = other) -> return true
+      }
+      when {
+        other !is Echo -> return false
+      }
+      val tmp_4: Echo = other /*as Echo */
+      when {
+        EQEQ(arg0 = <this>.#message, arg1 = tmp_4.#message).not() -> return false
+      }
+      return true
+    }
+
+    override fun hashCode(): Int {
+      return <this>.#message.hashCode()
+    }
+
+    override fun toString(): String {
+      return "Echo(" + "message=" + <this>.#message + ")"
+    }
+
+  }
+
+}
+
+sealed interface ParentEvent {
+  @MapTo(target = Toggle::class)
+  @StabilityInferred(parameters = 1)
+  data class Flip : ParentEvent {
+    val id: String
+      field = id
+      get
+
+    /* static */ val $stable: Int
+      field = 0
+      get(): Int {
+        return #$stable
+      }
+
+    constructor(id: String) /* primary */ {
+      super/*Any*/()
+      /* <init>() */
+
+    }
+
+    operator fun component1(): String {
+      return <this>.#id
+    }
+
+    fun copy(id: String = <this>.#id): Flip {
+      return Flip(id = id)
+    }
+
+    override operator fun equals(other: Any?): Boolean {
+      when {
+        EQEQEQ(arg0 = <this>, arg1 = other) -> return true
+      }
+      when {
+        other !is Flip -> return false
+      }
+      val tmp_5: Flip = other /*as Flip */
+      when {
+        EQEQ(arg0 = <this>.#id, arg1 = tmp_5.#id).not() -> return false
+      }
+      return true
+    }
+
+    override fun hashCode(): Int {
+      return <this>.#id.hashCode()
+    }
+
+    override fun toString(): String {
+      return "Flip(" + "id=" + <this>.#id + ")"
+    }
+
+  }
+
+}
+
+@Composable
+fun PresenterScope<ChildEvent, ChildEffect>.child(/* var */ $composer: Composer?, $changed: Int): ChildState {
+  when {
+    isTraceInProgress() -> traceEventStart(key = -1813312704, dirty1 = $changed, dirty2 = -1, info = "child (fuseRewrite.kt:37)")
+  }
+  var toggled: Boolean
+    val toggled$delegate: MutableState<Boolean> = { // BLOCK
+      cache<MutableState<Boolean>>(/* <this> = $composer, */ invalid = false, block = local fun <anonymous>(): MutableState<Boolean> {
+        return mutableStateOf<Boolean>(value = false)
+      }
+)
+    }
+    local get(): Boolean {
+      return getValue<Boolean>(/* <this> = toggled$delegate, */ thisObj = null, property = ::toggled)
+    }
+    local set(<set-?>: Boolean) {
+      return setValue<Boolean>(/* <this> = toggled$delegate, */ thisObj = null, property = ::toggled, value = <set-?>)
+    }
+
+  on<Toggle>(/* <this> = <this>, */ handler = { // BLOCK
+    cache<SuspendFunction1<Toggle, Unit>>(/* <this> = $composer, */ invalid = when {
+      when {
+        greater(arg0 = $changed.and(other = 14).xor(other = 6), arg1 = 4) -> $composer.changed(value = <this>)
+        else -> false
+      } -> true
+      else -> EQEQ(arg0 = $changed.and(other = 6), arg1 = 4)
+    }, block = local fun <anonymous>(): SuspendFunction1<Toggle, Unit> {
+      return local suspend fun <anonymous>(event: Toggle) {
+        <set-toggled>(<set-?> = <get-toggled>().not())
+        <this>.emitEffect(effect = Reply(message = "toggled=" + event.<get-id>()))
+      }
+
+    }
+)
+  }, $composer = $composer, $changed = 14.and(other = $changed))
+  val tmp_6: ChildState = ChildState(toggled = <get-toggled>())
+  when {
+    isTraceInProgress() -> traceEventEnd()
+  }
+  return tmp_6
+}
+
+@Composable
+fun screenPresenter(events: Flow<ParentEvent>, /* var */ $composer: Composer?, $changed: Int): Presentation<ScreenState, ParentEffect> {
+  when {
+    isTraceInProgress() -> traceEventStart(key = -1226651325, dirty1 = $changed, dirty2 = -1, info = "screenPresenter (fuseRewrite.kt:49)")
+  }
+  val tmp_7: Presentation<ScreenState, ParentEffect> = buildPresenter<ParentEvent, ParentEffect, ScreenState>(eventFlow = events, block =   @Composable
+local fun PresenterScope<ParentEvent, ParentEffect>.<anonymous>(/* var */ $composer: Composer?, $changed: Int): ScreenState {
+    $composer.startReplaceGroup(key = -1511966000)
+    when {
+      isTraceInProgress() -> traceEventStart(key = -1511966000, dirty1 = $changed, dirty2 = -1, info = "screenPresenter.<anonymous> (fuseRewrite.kt:50)")
+    }
+    val childState: ChildState = { // BLOCK
+      val tmp_8: PresenterScope<ParentEvent, ParentEffect> = $this$buildPresenter
+      val tmp_9: Flow<ChildEvent> = mapEvents<ParentEvent, ChildEvent>(/* <this> = tmp_8.<get-eventFlow>(), */ mapper = { // BLOCK
+        cache<Function1<ParentEvent, ChildEvent?>>(/* <this> = $composer, */ invalid = false, block = local fun <anonymous>(): Function1<ParentEvent, ChildEvent?> {
+          return local fun <anonymous>(it: ParentEvent): ChildEvent? {
+            return when {
+              it is Flip -> Toggle(id = it.<get-id>())
+              else -> null
+            }
+          }
+
+        }
+)
+      })
+      val tmp_10: PresenterScope<ChildEvent, ChildEffect> = PresenterScope<ChildEvent, ChildEffect>(eventFlow = tmp_9)
+      forwardEffects<ChildEffect, ParentEffect>(childScope = tmp_10, parentScope = tmp_8, mapper = { // BLOCK
+        cache<Function1<ChildEffect, ParentEffect?>>(/* <this> = $composer, */ invalid = false, block = local fun <anonymous>(): Function1<ChildEffect, ParentEffect?> {
+          return local fun <anonymous>(it: ChildEffect): ParentEffect? {
+            return when {
+              it is Reply -> Echo(message = it.<get-message>())
+              else -> null
+            }
+          }
+
+        }
+)
+      }, $composer = $composer, $changed = 384.or(other = 112.and(other = $changed.shl(bitCount = 3))))
+            @Composable
+local fun PresenterScope<ChildEvent, ChildEffect>.<anonymous>(/* var */ $composer: Composer?, $changed: Int): ChildState {
+        $composer.startReplaceGroup(key = -2111360969)
+        when {
+          isTraceInProgress() -> traceEventStart(key = -2111360969, dirty1 = $changed, dirty2 = -1, info = "screenPresenter.<anonymous>.<anonymous> (fuseRewrite.kt:50)")
+        }
+        val tmp_11: ChildState = child(/* <this> = $this$fuse, */ $composer = $composer, $changed = 14.and(other = $changed))
+        when {
+          isTraceInProgress() -> traceEventEnd()
+        }
+        $composer.endReplaceGroup()
+        return tmp_11
+      }
+.invoke(p1 = tmp_10, p2 = $composer, p3 = 0)
+    }
+    val tmp_12: ScreenState = ScreenState(child = childState)
+    when {
+      isTraceInProgress() -> traceEventEnd()
+    }
+    $composer.endReplaceGroup()
+    return tmp_12
+  }
+, $composer = $composer, $changed = 14.and(other = $changed))
+  when {
+    isTraceInProgress() -> traceEventEnd()
+  }
+  return tmp_7
+}

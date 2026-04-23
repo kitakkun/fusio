@@ -45,7 +45,7 @@ The sample (`sample/`) consumes `:fusio-compiler-plugin` through Gradle's compos
 ### Validation
 
 - **`:fusio-compiler-plugin:test`** (Kotlin 2.3.21, primary): full box + diagnostics + IR text suite via `kotlin-compiler-internal-test-framework`. Covers the same pipeline end-to-end a user project would hit.
-- **`:fusio-compiler-plugin-k24-tests:test`** (Kotlin 2.4.0-Beta2): parallel lane running box + diagnostics against the same testData directory with a 2.4-shaped `configure(NonGroupingPhaseTestConfigurationBuilder)` override. Shares the plugin classpath with the primary module; the `k240_beta2` compat impl kicks in at runtime via ServiceLoader. IR-text tests are deliberately skipped in this lane because IR dump format shifts across compiler versions and sharing goldens isn't meaningful.
+- **`:fusio-compiler-plugin-k24-tests:test`** (Kotlin 2.4.0-Beta2): parallel lane running box + diagnostics + IR text against a 2.4-shaped `configure(NonGroupingPhaseTestConfigurationBuilder)` override. Shares the plugin classpath with the primary module; the `k240_beta2` compat impl kicks in at runtime via ServiceLoader. box / diagnostics share the primary lane's testData (behavioural contracts are version-independent). IR text tests live under `fusio-compiler-plugin-k24-tests/testData/ir/` with their own 2.4-pinned `.fir.ir.txt` / `.fir.kt.txt` goldens — the Kotlin IR dump format shifts across patches (2.4's Compose compiler expands `$stable` into a PROPERTY + getter where 2.3 emits a bare FIELD, for example), so each version gets its own snapshot.
 - **`:fusio-compiler-plugin:smokeK24`** (Kotlin 2.4.0-Beta2): still present. Forks a JVM, invokes `K2JVMCompiler` with the shaded plugin jar on `-Xplugin`, and compiles `src/smokeK24/kotlin/Sample.kt`. Different guarantee from the k24 test module: this one validates the shaded-jar-load-in-an-isolated-process path; the test module runs the plugin classes directly on the test JVM's classpath. Both are wired into `check`.
 - **demo**: composite-build runtime smoke — `cd demo && ../gradlew runJvm` under the primary Kotlin version exercises the whole state/effect plumbing and renders a Compose Desktop window.
 
@@ -53,7 +53,7 @@ All of the above are wired into the root `check`, so `./gradlew build` exercises
 
 ### Known gaps
 
-- **IR-text snapshots on 2.4**: the `fuseRewrite.fir.ir.txt` / `.fir.kt.txt` goldens track a specific compiler's rendering and aren't stable across patches. The 2.4 lane would need its own parallel goldens that drift per Beta. Not done; the box lane on 2.4 catches behavioural changes, which is what we actually care about.
+(none outstanding for the 2.3 / 2.4 pair; add entries here as new Kotlin lines get added.)
 
 ## Stress-test probe: Kotlin 2.0.21
 
