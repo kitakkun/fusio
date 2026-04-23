@@ -6,13 +6,18 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
+import java.util.Properties
 
 class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
 
     override fun apply(target: Project) {
-        // Auto-add runtime dependency.
+        // Auto-add runtime dependency. Version is baked from this plugin's own
+        // build — consumers' `project.version` is unrelated to ours.
         target.afterEvaluate {
-            target.dependencies.add("commonMainImplementation", "com.kitakkun.fusio:fusio-runtime:${target.version}")
+            target.dependencies.add(
+                "commonMainImplementation",
+                "com.kitakkun.fusio:fusio-runtime:$FUSIO_VERSION",
+            )
         }
     }
 
@@ -30,6 +35,7 @@ class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
     override fun getPluginArtifact(): SubpluginArtifact = SubpluginArtifact(
         groupId = "com.kitakkun.fusio",
         artifactId = "fusio-compiler-plugin",
+        version = FUSIO_VERSION,
     )
 
     override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
@@ -53,5 +59,20 @@ class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
     private companion object {
         const val FUSIO_PLUGIN_ID = "com.kitakkun.fusio"
         const val COMPOSE_PLUGIN_ID = "androidx.compose.compiler.plugins.kotlin"
+
+        /**
+         * Read from a `version.properties` resource baked by the
+         * `generateFusioVersionResource` Gradle task during the plugin's own
+         * build. Coupling our plugin to its matching compiler-plugin /
+         * runtime artifacts via this resource lets the Kotlin Gradle plugin
+         * default (the Kotlin version itself) never leak into our resolution.
+         */
+        val FUSIO_VERSION: String = FusioGradlePlugin::class.java.classLoader
+            .getResourceAsStream("com/kitakkun/fusio/gradle/version.properties")
+            ?.use { stream -> Properties().apply { load(stream) }.getProperty("version") }
+            ?: error(
+                "fusio-gradle-plugin: version.properties not found on classpath. " +
+                    "The plugin jar was likely built without the generateFusioVersionResource task.",
+            )
     }
 }

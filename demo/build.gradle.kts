@@ -1,12 +1,9 @@
 plugins {
-    kotlin("multiplatform") version "2.3.20"
-    id("org.jetbrains.compose") version "1.10.3"
-    id("org.jetbrains.kotlin.plugin.compose") version "2.3.20"
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.kotlin.compose.compiler)
     id("com.kitakkun.fusio")
 }
-
-group = "com.kitakkun.fusio.demo"
-version = "0.1.0-SNAPSHOT"
 
 kotlin {
     jvm {
@@ -26,12 +23,12 @@ kotlin {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material3)
-                // fusio-runtime and fusio-annotations are auto-added by the
-                // com.kitakkun.fusio Gradle plugin, but the composite build
-                // needs the explicit GAV so IDE indexing sees the KMP
-                // umbrella and picks the common variant in commonMain.
-                implementation("com.kitakkun.fusio:fusio-runtime:0.1.0-SNAPSHOT")
-                implementation("com.kitakkun.fusio:fusio-annotations:0.1.0-SNAPSHOT")
+                // fusio-runtime is auto-added by the com.kitakkun.fusio Gradle
+                // plugin. Declaring it explicitly via `project(...)` here
+                // keeps the IDE happy and lets demo compile deterministically
+                // without needing a prior publishToMavenLocal.
+                implementation(project(":fusio-runtime"))
+                implementation(project(":fusio-annotations"))
             }
         }
         jvmMain {

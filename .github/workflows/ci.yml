@@ -56,36 +56,6 @@ jobs:
             **/build/reports/tests/**
             **/build/test-results/**
 
-  demo:
-    name: Demo build (composite)
-    needs: library
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
-
-      # demo/ is a Compose Desktop application wired to Fusio via
-      # `includeBuild("../")`. `build` exercises the composite resolution
-      # and compiles the real Presenter + Compose UI without actually
-      # launching a window — it's the closest we have to a downstream
-      # consumer smoke test.
-      - name: Build demo
-        working-directory: demo
-        run: ../gradlew build
-
-      - name: Upload demo logs on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: demo-logs
-          path: demo/build/reports/**
+# demo is now a subproject of the root, not a composite build. It's
+# exercised automatically by the `library` job's `./gradlew build`, so
+# there's no separate CI job for it.

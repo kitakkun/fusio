@@ -9,6 +9,12 @@ pluginManagement {
     // (fusio.publish, ...). Module build files reference them via
     // `plugins { id("fusio.publish") }`.
     includeBuild("build-logic")
+    // fusio-gradle-plugin is an included build so downstream consumers
+    // (demo/) can apply `id("com.kitakkun.fusio")` straight from
+    // pluginManagement without publishing to mavenLocal first. The
+    // plugin module stays on disk in the same repo but is evaluated
+    // as its own Gradle build rather than as a subproject.
+    includeBuild("fusio-gradle-plugin")
 }
 
 @Suppress("UnstableApiUsage")
@@ -41,6 +47,6 @@ include(":fusio-compiler-plugin")
 include(":fusio-compiler-compat")
 include(":fusio-compiler-compat:k2320")
 include(":fusio-compiler-compat:k240_beta2")
-include(":fusio-gradle-plugin")
 include(":benchmarks")
-// sample is a separate composite build — see sample/settings.gradle.kts
+include(":demo")
+// fusio-gradle-plugin is registered as a pluginManagement includeBuild above.
