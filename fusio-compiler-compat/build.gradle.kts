@@ -2,8 +2,10 @@
  * Host module for Fusio's Kotlin-compiler-version compatibility layer.
  *
  * This module exposes only the [CompatContext] interface + [CompatContextResolver].
- * Per-Kotlin-version implementations live in sibling subprojects (e.g. `:k2320`,
- * `:k240_beta2`) and are ServiceLoader-registered via META-INF/services entries.
+ * Per-Kotlin-version implementations live in sibling subprojects — `:k230`
+ * (2.3.0 – 2.3.19, legacy finder API), `:k2320` (2.3.20 – 2.3.x,
+ * DeclarationFinder API), `:k240_beta2` (2.4.x) — and are ServiceLoader-
+ * registered via META-INF/services entries.
  *
  * At release time the `fusio-compiler-plugin` build shades this module and every
  * k** implementation into its jar, so end users install a single artifact. The

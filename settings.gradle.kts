@@ -26,7 +26,7 @@ dependencyResolutionManagement {
         // file), so serving them from mavenLocal makes Gradle fall back to
         // POM resolution and pick the JVM-only artifact even for common /
         // native compilations. Restricting mavenLocal to com.kitakkun.fusio
-        // keeps `:publishToMavenLocal` → sample composite-build working while
+        // keeps `:publishToMavenLocal` → downstream consumers working while
         // letting all third-party deps come from mavenCentral with their
         // proper KMP variants intact.
         mavenLocal {
@@ -46,10 +46,11 @@ include(":fusio-runtime")
 include(":fusio-test")
 include(":fusio-compiler-plugin")
 // One test lane per supported Kotlin patch — each runs the full box +
-// diagnostics suite against its pinned compiler. The compat/k2320 module
-// declares `supportedRange = 2.3.0..2.3.21` but we still exercise every
-// patch because ServiceLoader behaviour and small linker edge cases can
-// surface at a specific patch that the baseline compile doesn't cover.
+// diagnostics suite against its pinned compiler. The compat/k230 and
+// compat/k2320 modules cover 2.3.0–2.3.19 and 2.3.20–2.3.x respectively;
+// we still exercise every patch because ServiceLoader behaviour and
+// small linker edge cases can surface at a specific patch that the
+// baseline compile against the range's lowest version doesn't cover.
 include(":fusio-compiler-plugin-tests:k230")
 include(":fusio-compiler-plugin-tests:k2310")
 include(":fusio-compiler-plugin-tests:k2320")
