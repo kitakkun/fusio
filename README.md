@@ -2,100 +2,161 @@
 
 > ⚠️ Experimental — a research project exploring Composable presenter decomposition, building on DroidKaigi 2024 / 2025-style Compose architectures.
 
-Fusio is a Kotlin Compiler Plugin library for **decomposing fat Composable Presenters into reusable, self-contained sub-presenters**, with automatic event/effect bridging between them.
+**Fusio** — *Latin, "to pour together, to fuse"* — is a Kotlin compiler plugin for Compose presenters that stay small as a screen grows.
 
-## Problem
+A single `@Composable` presenter for a whole screen accumulates state,
+`LaunchedEffect`s, and event branches until nobody wants to touch it. Splitting
+it into sub-presenters normally means hand-plumbing every parent event down to
+the right child and every child effect back up. Fusio does that plumbing for
+you, at compile time, from a pair of annotations.
 
-Composable-based Presenters grow unwieldy as screens accumulate features:
+The name isn't decorative. Every screen Fusio produces is literally a **fusion** of:
+
+- each sub-presenter's private state trees into one screen-level `UiState`
+- the children's effect flows back into the parent's single effect channel
+- the parent's event flow routed into each child's scope via declared mappings
+
+The library's core data type, `Fusio<State, Effect>`, *is* that fusion expressed as a pair — a state value and the effect stream the presenter produced alongside it.
+
+## The problem
+
+Without decomposition, a screen-level presenter grows like this:
 
 ```kotlin
 @Composable
 fun myScreenPresenter(eventFlow: Flow<MyScreenEvent>): MyScreenUiState {
-    var state1 by remember { mutableStateOf(...) }
-    var state2 by remember { mutableStateOf(...) }
-    var state3 by remember { mutableStateOf(...) }
+    var tasks by remember { mutableStateOf(listOf<Task>()) }
+    var filter by remember { mutableStateOf(TaskFilter.All) }
+    var nextId by remember { mutableStateOf(1L) }
+    // …more state every time the screen learns a new feature…
 
-    LaunchedEffect(...) { /* wire state1 */ }
-    LaunchedEffect(...) { /* wire state2 */ }
-    // ...and so on
+    LaunchedEffect(Unit) { /* AddTask handler */ }
+    LaunchedEffect(Unit) { /* ToggleTask handler */ }
+    LaunchedEffect(Unit) { /* RemoveTask handler */ }
+    LaunchedEffect(Unit) { /* SelectFilter handler */ }
+    // …and so on; each new feature adds another branch…
+
+    val visible = when (filter) { … }
+    return MyScreenUiState(visible, filter, …)
 }
 ```
 
-Splitting them into sub-presenters normally forces you to plumb events and effects by hand. Fusio makes that plumbing a compile-time concern.
+Split the feature-rules into sub-presenters and the parent becomes a composition
+step instead of a junk drawer — *if* you're willing to write the event /
+effect plumbing between them by hand. Fusio turns that plumbing into annotations the compiler reads.
 
-## What Fusio gives you
-
-- `buildPresenter(eventFlow) { ... }` — screen-level presenter entry
-- `on<Event> { ... }` — typed handler wired to the presenter's event flow
-- `mappedScope { subPresenter() }` — delegate to a sub-presenter; the compiler plugin rewrites the call site to wire events and effects
-- `@MapTo(ChildEvent::class)` / `@MapFrom(ChildEffect::class)` — declare event/effect mappings between parent and child sealed hierarchies
-- FIR checkers that validate property compatibility and require exhaustive mappings at compile time
-
-## Current status (April 2026)
-
-End-to-end working:
-
-```
-buildPresenter ─┬─> on<Event>                   ✔
-                └─> mappedScope { subPresenter() } ✔  (nested ✔, data object subtypes ✔)
-                     │
-                     ├─ @MapTo event mapping       ✔
-                     └─ @MapFrom effect forwarding ✔
-
-FIR checkers:
-  @MapTo/@MapFrom property compatibility          ✔
-  Exhaustive mappings over child sealed subtypes  ✔
-```
-
-See `demo/` for a runnable Compose Desktop example (`../gradlew runJvm` from within `demo/`).
-
-## Example
+## The fusion point
 
 ```kotlin
-// Child (sub-presenter) types
-sealed interface FavoriteEvent {
-    data class Toggle(val id: String) : FavoriteEvent
+val tasks  = mappedScope { taskList() }   // <── child presenter 1
+val filter = mappedScope { filter() }     // <── child presenter 2
+```
+
+Each `mappedScope { subPresenter() }` is where a sub-presenter's scope fuses
+into the parent's. The Fusio compiler plugin rewrites each call site at IR
+time into:
+
+1. a `mapEvents { when(parentEvent) { … } }` pipeline driven by the parent's
+   `@MapTo` annotations — only the events this child should see flow in,
+2. a fresh child `PresenterScope<ChildEvent, ChildEffect>`,
+3. a `forwardEffects { when(childEffect) { … } }` pipeline driven by the parent's
+   `@MapFrom` annotations — child effects bubble up as parent effects,
+4. an invocation of the sub-presenter lambda, whose return value is the
+   child's `State`.
+
+Sibling `mappedScope` calls don't see each other's events or effects: each gets
+a narrow, typed slice of the parent's flows.
+
+## What you write
+
+- `buildPresenter(eventFlow) { … }` — screen-level entry, returns `Fusio<State, Effect>`
+- `on<Event> { … }` — typed handler reading from the current scope's event flow
+- `mappedScope { subPresenter() }` — the fusion point above
+- `@MapTo(ChildEvent::class)` on a *parent-event* sealed subtype — "route me into this child"
+- `@MapFrom(ChildEffect::class)` on a *parent-effect* sealed subtype — "lift this child effect up as me"
+
+FIR checkers enforce the interesting invariants:
+
+- properties on the mapped subtypes must line up by name and type
+- every child sealed subtype must be covered by a parent `@MapFrom` (exhaustiveness)
+
+## Example: a Todo screen with two sibling sub-presenters
+
+Sub-presenter types (each child is its own self-contained module — no parent knowledge):
+
+```kotlin
+sealed interface TaskListEvent {
+    data class Add(val title: String) : TaskListEvent
+    data class Toggle(val id: Long) : TaskListEvent
+    data class Remove(val id: Long) : TaskListEvent
 }
-sealed interface FavoriteEffect {
-    data class ShowMessage(val message: String) : FavoriteEffect
+sealed interface TaskListEffect {
+    data class Added(val title: String) : TaskListEffect
+    data class Completed(val title: String) : TaskListEffect
 }
 
-// Parent (screen-level) types
+sealed interface FilterEvent {
+    data class Select(val filter: TaskFilter) : FilterEvent
+}
+sealed interface FilterEffect {
+    data class Changed(val newFilter: TaskFilter) : FilterEffect
+}
+```
+
+Parent (screen-level) types — annotations declare the fusion:
+
+```kotlin
 sealed interface MyScreenEvent {
-    @MapTo(FavoriteEvent.Toggle::class)
-    data class ToggleFavorite(val id: String) : MyScreenEvent
+    @MapTo(TaskListEvent.Add::class)    data class AddTask(val title: String) : MyScreenEvent
+    @MapTo(TaskListEvent.Toggle::class) data class ToggleTask(val id: Long) : MyScreenEvent
+    @MapTo(TaskListEvent.Remove::class) data class RemoveTask(val id: Long) : MyScreenEvent
+    @MapTo(FilterEvent.Select::class)   data class SelectFilter(val filter: TaskFilter) : MyScreenEvent
 }
 sealed interface MyScreenEffect {
-    @MapFrom(FavoriteEffect.ShowMessage::class)
-    data class ShowSnackbar(val message: String) : MyScreenEffect
+    @MapFrom(TaskListEffect.Added::class)     data class ShowTaskAdded(val title: String) : MyScreenEffect
+    @MapFrom(TaskListEffect.Completed::class) data class ShowTaskCompleted(val title: String) : MyScreenEffect
+    @MapFrom(FilterEffect.Changed::class)     data class ShowFilterChanged(val newFilter: TaskFilter) : MyScreenEffect
 }
+```
 
-// Sub-presenter (reusable, has no parent knowledge)
+Each sub-presenter is a plain Composable function on its own `PresenterScope`:
+
+```kotlin
 @Composable
-fun PresenterScope<FavoriteEvent, FavoriteEffect>.favorite(): Fusio<FavoriteState, FavoriteEffect> {
-    var favorited by remember { mutableStateOf(false) }
-    on<FavoriteEvent.Toggle> { event ->
-        favorited = !favorited
-        emitEffect(FavoriteEffect.ShowMessage("Toggled ${event.id}"))
-    }
-    return Fusio(FavoriteState(favorited), emptyFlow())
-}
+fun PresenterScope<TaskListEvent, TaskListEffect>.taskList(): TaskListState { /* … */ }
 
-// Screen presenter — the compiler plugin wires mappedScope
+@Composable
+fun PresenterScope<FilterEvent, FilterEffect>.filter(): FilterState { /* … */ }
+```
+
+The screen-level presenter fuses them:
+
+```kotlin
 @Composable
 fun myScreenPresenter(eventFlow: Flow<MyScreenEvent>): Fusio<MyScreenUiState, MyScreenEffect> =
     buildPresenter(eventFlow) {
-        val favoriteState = mappedScope { favorite() }
-        MyScreenUiState(favoriteState)
+        val tasks  = mappedScope { taskList() }
+        val filter = mappedScope { filter() }
+
+        val visible = when (filter.current) {
+            TaskFilter.All       -> tasks.tasks
+            TaskFilter.Active    -> tasks.tasks.filterNot { it.completed }
+            TaskFilter.Completed -> tasks.tasks.filter    { it.completed }
+        }
+        MyScreenUiState(visible, filter.current, /* …counts… */)
     }
 ```
 
-When a `MyScreenEvent.ToggleFavorite` is emitted on the parent event flow, Fusio:
-1. Maps it to `FavoriteEvent.Toggle` via the `@MapTo` annotation
-2. Delivers it to the child's `on<FavoriteEvent.Toggle>` handler
-3. Forwards the child's `FavoriteEffect.ShowMessage` back to the parent as `MyScreenEffect.ShowSnackbar` via `@MapFrom`
+At runtime, a `MyScreenEvent.AddTask("Buy milk")` emitted on the parent flow is:
 
-All of this is generated at compile time with no reflection.
+1. routed by the `@MapTo` into `TaskListEvent.Add("Buy milk")` on the child scope,
+2. handled by `taskList()`'s `on<TaskListEvent.Add>`,
+3. answered with a `TaskListEffect.Added("Buy milk")`,
+4. lifted back up as `MyScreenEffect.ShowTaskAdded("Buy milk")` via the `@MapFrom`.
+
+All of that plumbing is generated by the compiler plugin. No reflection.
+
+See `demo/` for the runnable version — launch with `cd demo && ../gradlew runJvm`.
 
 ## Project layout
 
@@ -104,8 +165,8 @@ fusio-annotations/      @MapTo, @MapFrom                    (Kotlin Multiplatfor
 fusio-runtime/          Fusio, PresenterScope, buildPresenter, on, mappedScope stub
                                                              (Kotlin Multiplatform + Compose Multiplatform)
 fusio-compiler-plugin/  FIR checkers + IR transformer        (JVM, single shaded jar)
-fusio-gradle-plugin/    KotlinCompilerPluginSupportPlugin integration
-demo/                  Compose Desktop app using Fusio end-to-end (composite build)
+fusio-gradle-plugin/    KotlinCompilerPluginSupportPlugin integration (included build)
+demo/                   Compose Desktop Todo app using Fusio end-to-end
 ```
 
 ### Platform targets
@@ -115,30 +176,40 @@ demo/                  Compose Desktop app using Fusio end-to-end (composite bui
 | Target | Status |
 |---|---|
 | JVM | ✅ |
+| Android (`com.android.kotlin.multiplatform.library`) | ✅ |
 | iOS (`iosArm64`, `iosSimulatorArm64`) | ✅ |
 | macOS (`macosArm64`) | ✅ |
 | JS (`js(IR)` — browser & node) | ✅ |
 | Wasm (`wasmJs` — browser & node) | ✅ |
 
-`commonTest` runs on all of the above. Android, watchOS, tvOS, Linux, and Windows aren't configured yet but pose no fundamental obstacle — see `fusio-runtime/build.gradle.kts` to add more.
+`commonTest` runs on all of the above. watchOS, tvOS, Linux, and Windows
+aren't configured yet but pose no fundamental obstacle — see
+`fusio-runtime/build.gradle.kts` to add more.
 
 ## Build
 
 ```
-./gradlew build                       # compile + test every target
+./gradlew build                       # compile + test every target, every module
 ./gradlew :fusio-runtime:allTests     # runtime tests on every platform
 ./gradlew :fusio-runtime:jvmTest      # JVM only (fastest feedback)
 
-# Run the demo (Compose Desktop window)
+# Launch the Todo demo (Compose Desktop window)
 cd demo
 ../gradlew runJvm
 ```
 
-Builds run with Gradle 9 configuration cache enabled; incremental rebuilds complete in under a second after the first run.
+Builds run with Gradle 9 configuration cache enabled; incremental rebuilds
+complete in under a second after the first run.
 
 ### Plugin ordering
 
-Fusio's IR transformer must run **before** the Compose compiler plugin, because Compose injects `$composer`/`$changed` parameters into `@Composable` lambdas that Fusio needs to rewrite first. The Fusio Gradle plugin sets this automatically by injecting `-Xcompiler-plugin-order=com.kitakkun.fusio>androidx.compose.compiler.plugins.kotlin` into every Kotlin compilation, so applying the plugin is enough — no extra configuration required.
+Fusio's IR transformer must run **before** the Compose compiler plugin,
+because Compose injects `$composer` / `$changed` parameters into `@Composable`
+lambdas that Fusio needs to rewrite first. The Fusio Gradle plugin sets this
+automatically by injecting
+`-Xcompiler-plugin-order=com.kitakkun.fusio>androidx.compose.compiler.plugins.kotlin`
+into every Kotlin compilation, so applying the plugin is enough — no extra
+configuration required.
 
 ### Kotlin version compatibility
 
@@ -147,10 +218,17 @@ Fusio's IR transformer must run **before** the Compose compiler plugin, because 
 | 2.3.x       | ✅ |
 | 2.4.0-Beta2+ | ✅ |
 
-A single `fusio-compiler-plugin` jar ships with a per-Kotlin-version compatibility layer inside it (via a shaded `fusio-compiler-compat` + `kXXX` submodule pattern inspired by [ZacSweers/Metro](https://github.com/ZacSweers/metro)). At compile time the plugin inspects the running Kotlin compiler and `ServiceLoader`-resolves the matching impl, so there's nothing to configure per Kotlin version.
+A single `fusio-compiler-plugin` jar ships with a per-Kotlin-version
+compatibility layer inside it (via a shaded `fusio-compiler-compat` + `kXXX`
+submodule pattern inspired by [ZacSweers/Metro](https://github.com/ZacSweers/metro)).
+At compile time the plugin inspects the running Kotlin compiler and
+`ServiceLoader`-resolves the matching impl, so there's nothing to configure
+per Kotlin version.
 
 ## License
 
 Fusio is licensed under the [Apache License, Version 2.0](LICENSE).
 
-The design of the compiler-compat layer is inspired by [ZacSweers/Metro](https://github.com/ZacSweers/metro) (also Apache 2.0). See [NOTICE](NOTICE) for details.
+The design of the compiler-compat layer is inspired by
+[ZacSweers/Metro](https://github.com/ZacSweers/metro) (also Apache 2.0).
+See [NOTICE](NOTICE) for details.
