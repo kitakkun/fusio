@@ -17,6 +17,7 @@ Persistent notes that survive across sessions live in `~/.claude/projects/-Users
 | `fusio-annotations` | `@MapTo`, `@MapFrom` (KMP: jvm, iosArm64/SimArm64, macosArm64, js(IR), wasmJs) |
 | `fusio-runtime` | `Presentation`, `PresenterScope`, `buildPresenter`, `on<>`, `fuse` (inline stub), `mapEvents`, `forwardEffects` — same KMP targets |
 | `fusio-compiler-plugin` | FIR checkers + IR `FuseTransformer`; shades `fusio-compiler-compat` and every `kXXX` impl into a single jar (JVM only) |
+| `fusio-compiler-plugin-tests/` | Per-Kotlin-patch test lanes — one subproject per supported compiler (`k230`, `k2310`, `tests-k2320`, `k2321`, `tests-k240_beta2`). Shared box + diagnostics testData lives at `fusio-compiler-plugin-tests/testData/`; IR goldens are per-lane |
 | `fusio-compiler-compat/` | `CompatContext` interface + `CompatContextResolver` (ServiceLoader); `kXXX/` subprojects hold per-Kotlin-version impls |
 | `fusio-gradle-plugin` | Auto-injects `-Xcompiler-plugin-order` so Fusio runs before Compose |
 | `demo/` | Composite-build Compose Desktop app demonstrating the full Fusio pipeline end-to-end (parent presenter, mapped sub-presenter, nested fuse, @MapTo/@MapFrom round-trip) |
@@ -27,13 +28,15 @@ Build: Gradle 9.3.0, shadow 9.4.1, Kotlin 2.3.21 (+ 2.4.0-Beta2 via smokeK24). C
 ## Common commands
 
 ```
-./gradlew build                                  # compiles + runs all tests (7 platforms × commonTest)
-./gradlew :fusio-compiler-plugin:test             # diagnostics + box tests (13/13)
-./gradlew :fusio-runtime:allTests                 # runtime tests on every KMP target
-./gradlew :fusio-runtime:jvmTest                  # JVM only — fastest feedback
-cd demo && ../gradlew runJvm                     # launch Compose Desktop demo
-./gradlew :fusio-compiler-plugin:test -Pkotlin.test.update.test.data=true  # auto-update expected diagnostic markers
-./gradlew publishToMavenLocal                    # seed ~/.m2
+./gradlew build                                            # compiles + runs all tests (7 platforms × commonTest)
+./gradlew :fusio-compiler-plugin-tests:k2321:test           # primary Kotlin 2.3.21 lane — diagnostics + box + IR
+./gradlew :fusio-compiler-plugin-tests:tests-k240_beta2:test # Kotlin 2.4.0-Beta2 lane (own IR goldens)
+./gradlew :fusio-compiler-plugin-tests:k230:test            # Kotlin 2.3.0 (KNOWN-FAILING — see note below)
+./gradlew :fusio-runtime:allTests                           # runtime tests on every KMP target
+./gradlew :fusio-runtime:jvmTest                            # JVM only — fastest feedback
+cd demo && ../gradlew runJvm                               # launch Compose Desktop demo
+./gradlew :fusio-compiler-plugin-tests:k2321:test -Pkotlin.test.update.test.data=true  # auto-update diagnostic markers
+./gradlew publishToMavenLocal                              # seed ~/.m2
 ```
 
 mavenLocal is content-filtered to `com.kitakkun.fusio` in settings so external KMP deps always resolve from mavenCentral with proper `.module` metadata. Don't remove that filter — doing so will silently pin kotlinx-coroutines-core to its JVM variant in commonMain compile.
@@ -57,3 +60,9 @@ Single shaded `fusio-compiler-plugin` jar covers every supported Kotlin version.
 Shadow plugin in `fusio-compiler-plugin/build.gradle.kts` bundles all three jars and merges their `META-INF/services/…/CompatContext$Factory` files. `CompatContextResolver.resolve()` picks the matching factory via `KotlinCompilerVersion.VERSION` at plugin init.
 
 Adding Kotlin 2.5 support: create `fusio-compiler-compat/k250/` mirroring `k240_beta2/`, declare its `supportedRange`, add it to the `shaded` configuration in `fusio-compiler-plugin/build.gradle.kts`. See `docs/08-multi-compiler-version-plan.md` for the full outline.
+
+### Known compat gap on 2.3.0 / 2.3.10
+
+`FuseTransformer` uses `IrPluginContext.finderForBuiltins()` + `DeclarationFinder`, which were added in **Kotlin 2.3.20**. The shaded plugin jar references those symbols directly, so on 2.3.0 / 2.3.10 the first `fuse { }` transform fails with `NoClassDefFoundError: …/DeclarationFinder`.
+
+`:fusio-compiler-plugin-tests:k230` and `:k2310` run the full suite against those patches and mark the failures with `ignoreFailures = true` — so `./gradlew check` stays green, but the red test report makes the gap visible. To actually support 2.3.0+ the `finder` access would need to move behind `CompatContext` with a polyfill (via the legacy `pluginContext.referenceClass()` API) in a new `k230` compat impl.

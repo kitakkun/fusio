@@ -8,6 +8,12 @@ kotlin = "2.3.21"
 # the compat impl to 2.3.0 makes the shaded bytecode forward-compatible with
 # every 2.3.x release the supportedRange declares.
 kotlin-k23 = "2.3.0"
+# Per-patch Kotlin 2.3.x pins used by the `fusio-compiler-plugin-tests/k*`
+# lanes — each lane runs the full box/diagnostics suite against its pinned
+# compiler so a regression that surfaces only at a specific patch is caught.
+kotlin-k230 = "2.3.0"
+kotlin-k2310 = "2.3.10"
+kotlin-k2320 = "2.3.20"
 kotlin-k24 = "2.4.0-Beta2"
 compose-multiplatform = "1.10.3"
 coroutines = "1.10.2"
@@ -26,10 +32,19 @@ kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-em
 kotlin-compiler-embeddable-k23 = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-k23" }
 kotlin-compiler-embeddable-k24 = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-k24" }
 kotlin-compiler = { module = "org.jetbrains.kotlin:kotlin-compiler", version.ref = "kotlin" }
+kotlin-compiler-k230 = { module = "org.jetbrains.kotlin:kotlin-compiler", version.ref = "kotlin-k230" }
+kotlin-compiler-k2310 = { module = "org.jetbrains.kotlin:kotlin-compiler", version.ref = "kotlin-k2310" }
+kotlin-compiler-k2320 = { module = "org.jetbrains.kotlin:kotlin-compiler", version.ref = "kotlin-k2320" }
 kotlin-compiler-k24 = { module = "org.jetbrains.kotlin:kotlin-compiler", version.ref = "kotlin-k24" }
 kotlin-compiler-internal-test-framework = { module = "org.jetbrains.kotlin:kotlin-compiler-internal-test-framework", version.ref = "kotlin" }
+kotlin-compiler-internal-test-framework-k230 = { module = "org.jetbrains.kotlin:kotlin-compiler-internal-test-framework", version.ref = "kotlin-k230" }
+kotlin-compiler-internal-test-framework-k2310 = { module = "org.jetbrains.kotlin:kotlin-compiler-internal-test-framework", version.ref = "kotlin-k2310" }
+kotlin-compiler-internal-test-framework-k2320 = { module = "org.jetbrains.kotlin:kotlin-compiler-internal-test-framework", version.ref = "kotlin-k2320" }
 kotlin-compiler-internal-test-framework-k24 = { module = "org.jetbrains.kotlin:kotlin-compiler-internal-test-framework", version.ref = "kotlin-k24" }
 kotlin-compose-compiler-plugin = { module = "org.jetbrains.kotlin:kotlin-compose-compiler-plugin", version.ref = "kotlin" }
+kotlin-compose-compiler-plugin-k230 = { module = "org.jetbrains.kotlin:kotlin-compose-compiler-plugin", version.ref = "kotlin-k230" }
+kotlin-compose-compiler-plugin-k2310 = { module = "org.jetbrains.kotlin:kotlin-compose-compiler-plugin", version.ref = "kotlin-k2310" }
+kotlin-compose-compiler-plugin-k2320 = { module = "org.jetbrains.kotlin:kotlin-compose-compiler-plugin", version.ref = "kotlin-k2320" }
 kotlin-compose-compiler-plugin-k24 = { module = "org.jetbrains.kotlin:kotlin-compose-compiler-plugin", version.ref = "kotlin-k24" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime-desktop", version.ref = "compose-multiplatform" }
 compose-runtime-multiplatform = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }

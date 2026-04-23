@@ -57,7 +57,15 @@ allprojects {
 apiValidation {
     ignoredProjects += listOf(
         "fusio-compiler-plugin",
-        "fusio-compiler-plugin-k24-tests",
+        // Test lanes (per-Kotlin-patch). Names match the overrides in
+        // settings.gradle.kts — the k2320 / k240_beta2 test lanes are
+        // `tests-k2320` / `tests-k240_beta2` to avoid clashing with the
+        // compat impl modules of the same directory name.
+        "k230",
+        "k2310",
+        "tests-k2320",
+        "k2321",
+        "tests-k240_beta2",
         "fusio-compiler-compat",
         "k2320",
         "k240_beta2",
