@@ -225,8 +225,35 @@ fun main() = generateTestGroupSuiteWithJUnit5 {
 | `box/fusioDataClass.kt` | Runtime Fusio<S, E> data-class shape is stable | ✅ landed (bonus) |
 | `box/composableCompiles.kt` | Compose plugin is live in the test harness | ✅ landed (bonus) |
 | `box/validMapToCompiles.kt` | Valid @MapTo usage emits bytecode without regressions | ✅ landed (bonus) |
+| `ir/mappedScopeRewrite.kt` | Golden-file IR dump for the full @MapTo/@MapFrom round-trip — regression sentinel for `MappedScopeTransformer` | ✅ landed (post-Phase 2) |
 
 These replace most of what the sample manually demonstrates today and can run headless in CI in ~seconds instead of the current ~30s+ Gradle sample loop.
+
+### Lanes beyond diagnostics + box
+
+After the Phase 2 landing, an IR text dump lane runs alongside diagnostics and box:
+
+- **Runner**: `AbstractFusioJvmIrTextTest` extends
+  `AbstractFirLightTreeJvmIrTextTest`. Same plugin registration as the
+  box lane, plus `SKIP_NEW_KOTLIN_REFLECT_COMPATIBILITY_CHECK` —
+  kotlin-reflect's compatibility check defaults on for IR text tests and
+  blows up on Compose / plugin-generated types before it gets to our IR.
+- **Golden files**: `testData/ir/<case>.kt` paired with
+  `<case>.fir.ir.txt` (and `.fir.kt.txt`). Regenerate with
+  `./gradlew :fusio-compiler-plugin:test -Pkotlin.test.update.test.data=true`.
+- **What it catches**: behavioural box tests still pass even if the
+  transformer drops an argument or reorders blocks as long as the net
+  runtime effect is the same. The IR lane locks in the structure — the
+  `mapEvents` call, the `forwardEffects` call, and the `$this$mappedScope`
+  extension-receiver wiring are pinned exactly where the transformer
+  places them.
+
+Runtime-side skippability also has its own verification in
+`fusio-runtime/build.gradle.kts`: `verifyComposeMetrics` parses the
+Compose compiler's `composables.txt` and fails if `buildPresenter` /
+`forwardEffects` / `on` lose their expected stability header. Not a
+compiler-plugin test per se, but lives in the same regression-catch
+bucket.
 
 ## Risks / unknowns
 

@@ -185,9 +185,26 @@ val smokeK24 by tasks.registering(JavaExec::class) {
     inputs.dir(sourceDirProvider)
         .withPropertyName("smokeK24Sources")
         .withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.files(tasks.named("shadowJar")).withPropertyName("shadowJar")
+    inputs.files(tasks.named("shadowJar"))
+        .withPropertyName("shadowJar")
+        .withNormalizer(ClasspathNormalizer::class)
+    // The jars we pass via -Xplugin / -classpath at execution time aren't seen
+    // by Gradle's JavaExec classpath tracking (only `classpath = ...` is).
+    // Declare them explicitly so the task cache key reflects a Kotlin / Compose
+    // version bump, and normalize as Classpath so absolute paths in
+    // ~/.gradle/caches don't poison the key across machines / CI runners.
+    inputs.files(smokeK24CompileClasspath)
+        .withPropertyName("smokeK24CompileClasspath")
+        .withNormalizer(ClasspathNormalizer::class)
+    inputs.files(smokeK24Compiler)
+        .withPropertyName("smokeK24Compiler")
+        .withNormalizer(ClasspathNormalizer::class)
     val outDir = layout.buildDirectory.dir("smokeK24-out")
     outputs.dir(outDir).withPropertyName("smokeK24Out")
+    // Opt into build-cache storage. All non-gradle-tracked inputs (source
+    // dir, shaded jar, compile classpath, compiler jars) are declared above,
+    // so a cache hit across machines is safe.
+    outputs.cacheIf("all inputs are declared + classpath-normalized") { true }
 
     classpath = smokeK24Compiler
     mainClass.set("org.jetbrains.kotlin.cli.jvm.K2JVMCompiler")
