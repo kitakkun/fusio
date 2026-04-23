@@ -190,15 +190,14 @@ fun adds_a_task_and_shows_toast() = testPresenter(
     presenter = { events ->
         // The framework supplies `events`; bind every other real-presenter
         // parameter here — fakes, ids, dispatchers, feature flags, etc.
-        myScreenPresenter(events = events)
+        myScreenPresenter(events)
     },
 ) {
     send(MyScreenEvent.AddTask("Buy milk"))
-    awaitState { it.tasks.any { task -> task.title == "Buy milk" } }
+    awaitState { it.visibleTasks.any { task -> task.title == "Buy milk" } }
 
-    awaitEffect<MyScreenEffect.ShowTaskAdded> {
-        assertEquals("Buy milk", it.title)
-    }
+    val added = awaitEffect<MyScreenEffect.ShowTaskAdded>()
+    assertEquals("Buy milk", added.title)
     expectNoEffects()
 }
 ```

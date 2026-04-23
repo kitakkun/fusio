@@ -144,7 +144,8 @@ class TodoPresenterTest {
         send(TodoEvent.Add(text = "milk"))
         awaitState { it.items.size == 1 }
 
-        awaitEffect<TodoEffect.Toast> { assertEquals("added", it.message) }
+        val toast = awaitEffect<TodoEffect.Toast>()
+        assertEquals("added", toast.message)
         expectNoEffects()
     }
 }
