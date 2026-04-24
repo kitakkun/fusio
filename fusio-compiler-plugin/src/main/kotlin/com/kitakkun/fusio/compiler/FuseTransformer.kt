@@ -97,6 +97,9 @@ class FuseTransformer(
     private val forwardEffectsFn: IrSimpleFunctionSymbol by lazy {
         pluginContext.findFunctions(FusioClassIds.FORWARD_EFFECTS).single()
     }
+    private val forwardHandlerErrorsFn: IrSimpleFunctionSymbol by lazy {
+        pluginContext.findFunctions(FusioClassIds.FORWARD_HANDLER_ERRORS).single()
+    }
 
     override fun visitCall(expression: IrCall): IrExpression {
         val callee = expression.symbol.owner
@@ -139,6 +142,10 @@ class FuseTransformer(
                 parentEffectType = parentEffectType,
                 childEffectType = childEffectType,
                 parentDecl = parentDecl,
+            )
+            emitHandlerErrorForwarding(
+                parentScopeVar = parentScopeVar,
+                childScopeVar = childScopeVar,
             )
             +invokeLambda(lambdaExpr, childScopeVar, childStateType)
         }
@@ -228,6 +235,23 @@ class FuseTransformer(
             fc.setArg(0, irGet(childScopeVar))
             fc.setArg(1, irGet(parentScopeVar))
             fc.setArg(2, mapper)
+        }
+    }
+
+    /**
+     * Inserts `forwardHandlerErrors(childScope, parentScope)` unconditionally.
+     * Unlike effect forwarding, this isn't gated on `@MapFrom` annotations —
+     * a handler crash in a child scope should always bubble up to the parent
+     * so a single root-level observer sees every swallowed exception in the
+     * tree. `Throwable` flows through unchanged, so no mapper lambda.
+     */
+    private fun IrBlockBuilder.emitHandlerErrorForwarding(
+        parentScopeVar: IrVariable,
+        childScopeVar: IrVariable,
+    ) {
+        +irCall(forwardHandlerErrorsFn).also { fc ->
+            fc.setArg(0, irGet(childScopeVar))
+            fc.setArg(1, irGet(parentScopeVar))
         }
     }
 

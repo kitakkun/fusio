@@ -907,6 +907,15 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
                           ARG other: CALL 'public final fun shl (bitCount: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
                             ARG <this>: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter.<anonymous>' type=kotlin.Int origin=null
                             ARG bitCount: CONST Int type=kotlin.Int value=3
+                    CALL 'public final fun forwardHandlerErrors (childScope: com.kitakkun.fusio.PresenterScope<*, *>, parentScope: com.kitakkun.fusio.PresenterScope<*, *>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): kotlin.Unit declared in com.kitakkun.fusio' type=kotlin.Unit origin=null
+                      ARG childScope: GET_VAR 'val tmp_10: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
+                      ARG parentScope: GET_VAR 'val tmp_8: com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> origin=null
+                      ARG $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
+                      ARG $changed: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                        ARG <this>: CONST Int type=kotlin.Int value=112
+                        ARG other: CALL 'public final fun shl (bitCount: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                          ARG <this>: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter.<anonymous>' type=kotlin.Int origin=null
+                          ARG bitCount: CONST Int type=kotlin.Int value=3
                     CALL 'public abstract fun invoke (p1: P1 of kotlin.Function3, p2: P2 of kotlin.Function3, p3: P3 of kotlin.Function3): R of kotlin.Function3 declared in kotlin.Function3' type=<root>.ChildState origin=null
                       ARG <this>: FUN_EXPR type=@[ExtensionFunctionType] kotlin.Function3<com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>, androidx.compose.runtime.Composer, kotlin.Int, <root>.ChildState> origin=LAMBDA
                         FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL returnType:<root>.ChildState

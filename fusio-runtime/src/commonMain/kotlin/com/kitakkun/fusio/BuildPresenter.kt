@@ -18,5 +18,9 @@ public fun <Event, Effect, UiState> buildPresenter(
 
     val uiState = scope.block()
 
-    return Presentation(uiState, scope.internalEffectFlow)
+    return Presentation(
+        state = uiState,
+        effectFlow = scope.internalEffectFlow,
+        handlerErrors = scope.handlerErrors,
+    )
 }

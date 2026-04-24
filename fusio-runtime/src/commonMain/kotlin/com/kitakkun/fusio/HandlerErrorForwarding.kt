@@ -1,0 +1,29 @@
+package com.kitakkun.fusio
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+
+/**
+ * Runtime helper used by Fusio's IR transformer to lift a child presenter's
+ * swallowed `on<E>` handler crashes into the parent presenter's
+ * [PresenterScope.handlerErrors] stream. The compiler plugin emits a call
+ * to this function *unconditionally* next to every `fuse { … }` rewrite —
+ * error forwarding doesn't need per-annotation configuration the way
+ * [forwardEffects] does, because errors don't need type remapping: a
+ * `Throwable` flows through unchanged.
+ *
+ * Structure mirrors [forwardEffects] so the two are easy to keep in sync:
+ * a single `LaunchedEffect(Unit)` collects from the child and republishes
+ * to the parent via the scope's `@PublishedApi` recorder.
+ */
+@Composable
+public fun forwardHandlerErrors(
+    childScope: PresenterScope<*, *>,
+    parentScope: PresenterScope<*, *>,
+) {
+    LaunchedEffect(Unit) {
+        childScope.handlerErrors.collect { error ->
+            parentScope.recordHandlerError(error)
+        }
+    }
+}

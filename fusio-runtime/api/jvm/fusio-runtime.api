@@ -14,11 +14,17 @@ public final class com/kitakkun/fusio/FuseKt {
 	public static final fun fuse (Lcom/kitakkun/fusio/PresenterScope;Lkotlin/jvm/functions/Function3;)Ljava/lang/Object;
 }
 
+public final class com/kitakkun/fusio/HandlerErrorForwardingKt {
+	public static final fun forwardHandlerErrors (Lcom/kitakkun/fusio/PresenterScope;Lcom/kitakkun/fusio/PresenterScope;Landroidx/compose/runtime/Composer;I)V
+}
+
 public final class com/kitakkun/fusio/Presentation {
 	public static final field $stable I
-	public fun <init> (Ljava/lang/Object;Lkotlinx/coroutines/flow/Flow;)V
+	public fun <init> (Ljava/lang/Object;Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/flow/Flow;)V
+	public synthetic fun <init> (Ljava/lang/Object;Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/flow/Flow;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getEffectFlow ()Lkotlinx/coroutines/flow/Flow;
+	public final fun getHandlerErrors ()Lkotlinx/coroutines/flow/Flow;
 	public final fun getState ()Ljava/lang/Object;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -29,5 +35,7 @@ public final class com/kitakkun/fusio/PresenterScope {
 	public fun <init> (Lkotlinx/coroutines/flow/Flow;)V
 	public final fun emitEffect (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getEventFlow ()Lkotlinx/coroutines/flow/Flow;
+	public final fun getHandlerErrors ()Lkotlinx/coroutines/flow/Flow;
+	public final fun recordHandlerError (Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

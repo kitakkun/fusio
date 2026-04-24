@@ -15,4 +15,5 @@ object FusioClassIds {
     val FUSE = CallableId(FUSIO_PACKAGE, Name.identifier("fuse"))
     val MAP_EVENTS = CallableId(FUSIO_PACKAGE, Name.identifier("mapEvents"))
     val FORWARD_EFFECTS = CallableId(FUSIO_PACKAGE, Name.identifier("forwardEffects"))
+    val FORWARD_HANDLER_ERRORS = CallableId(FUSIO_PACKAGE, Name.identifier("forwardHandlerErrors"))
 }
