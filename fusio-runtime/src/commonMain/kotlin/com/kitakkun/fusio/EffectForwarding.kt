@@ -21,7 +21,13 @@ public fun <ChildEffect, ParentEffect> forwardEffects(
     parentScope: PresenterScope<*, ParentEffect>,
     mapper: (ChildEffect) -> ParentEffect?,
 ) {
-    LaunchedEffect(Unit) {
+    // Keyed on the two scopes so a reparented child (scope identity change)
+    // restarts collection against the new source instead of silently
+    // observing the original forever. Under the `remember { … }` wrap the
+    // IR transformer emits around the child scope's creation, identity is
+    // stable across recompositions — the keyed form pays nothing at
+    // steady state and correctly restarts when identity really shifts.
+    LaunchedEffect(childScope, parentScope) {
         childScope.internalEffectFlow.collect { childEffect ->
             val mapped = mapper(childEffect)
             if (mapped != null) parentScope.emitEffect(mapped)

@@ -100,6 +100,13 @@ class FuseTransformer(
     private val forwardHandlerErrorsFn: IrSimpleFunctionSymbol by lazy {
         pluginContext.findFunctions(FusioClassIds.FORWARD_HANDLER_ERRORS).single()
     }
+    private val rememberFn: IrSimpleFunctionSymbol by lazy {
+        // `remember` in androidx.compose.runtime has five overloads (0–4 explicit
+        // keys + vararg). We want the zero-key form: one parameter, the
+        // `calculation: () -> T` lambda.
+        pluginContext.findFunctions(FusioClassIds.COMPOSE_REMEMBER)
+            .single { it.owner.parameters.size == 1 }
+    }
 
     override fun visitCall(expression: IrCall): IrExpression {
         val callee = expression.symbol.owner
@@ -151,7 +158,24 @@ class FuseTransformer(
         }
     }
 
-    /** Builds and declares `val childScope = PresenterScope<CE, CEff>(mappedEventFlow)`. */
+    /**
+     * Builds and declares:
+     * ```
+     * val childScope = remember {
+     *     val childEventFlow = parentScope.eventFlow.mapEvents { @MapTo when }
+     *     PresenterScope<CE, CEff>(childEventFlow)
+     * }
+     * ```
+     *
+     * Wrapping the allocation in `remember { ... }` gives the child scope a
+     * stable identity across parent recompositions. Without this the child
+     * scope would be re-allocated every frame; the `LaunchedEffect`s inside
+     * `forwardEffects` / `forwardHandlerErrors` that capture it at first
+     * invocation would then observe a scope the child's `on<>` handlers
+     * stop publishing into (the handlers re-capture the fresh `this` each
+     * recomposition — a bug that surfaces as "effects emitted after the
+     * second send never reach the scenario").
+     */
     private fun IrBlockBuilder.buildChildScope(
         parentScopeVar: IrVariable,
         parentEventType: IrType?,
@@ -159,42 +183,70 @@ class FuseTransformer(
         childEffectType: IrType,
         parentDecl: IrDeclarationParent,
     ): IrVariable {
-        val parentEventFlowCall = irCall(presenterScopeEventFlowGetter).also {
-            it.setArg(0, irGet(parentScopeVar))
-        }
-
-        val childEventFlowExpr: IrExpression = parentEventType
-            ?.let { pEvent ->
-                val mapper = buildMapperLambda(
-                    fromType = pEvent,
-                    toType = childEventType,
-                    parent = parentDecl,
-                    annotationClassId = FusioClassIds.MAP_TO,
-                    fromClass = pEvent.classOrNull?.owner,
-                    // Filter by the child event root so sibling fuse
-                    // calls don't poach each other's @MapTo annotations.
-                    expectedOtherClass = childEventType.classOrNull?.owner,
-                )
-                if (mapper != null) {
-                    irCall(mapEventsFn).also { mc ->
-                        mc.setTypeArg(0, pEvent)
-                        mc.setTypeArg(1, childEventType)
-                        mc.setArg(0, parentEventFlowCall)
-                        mc.setArg(1, mapper)
-                    }
-                } else null
-            }
-            ?: parentEventFlowCall
-
-        val childEventFlowVar = irTemporary(childEventFlowExpr, nameHint = "fusioChildEventFlow")
-
         val childScopeType = presenterScopeClass.typeWith(childEventType, childEffectType)
-        val childScopeCall = irCall(presenterScopeConstructor, childScopeType).also {
-            it.setTypeArg(0, childEventType)
-            it.setTypeArg(1, childEffectType)
-            it.setArg(0, irGet(childEventFlowVar))
+
+        // The `remember`'s calculation lambda: () -> PresenterScope<CE, CEff>.
+        val calculationType = pluginContext.irBuiltIns.functionN(0).typeWith(childScopeType)
+
+        val calculationFun = pluginContext.irFactory.buildFun {
+            origin = localFunctionForLambdaOrigin
+            name = Name.special("<anonymous>")
+            visibility = DescriptorVisibilities.LOCAL
+            returnType = childScopeType
+        }.apply {
+            this.parent = parentDecl
+            body = DeclarationIrBuilder(pluginContext, symbol).irBlockBody {
+                val parentEventFlowCall = irCall(presenterScopeEventFlowGetter).also {
+                    it.setArg(0, irGet(parentScopeVar))
+                }
+
+                val childEventFlowExpr: IrExpression = parentEventType
+                    ?.let { pEvent ->
+                        val mapper = buildMapperLambda(
+                            fromType = pEvent,
+                            toType = childEventType,
+                            parent = this@apply,
+                            annotationClassId = FusioClassIds.MAP_TO,
+                            fromClass = pEvent.classOrNull?.owner,
+                            // Filter by the child event root so sibling fuse
+                            // calls don't poach each other's @MapTo annotations.
+                            expectedOtherClass = childEventType.classOrNull?.owner,
+                        )
+                        if (mapper != null) {
+                            irCall(mapEventsFn).also { mc ->
+                                mc.setTypeArg(0, pEvent)
+                                mc.setTypeArg(1, childEventType)
+                                mc.setArg(0, parentEventFlowCall)
+                                mc.setArg(1, mapper)
+                            }
+                        } else null
+                    }
+                    ?: parentEventFlowCall
+
+                val childEventFlowVar = irTemporary(childEventFlowExpr, nameHint = "fusioChildEventFlow")
+
+                val childScopeCall = irCall(presenterScopeConstructor, childScopeType).also {
+                    it.setTypeArg(0, childEventType)
+                    it.setTypeArg(1, childEffectType)
+                    it.setArg(0, irGet(childEventFlowVar))
+                }
+                +irReturn(childScopeCall)
+            }
         }
-        return irTemporary(childScopeCall, nameHint = "fusioChildScope")
+
+        val calculationExpr = IrFunctionExpressionImpl(
+            startOffset = UNDEFINED_OFFSET,
+            endOffset = UNDEFINED_OFFSET,
+            type = calculationType,
+            function = calculationFun,
+            origin = IrStatementOrigin.LAMBDA,
+        )
+
+        val rememberCall = irCall(rememberFn, childScopeType).also {
+            it.setTypeArg(0, childScopeType)
+            it.setArg(0, calculationExpr)
+        }
+        return irTemporary(rememberCall, nameHint = "fusioChildScope")
     }
 
     /**

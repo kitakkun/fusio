@@ -787,22 +787,22 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
                   BLOCK type=<root>.ChildState origin=null
                     VAR IR_TEMPORARY_VARIABLE name:tmp_8 type:com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> [val]
                       GET_VAR '$this$buildPresenter: com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> origin=IMPLICIT_ARGUMENT
-                    VAR IR_TEMPORARY_VARIABLE name:tmp_9 type:kotlinx.coroutines.flow.Flow<ChildEvent of com.kitakkun.fusio.mapEvents> [val]
-                      CALL 'internal final fun mapEvents <ParentEvent, ChildEvent> (<this>: kotlinx.coroutines.flow.Flow<ParentEvent of com.kitakkun.fusio.mapEvents>, mapper: kotlin.Function1<ParentEvent of com.kitakkun.fusio.mapEvents, ChildEvent of com.kitakkun.fusio.mapEvents?>): kotlinx.coroutines.flow.Flow<ChildEvent of com.kitakkun.fusio.mapEvents> declared in com.kitakkun.fusio' type=kotlinx.coroutines.flow.Flow<ChildEvent of com.kitakkun.fusio.mapEvents> origin=null
-                        TYPE_ARG ParentEvent: <root>.ParentEvent
-                        TYPE_ARG ChildEvent: <root>.ChildEvent
-                        ARG <this>: CALL 'internal final fun <get-eventFlow> (): kotlinx.coroutines.flow.Flow<Event of com.kitakkun.fusio.PresenterScope> declared in com.kitakkun.fusio.PresenterScope' type=kotlinx.coroutines.flow.Flow<Event of com.kitakkun.fusio.PresenterScope> origin=null
-                          ARG <this>: GET_VAR 'val tmp_8: com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> origin=null
-                        ARG mapper: BLOCK type=kotlin.Function1<<root>.ParentEvent, <root>.ChildEvent?> origin=null
-                          CALL 'public final fun cache <T> (<this>: androidx.compose.runtime.Composer, invalid: kotlin.Boolean, block: @[DisallowComposableCalls] kotlin.Function0<T of androidx.compose.runtime.cache>): T of androidx.compose.runtime.cache declared in androidx.compose.runtime' type=kotlin.Function1<<root>.ParentEvent, <root>.ChildEvent?> origin=null
-                            TYPE_ARG T: kotlin.Function1<<root>.ParentEvent, <root>.ChildEvent?>
-                            ARG <this>: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
-                            ARG invalid: CONST Boolean type=kotlin.Boolean value=false
-                            ARG block: FUN_EXPR type=kotlin.Function0<kotlin.Function1<<root>.ParentEvent, <root>.ChildEvent?>> origin=LAMBDA
-                              FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL returnType:kotlin.Function1<<root>.ParentEvent, <root>.ChildEvent?>
-                                BLOCK_BODY
-                                  RETURN type=kotlin.Nothing from='local final fun <anonymous> (): kotlin.Function1<<root>.ParentEvent, <root>.ChildEvent?> declared in <root>.screenPresenter.<anonymous>'
-                                    FUN_EXPR type=kotlin.Function1<<root>.ParentEvent, <root>.ChildEvent?> origin=LAMBDA
+                    VAR IR_TEMPORARY_VARIABLE name:tmp_9 type:com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> [val]
+                      BLOCK type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
+                        CALL 'public final fun cache <T> (<this>: androidx.compose.runtime.Composer, invalid: kotlin.Boolean, block: @[DisallowComposableCalls] kotlin.Function0<T of androidx.compose.runtime.cache>): T of androidx.compose.runtime.cache declared in androidx.compose.runtime' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
+                          TYPE_ARG T: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>
+                          ARG <this>: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
+                          ARG invalid: CONST Boolean type=kotlin.Boolean value=false
+                          ARG block: FUN_EXPR type=kotlin.Function0<com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>> origin=LAMBDA
+                            FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL returnType:com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>
+                              BLOCK_BODY
+                                VAR IR_TEMPORARY_VARIABLE name:tmp_10 type:kotlinx.coroutines.flow.Flow<ChildEvent of com.kitakkun.fusio.mapEvents> [val]
+                                  CALL 'internal final fun mapEvents <ParentEvent, ChildEvent> (<this>: kotlinx.coroutines.flow.Flow<ParentEvent of com.kitakkun.fusio.mapEvents>, mapper: kotlin.Function1<ParentEvent of com.kitakkun.fusio.mapEvents, ChildEvent of com.kitakkun.fusio.mapEvents?>): kotlinx.coroutines.flow.Flow<ChildEvent of com.kitakkun.fusio.mapEvents> declared in com.kitakkun.fusio' type=kotlinx.coroutines.flow.Flow<ChildEvent of com.kitakkun.fusio.mapEvents> origin=null
+                                    TYPE_ARG ParentEvent: <root>.ParentEvent
+                                    TYPE_ARG ChildEvent: <root>.ChildEvent
+                                    ARG <this>: CALL 'internal final fun <get-eventFlow> (): kotlinx.coroutines.flow.Flow<Event of com.kitakkun.fusio.PresenterScope> declared in com.kitakkun.fusio.PresenterScope' type=kotlinx.coroutines.flow.Flow<Event of com.kitakkun.fusio.PresenterScope> origin=null
+                                      ARG <this>: GET_VAR 'val tmp_8: com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> origin=null
+                                    ARG mapper: FUN_EXPR type=kotlin.Function1<<root>.ParentEvent, <root>.ChildEvent?> origin=LAMBDA
                                       FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL returnType:<root>.ChildEvent?
                                         VALUE_PARAMETER kind:Regular name:it index:0 type:<root>.ParentEvent
                                         BLOCK_BODY
@@ -817,15 +817,15 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
                                               BRANCH
                                                 if: CONST Boolean type=kotlin.Boolean value=true
                                                 then: CONST Null type=<root>.ChildEvent? value=null
-                    VAR IR_TEMPORARY_VARIABLE name:tmp_10 type:com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> [val]
-                      CONSTRUCTOR_CALL 'public constructor <init> (eventFlow: kotlinx.coroutines.flow.Flow<Event of com.kitakkun.fusio.PresenterScope>) declared in com.kitakkun.fusio.PresenterScope' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
-                        TYPE_ARG (of class) Event: <root>.ChildEvent
-                        TYPE_ARG (of class) Effect: <root>.ChildEffect
-                        ARG eventFlow: GET_VAR 'val tmp_9: kotlinx.coroutines.flow.Flow<ChildEvent of com.kitakkun.fusio.mapEvents> declared in <root>.screenPresenter.<anonymous>' type=kotlinx.coroutines.flow.Flow<ChildEvent of com.kitakkun.fusio.mapEvents> origin=null
+                                RETURN type=kotlin.Nothing from='local final fun <anonymous> (): com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.screenPresenter.<anonymous>'
+                                  CONSTRUCTOR_CALL 'public constructor <init> (eventFlow: kotlinx.coroutines.flow.Flow<Event of com.kitakkun.fusio.PresenterScope>) declared in com.kitakkun.fusio.PresenterScope' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
+                                    TYPE_ARG (of class) Event: <root>.ChildEvent
+                                    TYPE_ARG (of class) Effect: <root>.ChildEffect
+                                    ARG eventFlow: GET_VAR 'val tmp_10: kotlinx.coroutines.flow.Flow<ChildEvent of com.kitakkun.fusio.mapEvents> declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=kotlinx.coroutines.flow.Flow<ChildEvent of com.kitakkun.fusio.mapEvents> origin=null
                     CALL 'public final fun forwardEffects <ChildEffect, ParentEffect> (childScope: com.kitakkun.fusio.PresenterScope<*, ChildEffect of com.kitakkun.fusio.forwardEffects>, parentScope: com.kitakkun.fusio.PresenterScope<*, ParentEffect of com.kitakkun.fusio.forwardEffects>, mapper: kotlin.Function1<ChildEffect of com.kitakkun.fusio.forwardEffects, ParentEffect of com.kitakkun.fusio.forwardEffects?>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): kotlin.Unit declared in com.kitakkun.fusio' type=kotlin.Unit origin=null
                       TYPE_ARG ChildEffect: <root>.ChildEffect
                       TYPE_ARG ParentEffect: <root>.ParentEffect
-                      ARG childScope: GET_VAR 'val tmp_10: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
+                      ARG childScope: GET_VAR 'val tmp_9: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
                       ARG parentScope: GET_VAR 'val tmp_8: com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> origin=null
                       ARG mapper: BLOCK type=kotlin.Function1<<root>.ChildEffect, <root>.ParentEffect?> origin=null
                         CALL 'public final fun cache <T> (<this>: androidx.compose.runtime.Composer, invalid: kotlin.Boolean, block: @[DisallowComposableCalls] kotlin.Function0<T of androidx.compose.runtime.cache>): T of androidx.compose.runtime.cache declared in androidx.compose.runtime' type=kotlin.Function1<<root>.ChildEffect, <root>.ParentEffect?> origin=null
@@ -853,21 +853,23 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
                                               then: CONST Null type=<root>.ParentEffect? value=null
                       ARG $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
                       ARG $changed: CALL 'public final fun or (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
-                        ARG <this>: CONST Int type=kotlin.Int value=384
+                        ARG <this>: CONST Int type=kotlin.Int value=390
                         ARG other: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
                           ARG <this>: CONST Int type=kotlin.Int value=112
                           ARG other: CALL 'public final fun shl (bitCount: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
                             ARG <this>: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter.<anonymous>' type=kotlin.Int origin=null
                             ARG bitCount: CONST Int type=kotlin.Int value=3
                     CALL 'public final fun forwardHandlerErrors (childScope: com.kitakkun.fusio.PresenterScope<*, *>, parentScope: com.kitakkun.fusio.PresenterScope<*, *>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): kotlin.Unit declared in com.kitakkun.fusio' type=kotlin.Unit origin=null
-                      ARG childScope: GET_VAR 'val tmp_10: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
+                      ARG childScope: GET_VAR 'val tmp_9: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
                       ARG parentScope: GET_VAR 'val tmp_8: com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> origin=null
                       ARG $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
-                      ARG $changed: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
-                        ARG <this>: CONST Int type=kotlin.Int value=112
-                        ARG other: CALL 'public final fun shl (bitCount: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
-                          ARG <this>: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter.<anonymous>' type=kotlin.Int origin=null
-                          ARG bitCount: CONST Int type=kotlin.Int value=3
+                      ARG $changed: CALL 'public final fun or (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                        ARG <this>: CONST Int type=kotlin.Int value=6
+                        ARG other: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                          ARG <this>: CONST Int type=kotlin.Int value=112
+                          ARG other: CALL 'public final fun shl (bitCount: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
+                            ARG <this>: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter.<anonymous>' type=kotlin.Int origin=null
+                            ARG bitCount: CONST Int type=kotlin.Int value=3
                     CALL 'public abstract fun invoke (p1: P1 of kotlin.Function3, p2: P2 of kotlin.Function3, p3: P3 of kotlin.Function3): R of kotlin.Function3 declared in kotlin.Function3' type=<root>.ChildState origin=null
                       ARG <this>: FUN_EXPR type=@[ExtensionFunctionType] kotlin.Function3<com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>, androidx.compose.runtime.Composer, kotlin.Int, <root>.ChildState> origin=LAMBDA
                         FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL returnType:<root>.ChildState
@@ -903,9 +905,9 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
                               ARG <this>: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
                             RETURN type=<root>.ChildState from='local final fun <anonymous> ($this$fuse: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): <root>.ChildState declared in <root>.screenPresenter.<anonymous>'
                               GET_VAR 'val tmp_11: <root>.ChildState declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=<root>.ChildState origin=null
-                      ARG p1: GET_VAR 'val tmp_10: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
+                      ARG p1: GET_VAR 'val tmp_9: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.screenPresenter.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=null
                       ARG p2: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
-                      ARG p3: CONST Int type=kotlin.Int value=0
+                      ARG p3: CONST Int type=kotlin.Int value=6
                 VAR IR_TEMPORARY_VARIABLE name:tmp_12 type:<root>.ScreenState [val]
                   CONSTRUCTOR_CALL 'public constructor <init> (child: <root>.ChildState) declared in <root>.ScreenState' type=<root>.ScreenState origin=null
                     ARG child: GET_VAR 'val childState: <root>.ChildState declared in <root>.screenPresenter.<anonymous>' type=<root>.ChildState origin=null

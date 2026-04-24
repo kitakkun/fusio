@@ -2,12 +2,23 @@ package com.kitakkun.fusio
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.filterIsInstance
 
 /**
  * Registers a handler for events of type [E] arriving on the enclosing
  * [PresenterScope]'s event flow.
+ *
+ * ## Handler freshness
+ *
+ * [handler] is captured through [rememberUpdatedState] so each
+ * recomposition's latest lambda wins — a closure that reads a
+ * recomposition-dependent value (e.g. a `currentUser: User` parameter on
+ * the enclosing presenter) sees the current value rather than the one at
+ * first composition. The outer `LaunchedEffect(Unit)` stays put so
+ * in-flight events aren't dropped by restart.
  *
  * ## Error handling
  *
@@ -28,10 +39,11 @@ public inline fun <reified E> PresenterScope<*, *>.on(
 ) {
     val flow = eventFlow
     val scope = this
+    val currentHandler by rememberUpdatedState(handler)
     LaunchedEffect(Unit) {
         flow.filterIsInstance<E>().collect { event ->
             try {
-                handler(event)
+                currentHandler(event)
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (t: Throwable) {

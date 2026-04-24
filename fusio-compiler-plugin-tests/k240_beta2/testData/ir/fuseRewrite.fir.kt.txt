@@ -367,20 +367,20 @@ local fun PresenterScope<ParentEvent, ParentEffect>.<anonymous>(/* var */ $compo
     }
     val childState: ChildState = { // BLOCK
       val tmp_8: PresenterScope<ParentEvent, ParentEffect> = $this$buildPresenter
-      val tmp_9: Flow<ChildEvent> = mapEvents<ParentEvent, ChildEvent>(/* <this> = tmp_8.<get-eventFlow>(), */ mapper = { // BLOCK
-        cache<Function1<ParentEvent, ChildEvent?>>(/* <this> = $composer, */ invalid = false, block = local fun <anonymous>(): Function1<ParentEvent, ChildEvent?> {
-          return local fun <anonymous>(it: ParentEvent): ChildEvent? {
+      val tmp_9: PresenterScope<ChildEvent, ChildEffect> = { // BLOCK
+        cache<PresenterScope<ChildEvent, ChildEffect>>(/* <this> = $composer, */ invalid = false, block = local fun <anonymous>(): PresenterScope<ChildEvent, ChildEffect> {
+          val tmp_10: Flow<ChildEvent> = mapEvents<ParentEvent, ChildEvent>(/* <this> = tmp_8.<get-eventFlow>(), */ mapper = local fun <anonymous>(it: ParentEvent): ChildEvent? {
             return when {
               it is Flip -> Toggle(id = it.<get-id>())
               else -> null
             }
           }
-
+)
+          return PresenterScope<ChildEvent, ChildEffect>(eventFlow = tmp_10)
         }
 )
-      })
-      val tmp_10: PresenterScope<ChildEvent, ChildEffect> = PresenterScope<ChildEvent, ChildEffect>(eventFlow = tmp_9)
-      forwardEffects<ChildEffect, ParentEffect>(childScope = tmp_10, parentScope = tmp_8, mapper = { // BLOCK
+      }
+      forwardEffects<ChildEffect, ParentEffect>(childScope = tmp_9, parentScope = tmp_8, mapper = { // BLOCK
         cache<Function1<ChildEffect, ParentEffect?>>(/* <this> = $composer, */ invalid = false, block = local fun <anonymous>(): Function1<ChildEffect, ParentEffect?> {
           return local fun <anonymous>(it: ChildEffect): ParentEffect? {
             return when {
@@ -391,8 +391,8 @@ local fun PresenterScope<ParentEvent, ParentEffect>.<anonymous>(/* var */ $compo
 
         }
 )
-      }, $composer = $composer, $changed = 384.or(other = 112.and(other = $changed.shl(bitCount = 3))))
-      forwardHandlerErrors(childScope = tmp_10, parentScope = tmp_8, $composer = $composer, $changed = 112.and(other = $changed.shl(bitCount = 3)))
+      }, $composer = $composer, $changed = 390.or(other = 112.and(other = $changed.shl(bitCount = 3))))
+      forwardHandlerErrors(childScope = tmp_9, parentScope = tmp_8, $composer = $composer, $changed = 6.or(other = 112.and(other = $changed.shl(bitCount = 3))))
             @Composable
 local fun PresenterScope<ChildEvent, ChildEffect>.<anonymous>(/* var */ $composer: Composer?, $changed: Int): ChildState {
         $composer.startReplaceGroup(key = -2111360969)
@@ -406,7 +406,7 @@ local fun PresenterScope<ChildEvent, ChildEffect>.<anonymous>(/* var */ $compose
         $composer.endReplaceGroup()
         return tmp_11
       }
-.invoke(p1 = tmp_10, p2 = $composer, p3 = 0)
+.invoke(p1 = tmp_9, p2 = $composer, p3 = 6)
     }
     val tmp_12: ScreenState = ScreenState(child = childState)
     when {

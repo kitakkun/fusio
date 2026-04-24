@@ -16,4 +16,11 @@ object FusioClassIds {
     val MAP_EVENTS = CallableId(FUSIO_PACKAGE, Name.identifier("mapEvents"))
     val FORWARD_EFFECTS = CallableId(FUSIO_PACKAGE, Name.identifier("forwardEffects"))
     val FORWARD_HANDLER_ERRORS = CallableId(FUSIO_PACKAGE, Name.identifier("forwardHandlerErrors"))
+
+    /**
+     * `androidx.compose.runtime.remember` — the zero-key inline form. Used by
+     * [FuseTransformer] to memoize the child [PresenterScope] across
+     * recompositions instead of reallocating it every parent invocation.
+     */
+    val COMPOSE_REMEMBER = CallableId(FqName("androidx.compose.runtime"), Name.identifier("remember"))
 }

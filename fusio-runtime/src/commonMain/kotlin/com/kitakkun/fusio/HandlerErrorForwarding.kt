@@ -21,7 +21,11 @@ public fun forwardHandlerErrors(
     childScope: PresenterScope<*, *>,
     parentScope: PresenterScope<*, *>,
 ) {
-    LaunchedEffect(Unit) {
+    // Keyed on the two scopes for the same reason [forwardEffects] is —
+    // correct behaviour when the IR transformer emits a reparented scope,
+    // no-op restart in steady-state thanks to the `remember { … }`
+    // wrapping that keeps identity stable.
+    LaunchedEffect(childScope, parentScope) {
         childScope.handlerErrors.collect { error ->
             parentScope.recordHandlerError(error)
         }
