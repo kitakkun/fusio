@@ -88,6 +88,7 @@ public fun <Event, State, Effect> testPresenter(
     val events = MutableSharedFlow<Event>(extraBufferCapacity = EVENT_BUFFER_CAPACITY)
     val clock = BroadcastFrameClock()
     val effectChannel = Channel<Effect>(Channel.UNLIMITED)
+    val handlerErrorChannel = Channel<Throwable>(Channel.UNLIMITED)
     val stateHolder = StateHolder<State>()
     val history: MutableList<State> = mutableListOf()
     val errorRef = ErrorRef()
@@ -95,10 +96,9 @@ public fun <Event, State, Effect> testPresenter(
     // Recomposer runs in its own coroutine so the scenario body can
     // interleave with it. The exception handler catches crashes *inside
     // the recomposer loop itself* — things that throw during Compose's
-    // change-apply phase. Crashes inside a `LaunchedEffect` body (e.g. an
-    // `on<Event>` handler that throws) propagate through their own scope
-    // and surface at the scenario body's `send`/`await` call site instead;
-    // see memory/project_fusio_test_error_surfacing.md for the full story.
+    // change-apply phase. `on<>` handler crashes are now caught by the
+    // runtime and surface through `presentation.handlerErrors`, drained
+    // into [handlerErrorChannel] below for the scenario to assert on.
     val recomposer = Recomposer(coroutineContext + clock)
     val recomposerJob = launch(
         clock + CoroutineExceptionHandler { _, t -> errorRef.value = t },
@@ -124,6 +124,9 @@ public fun <Event, State, Effect> testPresenter(
         LaunchedEffect(presentation.effectFlow) {
             presentation.effectFlow.collect { effectChannel.send(it) }
         }
+        LaunchedEffect(presentation.handlerErrors) {
+            presentation.handlerErrors.collect { handlerErrorChannel.send(it) }
+        }
     }
 
     val impl = PresenterScenarioImpl(
@@ -131,6 +134,7 @@ public fun <Event, State, Effect> testPresenter(
         stateHolder = stateHolder,
         stateHistory = history,
         effectChannel = effectChannel,
+        handlerErrorChannel = handlerErrorChannel,
         clock = clock,
         scheduler = testScheduler,
         recompositionError = errorRef,

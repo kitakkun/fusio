@@ -38,6 +38,7 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
     private val stateHolder: StateHolder<State>,
     override val stateHistory: List<State>,
     private val effectChannel: Channel<Effect>,
+    private val handlerErrorChannel: Channel<Throwable>,
     private val clock: BroadcastFrameClock,
     private val scheduler: TestCoroutineScheduler,
     private val recompositionError: ErrorRef,
@@ -45,6 +46,7 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
 
     private var frameTimeNanos = 0L
     private val _pendingEffects: MutableList<Effect> = mutableListOf()
+    private val _pendingHandlerErrors: MutableList<Throwable> = mutableListOf()
 
     override val state: State
         get() {
@@ -60,6 +62,12 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
         get() {
             drainEffectChannel()
             return _pendingEffects.toList()
+        }
+
+    override val pendingHandlerErrors: List<Throwable>
+        get() {
+            drainHandlerErrorChannel()
+            return _pendingHandlerErrors.toList()
         }
 
     override suspend fun send(event: Event) {
@@ -160,6 +168,45 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
         }
     }
 
+    override suspend fun awaitHandlerError(timeout: Duration): Throwable {
+        drainHandlerErrorChannel()
+        if (_pendingHandlerErrors.isNotEmpty()) return _pendingHandlerErrors.removeAt(0)
+
+        checkError()
+        return withTimeoutOrNull(timeout) {
+            handlerErrorChannel.receive()
+        } ?: throw AssertionError(
+            buildFailureMessage(
+                header = "awaitHandlerError timed out after $timeout.",
+                extras = mapOf(
+                    "No handler error surfaced during the window" to "",
+                    "Current state" to "${stateHolder.current}",
+                ),
+            ),
+        )
+    }
+
+    override suspend fun expectNoHandlerErrors(within: Duration) {
+        drainHandlerErrorChannel()
+        if (_pendingHandlerErrors.isNotEmpty()) {
+            throw AssertionError(
+                buildFailureMessage(
+                    header = "expectNoHandlerErrors: ${_pendingHandlerErrors.size} error(s) already queued.",
+                    extras = mapOf("Queued" to _pendingHandlerErrors.joinToString { it::class.simpleName ?: it.toString() }),
+                ),
+            )
+        }
+        val received = withTimeoutOrNull(within) { handlerErrorChannel.receive() }
+        if (received != null) {
+            throw AssertionError(
+                buildFailureMessage(
+                    header = "expectNoHandlerErrors: received ${received::class.simpleName ?: received} within $within.",
+                    extras = emptyMap(),
+                ),
+            )
+        }
+    }
+
     /**
      * Builds a multi-line failure message that includes scenario context
      * (state history, pending effects) under the given [header]. Every
@@ -190,6 +237,10 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
         if (_pendingEffects.isNotEmpty()) {
             appendLine("  Pending effects: $_pendingEffects")
         }
+        drainHandlerErrorChannel()
+        if (_pendingHandlerErrors.isNotEmpty()) {
+            appendLine("  Pending handler errors: ${_pendingHandlerErrors.joinToString { it::class.simpleName ?: it.toString() }}")
+        }
     }.trimEnd()
 
     private fun drainEffectChannel() {
@@ -197,6 +248,17 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
             val result = effectChannel.tryReceive()
             if (result.isSuccess) {
                 _pendingEffects += result.getOrThrow()
+            } else {
+                break
+            }
+        }
+    }
+
+    private fun drainHandlerErrorChannel() {
+        while (true) {
+            val result = handlerErrorChannel.tryReceive()
+            if (result.isSuccess) {
+                _pendingHandlerErrors += result.getOrThrow()
             } else {
                 break
             }

@@ -212,4 +212,33 @@ class TestPresenterTest {
         assertEquals(emptyList(), stateHistory)
     }
 
+    // ---- Handler-error surfacing -------------------------------------
+
+    @Test
+    fun awaitHandlerError_returns_exception_thrown_inside_on() = testPresenter<CounterEvent, Int, CounterEffect>(
+        presenter = { events ->
+            buildPresenter(events) {
+                on<CounterEvent.Increment> {
+                    throw IllegalStateException("handler crashed")
+                }
+                0
+            }
+        },
+    ) {
+        send(CounterEvent.Increment)
+        val err = awaitHandlerError<IllegalStateException>()
+        assertEquals("handler crashed", err.message)
+        // Presenter stays alive — state hasn't been corrupted, further
+        // events can be sent without the scenario tearing down.
+        assertState { it == 0 }
+    }
+
+    @Test
+    fun expectNoHandlerErrors_passes_when_handlers_run_cleanly() = testPresenter(
+        presenter = { events -> counterPresenter(events, initial = 0) },
+    ) {
+        send(CounterEvent.Increment)
+        awaitState { it == 1 }
+        expectNoHandlerErrors(within = 20.milliseconds)
+    }
 }

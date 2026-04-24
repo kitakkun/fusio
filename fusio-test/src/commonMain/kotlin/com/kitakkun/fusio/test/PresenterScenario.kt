@@ -28,6 +28,15 @@ import kotlin.time.Duration.Companion.seconds
  * [awaitEffect] calls when you want to assert "exactly this one effect, no
  * more".
  *
+ * ## Handler-error semantics
+ *
+ * Exceptions thrown inside `on<E>` handlers are caught by the runtime and
+ * routed into the root `PresenterScope.handlerErrors` stream (including
+ * errors bubbled up from `fuse`d children). Same queue shape as effects:
+ * [awaitHandlerError] pops, [pendingHandlerErrors] peeks. Useful for
+ * asserting that a handler *does* throw on bad input without letting the
+ * exception derail the rest of the scenario.
+ *
  * ## Timeouts
  *
  * All await-style methods accept a [Duration]. Under the virtual clock the
@@ -43,6 +52,9 @@ public interface PresenterScenario<Event, State, Effect> {
 
     /** Effects that have been emitted but not yet consumed by [awaitEffect]. */
     public val pendingEffects: List<Effect>
+
+    /** Handler errors that have been recorded but not yet consumed by [awaitHandlerError]. */
+    public val pendingHandlerErrors: List<Throwable>
 
     /** Push [event] into the presenter's event flow and advance one frame. */
     public suspend fun send(event: Event)
@@ -82,6 +94,19 @@ public interface PresenterScenario<Event, State, Effect> {
      * awaited".
      */
     public suspend fun expectNoEffects(within: Duration = 50.milliseconds)
+
+    /**
+     * Suspends until a handler error is available and returns it. Fails if
+     * none arrives within [timeout].
+     */
+    public suspend fun awaitHandlerError(timeout: Duration = 1.seconds): Throwable
+
+    /**
+     * Fails if any handler error is already queued or arrives within
+     * [within]. Symmetric with [expectNoEffects] for asserting that the
+     * presenter's `on<>` handlers ran without swallowing any exception.
+     */
+    public suspend fun expectNoHandlerErrors(within: Duration = 50.milliseconds)
 }
 
 /**
@@ -108,4 +133,23 @@ public suspend inline fun <reified T : Any> PresenterScenario<*, *, *>.awaitEffe
         )
     }
     return eff
+}
+
+/**
+ * Reified sugar over [PresenterScenario.awaitHandlerError] that narrows
+ * the result to a specific [Throwable] subtype [T]. Fails fast if the
+ * next recorded error isn't a [T], matching the strictness of the
+ * effect-side [awaitEffect].
+ */
+public suspend inline fun <reified T : Throwable> PresenterScenario<*, *, *>.awaitHandlerError(
+    timeout: Duration = 1.seconds,
+): T {
+    val err = awaitHandlerError(timeout)
+    if (err !is T) {
+        throw AssertionError(
+            "awaitHandlerError<${T::class.simpleName ?: T::class}> got " +
+                "${err::class.simpleName ?: err::class}: $err",
+        )
+    }
+    return err
 }
