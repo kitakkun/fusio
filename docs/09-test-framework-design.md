@@ -248,6 +248,14 @@ Post-round-3 additions folded into the main proposal above:
 - Uniform failure-message builder: every `await*` / `assertState` / `expectNoEffects` failure now renders the observed-state trace (`[0] … [1] …`) plus any pending effects left in the queue. This traded a one-line "timeout" for a paragraph that usually pinpoints the presenter bug without re-running under a debugger.
 - Dropped the originally-proposed `assertEffect<T>()` fail-fast variant — its non-pop semantics would have confused against `awaitEffect`'s pop semantics. Users who want fail-fast read `pendingEffects` directly.
 
+### Phase 2.1 — handler-error surfacing (landed 2026-04-24)
+
+A follow-up that closed the "on<> handler crash kills the whole presenter" gap flagged during initial Phase 2 review. No design-doc round needed — the shape dropped out of the existing effect-stream pattern cleanly.
+
+- Runtime: `PresenterScope.handlerErrors: Flow<Throwable>`, populated by a try/catch wrap inside `on<E>` (CancellationException rethrown, everything else funnelled). `Presentation` gained a third property of the same name. `forwardHandlerErrors(child, parent)` runtime helper bubbles child errors up; `FuseTransformer` emits a call next to every `fuse { }` unconditionally (no annotation gate — Throwable flows through unchanged).
+- fusio-test: `awaitHandlerError()` / `awaitHandlerError<T>()` / `pendingHandlerErrors` / `expectNoHandlerErrors(within)` on `PresenterScenario`. `PresenterScenarioImpl` drains via a dedicated channel, which `testPresenter` populates with a `LaunchedEffect(presentation.handlerErrors) { collect { send } }` alongside the effect collector.
+- Previously-queued memory entry `project_fusio_test_error_surfacing.md` flipped to RESOLVED with a breadcrumb for future symptom matching.
+
 ## Open questions (resolved)
 
 All five were settled by the time Phase 2 landed. Notes kept so future revisits see the reasoning, not just the outcome.
