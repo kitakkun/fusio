@@ -241,4 +241,53 @@ class TestPresenterTest {
         awaitState { it == 1 }
         expectNoHandlerErrors(within = 20.milliseconds)
     }
+
+    // ---- Handler freshness (rememberUpdatedState regression guard) ----
+
+    private sealed interface FreshnessEvent {
+        data object Tick : FreshnessEvent     // bumps recomposition-varying local
+        data object Echo : FreshnessEvent     // replays the currently-captured value
+    }
+
+    private sealed interface FreshnessEffect {
+        data class Captured(val value: Int) : FreshnessEffect
+    }
+
+    /**
+     * Regression guard: before `on<E>` wrapped its handler in
+     * `rememberUpdatedState`, the first-composition's handler lambda (with
+     * its first-composition capture of local values) ran forever. The
+     * `Tick` event bumps a remembered state, so after `advance()` the
+     * block re-runs and a new handler is created that captures the bumped
+     * value. The `Echo` handler should see the LATEST captured value, not
+     * the one from the initial composition.
+     */
+    @Test
+    fun on_handler_captures_latest_recomposition_value() = testPresenter<FreshnessEvent, Int, FreshnessEffect>(
+        presenter = { events ->
+            buildPresenter(events) {
+                var count by remember { mutableStateOf(0) }
+                val capturedCount = count
+                on<FreshnessEvent.Tick> { count += 1 }
+                on<FreshnessEvent.Echo> { emitEffect(FreshnessEffect.Captured(capturedCount)) }
+                count
+            }
+        },
+    ) {
+        awaitState { it == 0 }
+
+        send(FreshnessEvent.Tick)
+        awaitState { it == 1 }  // count bumped, block re-executed, capturedCount == 1
+
+        send(FreshnessEvent.Echo)
+        val first = awaitEffect<FreshnessEffect.Captured>()
+        assertEquals(1, first.value, "Echo handler should read the latest capturedCount")
+
+        send(FreshnessEvent.Tick)
+        awaitState { it == 2 }
+
+        send(FreshnessEvent.Echo)
+        val second = awaitEffect<FreshnessEffect.Captured>()
+        assertEquals(2, second.value)
+    }
 }

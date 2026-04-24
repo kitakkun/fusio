@@ -34,6 +34,7 @@ composeCompiler {
 val expectedComposableMetrics = mapOf(
     "com.kitakkun.fusio.buildPresenter" to """scheme("[0, [0]]")""",
     "com.kitakkun.fusio.forwardEffects" to "restartable skippable",
+    "com.kitakkun.fusio.forwardHandlerErrors" to "restartable skippable",
     "com.kitakkun.fusio.on" to "inline",
 )
 
