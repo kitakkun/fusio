@@ -11,9 +11,10 @@ import kotlinx.coroutines.flow.emptyFlow
 // guards only the behaviour a library consumer should be able to rely on.
 fun box(): String {
     val flow = emptyFlow<String>()
-    val a = Presentation(state = 42, effectFlow = flow)
-    val b = Presentation(state = 42, effectFlow = flow)
-    val c = Presentation(state = 7, effectFlow = flow)
+    val errors = emptyFlow<Throwable>()
+    val a = Presentation(state = 42, effectFlow = flow, handlerErrors = errors)
+    val b = Presentation(state = 42, effectFlow = flow, handlerErrors = errors)
+    val c = Presentation(state = 7, effectFlow = flow, handlerErrors = errors)
 
     if (a != b) return "FAIL: equal states should be equal: $a vs $b"
     if (a.hashCode() != b.hashCode()) return "FAIL: equal instances should share hashCode"

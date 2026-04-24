@@ -18,7 +18,11 @@ sealed interface Parent {
 }
 
 fun box(): String {
-    val presentation: Presentation<String, Child> = Presentation(state = "ready", effectFlow = emptyFlow())
+    val presentation: Presentation<String, Child> = Presentation(
+        state = "ready",
+        effectFlow = emptyFlow(),
+        handlerErrors = emptyFlow(),
+    )
     if (presentation.state != "ready") return "FAIL: state=${presentation.state}"
 
     val parent = Parent.ToggleFavorite(id = "item-1")

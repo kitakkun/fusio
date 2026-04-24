@@ -21,7 +21,6 @@ public final class com/kitakkun/fusio/HandlerErrorForwardingKt {
 public final class com/kitakkun/fusio/Presentation {
 	public static final field $stable I
 	public fun <init> (Ljava/lang/Object;Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/flow/Flow;)V
-	public synthetic fun <init> (Ljava/lang/Object;Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/flow/Flow;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getEffectFlow ()Lkotlinx/coroutines/flow/Flow;
 	public final fun getHandlerErrors ()Lkotlinx/coroutines/flow/Flow;

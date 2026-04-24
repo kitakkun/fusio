@@ -2,7 +2,6 @@ package com.kitakkun.fusio
 
 import androidx.compose.runtime.Stable
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 
 /**
  * The value a Fusio presenter produces: a snapshot of screen [state] paired
@@ -34,18 +33,21 @@ import kotlinx.coroutines.flow.emptyFlow
  * `@Stable` lets composables that take a `Presentation` parameter skip
  * recomposition when the same instance is passed twice.
  *
- * ## `handlerErrors` default
+ * ## `handlerErrors` is required
  *
- * Defaults to an empty flow so code that built `Presentation` manually
- * before the field existed (the common case: `Presentation(state,
- * effectFlow)`) stays source-compatible. `buildPresenter` wires the real
- * stream from its `PresenterScope`.
+ * All three properties are required constructor arguments — there's no
+ * default on [handlerErrors]. A presenter author deciding not to propagate
+ * handler errors should pass `emptyFlow()` explicitly, so the decision is
+ * visible at the call site rather than being silently inherited from a
+ * default. `buildPresenter` wires the real stream from its `PresenterScope`;
+ * hand-rolled `Presentation(state, effectFlow, emptyFlow())` is the
+ * correct form when composing a presenter without `buildPresenter`.
  */
 @Stable
 public class Presentation<State, Effect>(
     public val state: State,
     public val effectFlow: Flow<Effect>,
-    public val handlerErrors: Flow<Throwable> = emptyFlow(),
+    public val handlerErrors: Flow<Throwable>,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

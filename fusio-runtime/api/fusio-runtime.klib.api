@@ -7,7 +7,7 @@
 
 // Library unique name: <com.kitakkun.fusio:fusio-runtime>
 final class <#A: kotlin/Any?, #B: kotlin/Any?> com.kitakkun.fusio/Presentation { // com.kitakkun.fusio/Presentation|null[0]
-    constructor <init>(#A, kotlinx.coroutines.flow/Flow<#B>, kotlinx.coroutines.flow/Flow<kotlin/Throwable> = ...) // com.kitakkun.fusio/Presentation.<init>|<init>(1:0;kotlinx.coroutines.flow.Flow<1:1>;kotlinx.coroutines.flow.Flow<kotlin.Throwable>){}[0]
+    constructor <init>(#A, kotlinx.coroutines.flow/Flow<#B>, kotlinx.coroutines.flow/Flow<kotlin/Throwable>) // com.kitakkun.fusio/Presentation.<init>|<init>(1:0;kotlinx.coroutines.flow.Flow<1:1>;kotlinx.coroutines.flow.Flow<kotlin.Throwable>){}[0]
 
     final val effectFlow // com.kitakkun.fusio/Presentation.effectFlow|{}effectFlow[0]
         final fun <get-effectFlow>(): kotlinx.coroutines.flow/Flow<#B> // com.kitakkun.fusio/Presentation.effectFlow.<get-effectFlow>|<get-effectFlow>(){}[0]
