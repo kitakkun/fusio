@@ -65,8 +65,13 @@ public interface PresenterScenario<Event, State, Effect> {
     /**
      * Suspends until [predicate] matches on the current state, or fails if
      * [timeout] elapses first. Returns the state that matched.
+     *
+     * [message] gets prepended to the timeout failure text so tests can
+     * annotate WHY they expected that state ("after login completes" etc.)
+     * without relying on recoverable predicate source.
      */
     public suspend fun awaitState(
+        message: String? = null,
         timeout: Duration = 1.seconds,
         predicate: (State) -> Boolean,
     ): State
@@ -84,29 +89,30 @@ public interface PresenterScenario<Event, State, Effect> {
 
     /**
      * Suspends until an effect is available and returns it. Fails if none
-     * arrives within [timeout].
+     * arrives within [timeout]. [message] annotates the failure text.
      */
-    public suspend fun awaitEffect(timeout: Duration = 1.seconds): Effect
+    public suspend fun awaitEffect(message: String? = null, timeout: Duration = 1.seconds): Effect
 
     /**
      * Fails if any effect is already queued or arrives within [within]. Use
      * this to lock down "no extra effects beyond the ones I explicitly
-     * awaited".
+     * awaited". [message] annotates the failure text.
      */
-    public suspend fun expectNoEffects(within: Duration = 50.milliseconds)
+    public suspend fun expectNoEffects(message: String? = null, within: Duration = 50.milliseconds)
 
     /**
      * Suspends until a handler error is available and returns it. Fails if
-     * none arrives within [timeout].
+     * none arrives within [timeout]. [message] annotates the failure text.
      */
-    public suspend fun awaitHandlerError(timeout: Duration = 1.seconds): Throwable
+    public suspend fun awaitHandlerError(message: String? = null, timeout: Duration = 1.seconds): Throwable
 
     /**
      * Fails if any handler error is already queued or arrives within
      * [within]. Symmetric with [expectNoEffects] for asserting that the
      * presenter's `on<>` handlers ran without swallowing any exception.
+     * [message] annotates the failure text.
      */
-    public suspend fun expectNoHandlerErrors(within: Duration = 50.milliseconds)
+    public suspend fun expectNoHandlerErrors(message: String? = null, within: Duration = 50.milliseconds)
 }
 
 /**
@@ -123,13 +129,17 @@ public interface PresenterScenario<Event, State, Effect> {
  * are never themselves nullable at the call site.
  */
 public suspend inline fun <reified T : Any> PresenterScenario<*, *, *>.awaitEffect(
+    message: String? = null,
     timeout: Duration = 1.seconds,
 ): T {
-    val eff = awaitEffect(timeout)
+    val eff = awaitEffect(message, timeout)
     if (eff !is T) {
         throw AssertionError(
-            "awaitEffect<${T::class.simpleName ?: T::class}> got " +
-                "${eff?.let { it::class.simpleName } ?: "null"}: $eff",
+            buildString {
+                append("awaitEffect<${T::class.simpleName ?: T::class}>")
+                if (message != null) append(" ($message)")
+                append(" got ${eff?.let { it::class.simpleName } ?: "null"}: $eff")
+            },
         )
     }
     return eff
@@ -142,13 +152,17 @@ public suspend inline fun <reified T : Any> PresenterScenario<*, *, *>.awaitEffe
  * effect-side [awaitEffect].
  */
 public suspend inline fun <reified T : Throwable> PresenterScenario<*, *, *>.awaitHandlerError(
+    message: String? = null,
     timeout: Duration = 1.seconds,
 ): T {
-    val err = awaitHandlerError(timeout)
+    val err = awaitHandlerError(message, timeout)
     if (err !is T) {
         throw AssertionError(
-            "awaitHandlerError<${T::class.simpleName ?: T::class}> got " +
-                "${err::class.simpleName ?: err::class}: $err",
+            buildString {
+                append("awaitHandlerError<${T::class.simpleName ?: T::class}>")
+                if (message != null) append(" ($message)")
+                append(" got ${err::class.simpleName ?: err::class}: $err")
+            },
         )
     }
     return err

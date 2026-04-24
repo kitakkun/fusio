@@ -91,6 +91,7 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
     }
 
     override suspend fun awaitState(
+        message: String?,
         timeout: Duration,
         predicate: (State) -> Boolean,
     ): State {
@@ -103,7 +104,7 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
             if (scheduler.currentTime >= deadline) {
                 throw AssertionError(
                     buildFailureMessage(
-                        header = "awaitState timed out after $timeout.",
+                        header = "awaitState timed out after $timeout${message?.let { " ($it)" } ?: ""}.",
                         extras = mapOf("Latest state" to "${stateHolder.current}"),
                     ),
                 )
@@ -129,7 +130,7 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
         return current
     }
 
-    override suspend fun awaitEffect(timeout: Duration): Effect {
+    override suspend fun awaitEffect(message: String?, timeout: Duration): Effect {
         drainEffectChannel()
         if (_pendingEffects.isNotEmpty()) return _pendingEffects.removeAt(0)
 
@@ -138,7 +139,7 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
             effectChannel.receive()
         } ?: throw AssertionError(
             buildFailureMessage(
-                header = "awaitEffect timed out after $timeout.",
+                header = "awaitEffect timed out after $timeout${message?.let { " ($it)" } ?: ""}.",
                 extras = mapOf(
                     "No effect emitted during the window" to "",
                     "Current state" to "${stateHolder.current}",
@@ -147,12 +148,12 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
         )
     }
 
-    override suspend fun expectNoEffects(within: Duration) {
+    override suspend fun expectNoEffects(message: String?, within: Duration) {
         drainEffectChannel()
         if (_pendingEffects.isNotEmpty()) {
             throw AssertionError(
                 buildFailureMessage(
-                    header = "expectNoEffects: ${_pendingEffects.size} effect(s) already queued.",
+                    header = "expectNoEffects: ${_pendingEffects.size} effect(s) already queued${message?.let { " ($it)" } ?: ""}.",
                     extras = mapOf("Queued" to "$_pendingEffects"),
                 ),
             )
@@ -161,14 +162,14 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
         if (received != null) {
             throw AssertionError(
                 buildFailureMessage(
-                    header = "expectNoEffects: received $received within $within.",
+                    header = "expectNoEffects: received $received within $within${message?.let { " ($it)" } ?: ""}.",
                     extras = emptyMap(),
                 ),
             )
         }
     }
 
-    override suspend fun awaitHandlerError(timeout: Duration): Throwable {
+    override suspend fun awaitHandlerError(message: String?, timeout: Duration): Throwable {
         drainHandlerErrorChannel()
         if (_pendingHandlerErrors.isNotEmpty()) return _pendingHandlerErrors.removeAt(0)
 
@@ -177,7 +178,7 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
             handlerErrorChannel.receive()
         } ?: throw AssertionError(
             buildFailureMessage(
-                header = "awaitHandlerError timed out after $timeout.",
+                header = "awaitHandlerError timed out after $timeout${message?.let { " ($it)" } ?: ""}.",
                 extras = mapOf(
                     "No handler error surfaced during the window" to "",
                     "Current state" to "${stateHolder.current}",
@@ -186,12 +187,12 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
         )
     }
 
-    override suspend fun expectNoHandlerErrors(within: Duration) {
+    override suspend fun expectNoHandlerErrors(message: String?, within: Duration) {
         drainHandlerErrorChannel()
         if (_pendingHandlerErrors.isNotEmpty()) {
             throw AssertionError(
                 buildFailureMessage(
-                    header = "expectNoHandlerErrors: ${_pendingHandlerErrors.size} error(s) already queued.",
+                    header = "expectNoHandlerErrors: ${_pendingHandlerErrors.size} error(s) already queued${message?.let { " ($it)" } ?: ""}.",
                     extras = mapOf("Queued" to _pendingHandlerErrors.joinToString { it::class.simpleName ?: it.toString() }),
                 ),
             )
@@ -200,7 +201,7 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
         if (received != null) {
             throw AssertionError(
                 buildFailureMessage(
-                    header = "expectNoHandlerErrors: received ${received::class.simpleName ?: received} within $within.",
+                    header = "expectNoHandlerErrors: received ${received::class.simpleName ?: received} within $within${message?.let { " ($it)" } ?: ""}.",
                     extras = emptyMap(),
                 ),
             )

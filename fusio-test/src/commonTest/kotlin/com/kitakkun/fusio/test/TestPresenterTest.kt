@@ -195,6 +195,28 @@ class TestPresenterTest {
         assertTrue("Pending effects" in msg, "missing pending effects in: $msg")
     }
 
+    @Test
+    fun await_message_annotation_threads_into_failure_text() = testPresenter(
+        presenter = { events -> counterPresenter(events, initial = 0) },
+    ) {
+        val err = assertFailsWith<AssertionError> {
+            awaitState(message = "after reset", timeout = 20.milliseconds) { it == 99 }
+        }
+        assertTrue(
+            "after reset" in (err.message ?: ""),
+            "caller-supplied message should appear in failure text, got: ${err.message}",
+        )
+
+        send(CounterEvent.Reset) // emits a Toast
+        val err2 = assertFailsWith<AssertionError> {
+            expectNoEffects(message = "handlers should be silent")
+        }
+        assertTrue(
+            "handlers should be silent" in (err2.message ?: ""),
+            "caller-supplied message missing in expectNoEffects failure",
+        )
+    }
+
     // ---- Phase 2: recordStateHistory = false -------------------------
 
     @Test
