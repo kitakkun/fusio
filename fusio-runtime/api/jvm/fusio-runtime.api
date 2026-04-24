@@ -29,6 +29,10 @@ public final class com/kitakkun/fusio/Presentation {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/kitakkun/fusio/PresenterKt {
+	public static final fun presenter (Lkotlin/jvm/functions/Function3;)Lkotlin/jvm/functions/Function3;
+}
+
 public final class com/kitakkun/fusio/PresenterScope {
 	public static final field $stable I
 	public fun <init> (Lkotlinx/coroutines/flow/Flow;)V

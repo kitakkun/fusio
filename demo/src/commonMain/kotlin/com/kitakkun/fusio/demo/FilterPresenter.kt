@@ -1,15 +1,13 @@
 package com.kitakkun.fusio.demo
 
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.kitakkun.fusio.PresenterScope
 import com.kitakkun.fusio.on
+import com.kitakkun.fusio.presenter
 
-@Composable
-fun PresenterScope<FilterEvent, FilterEffect>.filter(): FilterState {
+val filter = presenter<FilterEvent, FilterEffect, FilterState> {
     var current by remember { mutableStateOf(TaskFilter.All) }
 
     on<FilterEvent.Select> { event ->
@@ -19,5 +17,5 @@ fun PresenterScope<FilterEvent, FilterEffect>.filter(): FilterState {
         }
     }
 
-    return FilterState(current)
+    FilterState(current)
 }

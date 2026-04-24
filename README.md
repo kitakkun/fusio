@@ -119,15 +119,26 @@ sealed interface MyScreenEffect {
 }
 ```
 
-Each sub-presenter is a plain Composable function on its own `PresenterScope`:
+Each sub-presenter is a `@Composable` bound to its own `PresenterScope`. Two
+equivalent declaration styles are supported — pick whichever reads best:
 
 ```kotlin
+// (a) As a free @Composable extension on PresenterScope<Event, Effect>:
 @Composable
 fun PresenterScope<TaskListEvent, TaskListEffect>.taskList(): TaskListState { /* … */ }
 
-@Composable
-fun PresenterScope<FilterEvent, FilterEffect>.filter(): FilterState { /* … */ }
+// (b) As a `presenter<Event, Effect, State> { … }` factory value:
+val filter = presenter<FilterEvent, FilterEffect, FilterState> {
+    /* body; `on<>` and `emitEffect` resolve on the implicit PresenterScope receiver */
+}
 ```
+
+Both compile to the same shape — `fuse { taskList() }` / `fuse { filter() }` at
+the parent works identically for either form. The factory style moves the three
+type parameters out of the extension-receiver position onto a single call, which
+some codebases find easier to scan; the free-extension style is the plainer
+Kotlin idiom. See `docs/10-presenter-signature-ergonomics.md` for the design
+trade-offs.
 
 The screen-level presenter fuses them:
 
