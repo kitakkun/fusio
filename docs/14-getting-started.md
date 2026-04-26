@@ -29,32 +29,56 @@ fun myScreenPresenter(): MyScreenUiState {
 ```
 
 The natural fix is to split it. But the *manual* split forces I/O
-boilerplate at every seam — the parent has to thread a callback into
-each child, and each child has to invoke that callback to send
-anything back:
+boilerplate at **every seam, in both directions**: events have to flow
+down from the parent into the right child, and effects have to flow
+back up from each child into the parent.
 
 ```kotlin
 @Composable
 fun myScreenPresenter(): MyScreenUiState {
-    var lastSnack by remember { mutableStateOf<String?>(null) }
+    // Down direction: the parent has to manufacture an event channel
+    // per child, then route every parent UI event into the right one.
+    val taskListEvents = remember {
+        MutableSharedFlow<TaskListEvent>(extraBufferCapacity = 64)
+    }
+    val filterEvents = remember {
+        MutableSharedFlow<FilterEvent>(extraBufferCapacity = 64)
+    }
+    fun dispatch(event: MyScreenEvent) = when (event) {
+        is MyScreenEvent.AddTask      -> taskListEvents.tryEmit(TaskListEvent.Add(event.title))
+        is MyScreenEvent.ToggleTask   -> taskListEvents.tryEmit(TaskListEvent.Toggle(event.id))
+        is MyScreenEvent.RemoveTask   -> taskListEvents.tryEmit(TaskListEvent.Remove(event.id))
+        is MyScreenEvent.SelectFilter -> filterEvents.tryEmit(FilterEvent.Select(event.filter))
+    }
 
+    // Up direction: each child takes a callback per effect subtype the
+    // parent cares about, and the children have to invoke them at the
+    // right moments.
+    var lastSnack by remember { mutableStateOf<String?>(null) }
     val tasks = taskListPresenter(
-        onAdded = { title -> lastSnack = "Added: $title" },          // <-- callback in
-        onCompleted = { title -> lastSnack = "Completed: $title" },  // <-- callback in
+        events = taskListEvents,
+        onAdded     = { title -> lastSnack = "Added: $title" },
+        onCompleted = { title -> lastSnack = "Completed: $title" },
     )
     val filter = filterPresenter(
-        onChanged = { f -> lastSnack = "Filter → $f" },              // <-- callback in
+        events = filterEvents,
+        onChanged = { f -> lastSnack = "Filter → $f" },
     )
-    // … and you have to teach each child to fire those callbacks at the right moments.
+
+    // Both seams scale with every new feature: a new parent event subtype
+    // means a new branch in `dispatch`; a new child effect subtype means
+    // a new callback parameter on each child's signature.
     return MyScreenUiState(tasks, filter, lastSnack)
 }
 ```
 
 That's the I/O boilerplate Fusio resolves. You declare the routing
-**once**, on the parent's sealed event/effect types, and the compiler
-synthesises the per-seam plumbing — the children stay parameterless
-extensions on `PresenterScope<…>`, the parent stays a composition
-step.
+**once** on the parent's sealed event / effect types — `@MapTo` for the
+down direction, `@MapFrom` for the up — and the compiler synthesises
+the per-seam plumbing. The children stay parameterless extensions on
+`PresenterScope<…>` (no `events` argument, no per-effect callbacks),
+and the parent stays a composition step (no event channels to
+manufacture, no `dispatch` switch to maintain).
 
 ## The fusion point
 
