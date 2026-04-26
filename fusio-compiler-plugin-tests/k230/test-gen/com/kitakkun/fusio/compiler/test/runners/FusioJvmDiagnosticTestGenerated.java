@@ -21,6 +21,24 @@ public class FusioJvmDiagnosticTestGenerated extends AbstractFusioJvmDiagnosticT
   }
 
   @Test
+  @TestMetadata("eventHandlerCovered.kt")
+  public void testEventHandlerCovered() {
+    runTest("fusio-compiler-plugin-tests/testData/diagnostics/eventHandlerCovered.kt");
+  }
+
+  @Test
+  @TestMetadata("eventHandlerCoveredViaFuse.kt")
+  public void testEventHandlerCoveredViaFuse() {
+    runTest("fusio-compiler-plugin-tests/testData/diagnostics/eventHandlerCoveredViaFuse.kt");
+  }
+
+  @Test
+  @TestMetadata("eventHandlerCoveredViaParent.kt")
+  public void testEventHandlerCoveredViaParent() {
+    runTest("fusio-compiler-plugin-tests/testData/diagnostics/eventHandlerCoveredViaParent.kt");
+  }
+
+  @Test
   @TestMetadata("mapFromPropertyNameMismatch.kt")
   public void testMapFromPropertyNameMismatch() {
     runTest("fusio-compiler-plugin-tests/testData/diagnostics/mapFromPropertyNameMismatch.kt");
@@ -42,6 +60,12 @@ public class FusioJvmDiagnosticTestGenerated extends AbstractFusioJvmDiagnosticT
   @TestMetadata("missingEffectMappings.kt")
   public void testMissingEffectMappings() {
     runTest("fusio-compiler-plugin-tests/testData/diagnostics/missingEffectMappings.kt");
+  }
+
+  @Test
+  @TestMetadata("missingEventHandler.kt")
+  public void testMissingEventHandler() {
+    runTest("fusio-compiler-plugin-tests/testData/diagnostics/missingEventHandler.kt");
   }
 
   @Test

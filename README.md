@@ -79,6 +79,11 @@ FIR checkers enforce the interesting invariants:
 
 - properties on the mapped subtypes must line up by name and type
 - every child sealed subtype must be covered by a parent `@MapFrom` (exhaustiveness)
+- every parent-Event sealed subtype must be reached by some `on<E>` handler in the
+  presenter body, or routed via `@MapTo` to a fused child. Configurable severity
+  via the `fusio { eventHandlerExhaustiveSeverity = … }` DSL or the
+  `-Pfusio.event-handler-exhaustive-severity=error|warning|none` Gradle property
+  (default `WARNING`).
 
 ## Example: a Todo screen with two sibling sub-presenters
 

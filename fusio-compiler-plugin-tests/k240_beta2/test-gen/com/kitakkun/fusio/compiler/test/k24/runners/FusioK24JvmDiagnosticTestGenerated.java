@@ -25,6 +25,24 @@ public class FusioK24JvmDiagnosticTestGenerated extends AbstractFusioK24JvmDiagn
   }
 
   @Test
+  @TestMetadata("eventHandlerCovered.kt")
+  public void testEventHandlerCovered() {
+    run("eventHandlerCovered.kt");
+  }
+
+  @Test
+  @TestMetadata("eventHandlerCoveredViaFuse.kt")
+  public void testEventHandlerCoveredViaFuse() {
+    run("eventHandlerCoveredViaFuse.kt");
+  }
+
+  @Test
+  @TestMetadata("eventHandlerCoveredViaParent.kt")
+  public void testEventHandlerCoveredViaParent() {
+    run("eventHandlerCoveredViaParent.kt");
+  }
+
+  @Test
   @TestMetadata("mapFromPropertyNameMismatch.kt")
   public void testMapFromPropertyNameMismatch() {
     run("mapFromPropertyNameMismatch.kt");
@@ -46,6 +64,12 @@ public class FusioK24JvmDiagnosticTestGenerated extends AbstractFusioK24JvmDiagn
   @TestMetadata("missingEffectMappings.kt")
   public void testMissingEffectMappings() {
     run("missingEffectMappings.kt");
+  }
+
+  @Test
+  @TestMetadata("missingEventHandler.kt")
+  public void testMissingEventHandler() {
+    run("missingEventHandler.kt");
   }
 
   @Test

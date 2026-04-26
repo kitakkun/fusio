@@ -12,6 +12,12 @@ import java.util.Properties
 class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
 
     override fun apply(target: Project) {
+        // Register the `fusio { … }` DSL extension so consumers can override
+        // defaults from their own build script. Defaults come from
+        // [resolveSeverity] at applyToCompilation time so a consumer that
+        // never touches the extension still gets sensible behaviour.
+        target.extensions.create("fusio", FusioPluginExtension::class.java)
+
         // Auto-add runtime dependency. Version is baked from this plugin's
         // own build — consumers' `project.version` is unrelated to ours.
         //
@@ -37,6 +43,30 @@ class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
             target.dependencies.add("implementation", coordinate)
             warnIfKotlinUnsupported(target)
         }
+    }
+
+    /**
+     * DSL value (if set) → Gradle property fallback → [EventHandlerExhaustiveSeverity.WARNING]
+     * default. Property values are matched case-insensitively so the wire
+     * names `error` / `warning` / `none` and the enum names `ERROR` /
+     * `WARNING` / `NONE` both work.
+     */
+    private fun resolveSeverity(target: Project): EventHandlerExhaustiveSeverity {
+        val ext = target.extensions.findByType(FusioPluginExtension::class.java)
+        ext?.eventHandlerExhaustiveSeverity?.orNull?.let { return it }
+
+        val raw = target.providers.gradleProperty(EVENT_HANDLER_EXHAUSTIVE_SEVERITY_PROPERTY)
+            .orNull
+            ?: return EventHandlerExhaustiveSeverity.WARNING
+
+        return runCatching { EventHandlerExhaustiveSeverity.valueOf(raw.uppercase()) }
+            .getOrElse {
+                target.logger.warn(
+                    "Fusio: ignoring invalid $EVENT_HANDLER_EXHAUSTIVE_SEVERITY_PROPERTY='$raw'; " +
+                        "expected one of ${EventHandlerExhaustiveSeverity.values().joinToString { it.name.lowercase() }}.",
+                )
+                EventHandlerExhaustiveSeverity.WARNING
+            }
     }
 
     /**
@@ -111,8 +141,15 @@ class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
             )
         }
 
-        return kotlinCompilation.target.project.provider {
-            listOf(SubpluginOption("enabled", "true"))
+        val project = kotlinCompilation.target.project
+        return project.provider {
+            listOf(
+                SubpluginOption("enabled", "true"),
+                SubpluginOption(
+                    "event-handler-exhaustive-severity",
+                    resolveSeverity(project).name.lowercase(),
+                ),
+            )
         }
     }
 
@@ -125,6 +162,9 @@ class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
 
         /** Gradle property name that disables the apply-time Kotlin version warning. */
         const val VERSION_CHECK_PROPERTY = "fusio.version.check"
+
+        /** Gradle property name that selects the event-handler-exhaustive severity. */
+        const val EVENT_HANDLER_EXHAUSTIVE_SEVERITY_PROPERTY = "fusio.event-handler-exhaustive-severity"
 
         /**
          * Read from a `version.properties` resource baked by the

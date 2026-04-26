@@ -13,6 +13,8 @@ object FusioClassIds {
     val PRESENTER_SCOPE = ClassId(FUSIO_PACKAGE, Name.identifier("PresenterScope"))
 
     val FUSE = CallableId(FUSIO_PACKAGE, Name.identifier("fuse"))
+    val ON = CallableId(FUSIO_PACKAGE, Name.identifier("on"))
+    val BUILD_PRESENTER = CallableId(FUSIO_PACKAGE, Name.identifier("buildPresenter"))
     val MAP_EVENTS = CallableId(FUSIO_PACKAGE, Name.identifier("mapEvents"))
     val FORWARD_EFFECTS = CallableId(FUSIO_PACKAGE, Name.identifier("forwardEffects"))
     val FORWARD_EVENT_ERRORS = CallableId(FUSIO_PACKAGE, Name.identifier("forwardEventErrors"))

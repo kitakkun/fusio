@@ -59,13 +59,16 @@ val copySupportedKotlinVersions by tasks.registering(Copy::class) {
 
 // Single shared src dir for everything baked into the plugin's resources.
 // Both generators (version.properties + supported-kotlin-versions.txt)
-// write into here; processResources depends on both so the directory is
-// populated by the time it runs.
+// write into here; `builtBy` wires the task dependency so every consumer of
+// the source set (processResources, sourcesJar from the publish plugin,
+// etc.) picks them up without an explicit per-task dependsOn.
 sourceSets.main {
-    resources.srcDir(layout.buildDirectory.dir("generated/resources/fusio"))
-}
-tasks.named("processResources") {
-    dependsOn(generateFusioVersionResource, copySupportedKotlinVersions)
+    resources.srcDir(
+        files(layout.buildDirectory.dir("generated/resources/fusio")).builtBy(
+            generateFusioVersionResource,
+            copySupportedKotlinVersions,
+        ),
+    )
 }
 
 gradlePlugin {

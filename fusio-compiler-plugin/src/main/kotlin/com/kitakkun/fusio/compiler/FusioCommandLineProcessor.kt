@@ -12,6 +12,12 @@ class FusioCommandLineProcessor : CommandLineProcessor {
 
     override val pluginOptions: Collection<CliOption> = listOf(
         CliOption("enabled", "<true|false>", "Enable Fusio compiler plugin", required = false),
+        CliOption(
+            "event-handler-exhaustive-severity",
+            "<error|warning|none>",
+            "Severity of the event-handler exhaustiveness check (default: warning)",
+            required = false,
+        ),
     )
 
     override fun processOption(
@@ -21,6 +27,17 @@ class FusioCommandLineProcessor : CommandLineProcessor {
     ) {
         when (option.optionName) {
             "enabled" -> configuration.put(FusioConfigurationKeys.ENABLED, value.toBoolean())
+            "event-handler-exhaustive-severity" -> {
+                val severity = runCatching {
+                    EventHandlerExhaustiveSeverity.valueOf(value.uppercase())
+                }.getOrElse {
+                    error(
+                        "Fusio: invalid event-handler-exhaustive-severity '$value'; " +
+                            "expected one of ${EventHandlerExhaustiveSeverity.values().joinToString { it.name.lowercase() }}.",
+                    )
+                }
+                configuration.put(FusioConfigurationKeys.EVENT_HANDLER_EXHAUSTIVE_SEVERITY, severity)
+            }
         }
     }
 }
