@@ -16,11 +16,33 @@ import kotlinx.coroutines.flow.receiveAsFlow
  * those mutations aren't visible to the composition — Compose only cares
  * about the wrapper's identity and its public read-shape, both of which are
  * reference-stable.
+ *
+ * ## Why `Channel`, not `MutableSharedFlow`, backs effects and event errors
+ *
+ * Both streams represent **consume-once** values: an effect (toast,
+ * navigation, snackbar) should fire once, and an event-processing error
+ * should be observed once for logging / metrics. `Channel` enforces this
+ * by giving each item to exactly one collector and dropping it from the
+ * buffer afterwards. A `SharedFlow` would broadcast to every collector,
+ * which silently turns a "log AND show toast" pair into a double-fire.
+ *
+ * `Channel.UNLIMITED` is the buffer policy here so [emitEffect] and the
+ * internal error recorder never suspend the producer — the reasonable
+ * presenter cadence is well below "millions of effects per frame", and a
+ * runaway effect emitter signals a bug we want surfaced rather than
+ * silently back-pressured.
+ *
+ * If a caller genuinely needs fan-out (e.g. forward the same effect both
+ * to UI and to an analytics sink), wrap the exposed Flow with
+ * `shareIn(scope, SharingStarted.Eagerly)` at the call site. Making fan-out
+ * an explicit opt-in keeps the default safe.
  */
 @Stable
 public class PresenterScope<Event, Effect>(
     @PublishedApi internal val eventFlow: Flow<Event>,
 ) {
+    // See class KDoc ("Why `Channel`, not `MutableSharedFlow`") for the
+    // rationale behind both channels.
     private val _effectChannel = Channel<Effect>(Channel.UNLIMITED)
     internal val internalEffectFlow: Flow<Effect> = _effectChannel.receiveAsFlow()
 
