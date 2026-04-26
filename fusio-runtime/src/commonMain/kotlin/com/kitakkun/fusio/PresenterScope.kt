@@ -49,10 +49,10 @@ public class PresenterScope<Event, Effect>(
     // Channel rather than MutableSharedFlow, bounded capacity, default
     // SUSPEND-overflow. See docs/runtime-implementation-notes.md ("Why Channel ... backs effects and
     // event errors") for the buffer-vs-replay rationale.
-    private val _effectChannel = Channel<Effect>(capacity = BUFFER_CAPACITY)
-    internal val internalEffectFlow: Flow<Effect> = _effectChannel.receiveAsFlow()
+    private val effectChannel = Channel<Effect>(capacity = BUFFER_CAPACITY)
+    internal val internalEffectFlow: Flow<Effect> = effectChannel.receiveAsFlow()
 
-    private val _errorChannel = Channel<Throwable>(capacity = BUFFER_CAPACITY)
+    private val errorChannel = Channel<Throwable>(capacity = BUFFER_CAPACITY)
 
     /**
      * Stream of exceptions thrown by `on<E>` handlers in this scope (and
@@ -64,7 +64,7 @@ public class PresenterScope<Event, Effect>(
      * machinery instead, so coroutine cooperative cancellation keeps
      * working as expected.
      */
-    public val eventErrorFlow: Flow<Throwable> = _errorChannel.receiveAsFlow()
+    public val eventErrorFlow: Flow<Throwable> = errorChannel.receiveAsFlow()
 
     /**
      * Push [effect] out to whatever is collecting this scope's effect
@@ -75,7 +75,7 @@ public class PresenterScope<Event, Effect>(
      * holds 64 items by default).
      */
     public suspend fun emitEffect(effect: Effect) {
-        _effectChannel.send(effect)
+        effectChannel.send(effect)
     }
 
     /**
@@ -85,12 +85,12 @@ public class PresenterScope<Event, Effect>(
      */
     @PublishedApi
     internal suspend fun recordEventError(t: Throwable) {
-        _errorChannel.send(t)
+        errorChannel.send(t)
     }
 
     internal fun close() {
-        _effectChannel.close()
-        _errorChannel.close()
+        effectChannel.close()
+        errorChannel.close()
     }
 }
 
