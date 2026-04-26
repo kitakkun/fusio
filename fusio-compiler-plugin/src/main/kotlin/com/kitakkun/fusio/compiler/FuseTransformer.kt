@@ -97,8 +97,8 @@ class FuseTransformer(
     private val forwardEffectsFn: IrSimpleFunctionSymbol by lazy {
         pluginContext.findFunctions(FusioClassIds.FORWARD_EFFECTS).single()
     }
-    private val forwardHandlerErrorsFn: IrSimpleFunctionSymbol by lazy {
-        pluginContext.findFunctions(FusioClassIds.FORWARD_HANDLER_ERRORS).single()
+    private val forwardEventErrorsFn: IrSimpleFunctionSymbol by lazy {
+        pluginContext.findFunctions(FusioClassIds.FORWARD_EVENT_ERRORS).single()
     }
     private val rememberFn: IrSimpleFunctionSymbol by lazy {
         // `remember` in androidx.compose.runtime has five overloads (0–4 explicit
@@ -150,7 +150,7 @@ class FuseTransformer(
                 childEffectType = childEffectType,
                 parentDecl = parentDecl,
             )
-            emitHandlerErrorForwarding(
+            emitEventErrorForwarding(
                 parentScopeVar = parentScopeVar,
                 childScopeVar = childScopeVar,
             )
@@ -170,7 +170,7 @@ class FuseTransformer(
      * Wrapping the allocation in `remember { ... }` gives the child scope a
      * stable identity across parent recompositions. Without this the child
      * scope would be re-allocated every frame; the `LaunchedEffect`s inside
-     * `forwardEffects` / `forwardHandlerErrors` that capture it at first
+     * `forwardEffects` / `forwardEventErrors` that capture it at first
      * invocation would then observe a scope the child's `on<>` handlers
      * stop publishing into (the handlers re-capture the fresh `this` each
      * recomposition — a bug that surfaces as "effects emitted after the
@@ -291,17 +291,17 @@ class FuseTransformer(
     }
 
     /**
-     * Inserts `forwardHandlerErrors(childScope, parentScope)` unconditionally.
+     * Inserts `forwardEventErrors(childScope, parentScope)` unconditionally.
      * Unlike effect forwarding, this isn't gated on `@MapFrom` annotations —
      * a handler crash in a child scope should always bubble up to the parent
      * so a single root-level observer sees every swallowed exception in the
      * tree. `Throwable` flows through unchanged, so no mapper lambda.
      */
-    private fun IrBlockBuilder.emitHandlerErrorForwarding(
+    private fun IrBlockBuilder.emitEventErrorForwarding(
         parentScopeVar: IrVariable,
         childScopeVar: IrVariable,
     ) {
-        +irCall(forwardHandlerErrorsFn).also { fc ->
+        +irCall(forwardEventErrorsFn).also { fc ->
             fc.setArg(0, irGet(childScopeVar))
             fc.setArg(1, irGet(parentScopeVar))
         }

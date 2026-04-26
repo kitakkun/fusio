@@ -22,7 +22,7 @@ Three things wrong with this:
 
 1. **Boilerplate.** `events = remember { MutableSharedFlow(…) }` is identical at every Fusio call site. The `extraBufferCapacity = 64` value is arbitrary and copied around.
 2. **Two reference points.** The caller must keep `events` alive for `tryEmit` calls *and* keep `presentation` alive for state/effect reads — they're conceptually one thing but live as two locals.
-3. **Mismatched ownership.** Outputs (`state`, `effectFlow`, `handlerErrors`) flow from the presenter; the input flow flows *into* the presenter. The asymmetry leaks library plumbing into user code.
+3. **Mismatched ownership.** Outputs (`state`, `effectFlow`, `eventErrorFlow`) flow from the presenter; the input flow flows *into* the presenter. The asymmetry leaks library plumbing into user code.
 
 ## Iteration log
 

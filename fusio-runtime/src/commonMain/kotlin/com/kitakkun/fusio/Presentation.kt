@@ -5,9 +5,10 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * The value a Fusio presenter produces: a snapshot of screen [state], the
- * [effectFlow] of side effects, the [handlerErrors] stream of any crashes
- * swallowed by `on<E>` handlers, and a [send] entry point the UI uses to
- * push events into the presenter.
+ * [effectFlow] of side effects, the [eventErrorFlow] stream of any crashes
+ * raised while processing events (i.e. swallowed by an `on<E>` handler's
+ * try/catch), and a [send] entry point the UI uses to push events into the
+ * presenter.
  *
  * The name reflects what Fusio is doing at the call site — fusing the
  * sub-presenters' private state trees into one screen-level state and their
@@ -20,7 +21,7 @@ import kotlinx.coroutines.flow.Flow
  * ABI to the exact field list — adding, removing, or reordering a field
  * becomes a binary-incompatible change for downstream consumers. A
  * Maven-Central-grade library shouldn't leak that surface; callers of
- * `Presentation` read `.state` / `.effectFlow` / `.handlerErrors` directly
+ * `Presentation` read `.state` / `.effectFlow` / `.eventErrorFlow` directly
  * and don't need destructuring or `copy()`. The explicit [equals] /
  * [hashCode] / [toString] below retain the ergonomics that actually matter
  * (structural equality in tests and readable log output) without the ABI tax.
@@ -37,9 +38,9 @@ import kotlinx.coroutines.flow.Flow
  *
  * ## All four properties are required
  *
- * No defaults. A presenter author deciding not to propagate handler errors
- * should pass `emptyFlow()` explicitly, so the decision is visible at the
- * call site rather than being silently inherited from a default.
+ * No defaults. A presenter author deciding not to propagate event-processing
+ * errors should pass `emptyFlow()` explicitly, so the decision is visible at
+ * the call site rather than being silently inherited from a default.
  * `buildPresenter` wires the real channels from its `PresenterScope`;
  * hand-rolled `Presentation(state, effectFlow, emptyFlow(), {})` is the
  * correct form when composing a presenter without `buildPresenter`.
@@ -48,7 +49,7 @@ import kotlinx.coroutines.flow.Flow
 public class Presentation<State, Effect, Event>(
     public val state: State,
     public val effectFlow: Flow<Effect>,
-    public val handlerErrors: Flow<Throwable>,
+    public val eventErrorFlow: Flow<Throwable>,
     public val send: (Event) -> Unit,
 ) {
     override fun equals(other: Any?): Boolean {
@@ -56,18 +57,18 @@ public class Presentation<State, Effect, Event>(
         if (other !is Presentation<*, *, *>) return false
         return state == other.state &&
             effectFlow == other.effectFlow &&
-            handlerErrors == other.handlerErrors &&
+            eventErrorFlow == other.eventErrorFlow &&
             send == other.send
     }
 
     override fun hashCode(): Int {
         var result = state?.hashCode() ?: 0
         result = 31 * result + effectFlow.hashCode()
-        result = 31 * result + handlerErrors.hashCode()
+        result = 31 * result + eventErrorFlow.hashCode()
         result = 31 * result + send.hashCode()
         return result
     }
 
     override fun toString(): String =
-        "Presentation(state=$state, effectFlow=$effectFlow, handlerErrors=$handlerErrors, send=$send)"
+        "Presentation(state=$state, effectFlow=$effectFlow, eventErrorFlow=$eventErrorFlow, send=$send)"
 }

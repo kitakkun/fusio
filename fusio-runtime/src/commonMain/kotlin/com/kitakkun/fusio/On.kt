@@ -23,13 +23,13 @@ import kotlinx.coroutines.flow.filterIsInstance
  * ## Error handling
  *
  * If [handler] throws, the exception is caught and routed into
- * [PresenterScope.handlerErrors] instead of propagating up the
+ * [PresenterScope.eventErrorFlow] instead of propagating up the
  * `LaunchedEffect` scope (which would kill the composition). The offending
  * event is effectively dropped and subsequent events continue to flow.
  * [CancellationException] is always re-thrown so coroutine cooperative
  * cancellation keeps working.
  *
- * Observe `scope.handlerErrors` at the root presenter (or on the parent
+ * Observe `scope.eventErrorFlow` at the root presenter (or on the parent
  * scope a child `fuse`d into) to react to crashes — log, emit a user-
  * facing error effect, increment a metric, etc.
  */
@@ -47,7 +47,7 @@ public inline fun <reified E> PresenterScope<*, *>.on(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (t: Throwable) {
-                scope.recordHandlerError(t)
+                scope.recordEventError(t)
             }
         }
     }

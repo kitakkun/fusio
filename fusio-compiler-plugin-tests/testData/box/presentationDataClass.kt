@@ -13,9 +13,9 @@ fun box(): String {
     val flow = emptyFlow<String>()
     val errors = emptyFlow<Throwable>()
     val send: (Int) -> Unit = {}
-    val a = Presentation(state = 42, effectFlow = flow, handlerErrors = errors, send = send)
-    val b = Presentation(state = 42, effectFlow = flow, handlerErrors = errors, send = send)
-    val c = Presentation(state = 7, effectFlow = flow, handlerErrors = errors, send = send)
+    val a = Presentation(state = 42, effectFlow = flow, eventErrorFlow = errors, send = send)
+    val b = Presentation(state = 42, effectFlow = flow, eventErrorFlow = errors, send = send)
+    val c = Presentation(state = 7, effectFlow = flow, eventErrorFlow = errors, send = send)
 
     if (a != b) return "FAIL: equal states should be equal: $a vs $b"
     if (a.hashCode() != b.hashCode()) return "FAIL: equal instances should share hashCode"

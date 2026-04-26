@@ -222,24 +222,24 @@ fun adds_a_task_and_shows_toast() = testPresenter(
 `PresenterScenario` (the receiver on the lambda) exposes:
 
 - **Reads.** `state` (latest snapshot), `stateHistory` (every distinct value
-  observed, in order), `pendingEffects` and `pendingHandlerErrors`
+  observed, in order), `pendingEffects` and `pendingEventErrors`
   (queued but not yet awaited).
 - **Drivers.** `send(event)` pushes an event and advances one frame;
   `advance()` ticks a frame without sending.
 - **Awaits.** `awaitState { predicate }` suspends until the predicate matches;
   `awaitEffect()` / `awaitEffect<T>()` pops the next effect (strict on type
-  mismatch); `awaitHandlerError()` / `awaitHandlerError<T>()` pops the next
-  `on<>`-handler exception; `expectNoEffects()` / `expectNoHandlerErrors()`
+  mismatch); `awaitEventError()` / `awaitEventError<T>()` pops the next
+  event-processing exception; `expectNoEffects()` / `expectNoEventErrors()`
   fail if anything arrives in the window.
 - **Fail-fast.** `assertState(message?) { predicate }` checks the current
   state without waiting — useful for layering extra checks on a state that
   already landed.
 
-### Handler errors stay observable
+### Event errors stay observable
 
 Exceptions thrown inside `on<Event>` handlers are caught by the runtime
-and routed into `PresenterScope.handlerErrors`, surfaced at the root
-`Presentation.handlerErrors` flow. The presenter stays alive — the
+and routed into `PresenterScope.eventErrorFlow`, surfaced at the root
+`Presentation.eventErrorFlow`. The presenter stays alive — the
 offending event is dropped, subsequent events continue flowing — and a
 test can assert on the crash directly:
 
@@ -249,16 +249,16 @@ fun add_rejects_duplicate_title() = testPresenter(presenter = { todoPresenter() 
     send(TodoEvent.Add("milk"))
     send(TodoEvent.Add("milk")) // handler throws DuplicateTitleException
 
-    val err = awaitHandlerError<DuplicateTitleException>()
+    val err = awaitEventError<DuplicateTitleException>()
     assertEquals("milk", err.title)
     // presenter's state still updated cleanly from the first Add
     assertState { it.items.size == 1 }
 }
 ```
 
-Children `fuse`d into a parent forward their handler errors up
-automatically — one root-level observer sees every handler crash in the
-tree.
+Children `fuse`d into a parent forward their event errors up
+automatically — one root-level observer sees every event-processing
+crash in the tree.
 
 Under the hood it runs in `kotlinx-coroutines-test`'s virtual time, so
 `delay` / `withTimeout` inside a presenter resolve instantly. The entire

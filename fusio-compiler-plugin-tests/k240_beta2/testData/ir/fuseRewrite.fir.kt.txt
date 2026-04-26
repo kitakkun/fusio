@@ -392,7 +392,7 @@ local fun PresenterScope<ParentEvent, ParentEffect>.<anonymous>(/* var */ $compo
         }
 )
       }, $composer = $composer, $changed = 390.or(other = 112.and(other = $changed.shl(bitCount = 3))))
-      forwardHandlerErrors(childScope = tmp_9, parentScope = tmp_8, $composer = $composer, $changed = 6.or(other = 112.and(other = $changed.shl(bitCount = 3))))
+      forwardEventErrors(childScope = tmp_9, parentScope = tmp_8, $composer = $composer, $changed = 6.or(other = 112.and(other = $changed.shl(bitCount = 3))))
             @Composable
 local fun PresenterScope<ChildEvent, ChildEffect>.<anonymous>(/* var */ $composer: Composer?, $changed: Int): ChildState {
         $composer.startReplaceGroup(key = 6532170)

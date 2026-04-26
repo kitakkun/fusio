@@ -49,7 +49,7 @@ public fun <Event, Effect, UiState> buildPresenter(
     return Presentation(
         state = uiState,
         effectFlow = scope.internalEffectFlow,
-        handlerErrors = scope.handlerErrors,
+        eventErrorFlow = scope.eventErrorFlow,
         // tryEmit returns false on overflow; we ignore it. The buffer is
         // sized so this shouldn't happen under realistic UI cadence; if a
         // workload really needs back-pressure, expose buffer as a parameter.

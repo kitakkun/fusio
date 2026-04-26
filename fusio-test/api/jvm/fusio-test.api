@@ -4,16 +4,16 @@ public abstract interface class com/kitakkun/fusio/test/PresenterScenario {
 	public static synthetic fun assertState$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun awaitEffect-8Mi8wO0 (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun awaitEffect-8Mi8wO0$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public abstract fun awaitHandlerError-8Mi8wO0 (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun awaitHandlerError-8Mi8wO0$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun awaitEventError-8Mi8wO0 (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun awaitEventError-8Mi8wO0$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun awaitState-dWUq8MI (Ljava/lang/String;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun awaitState-dWUq8MI$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun expectNoEffects-8Mi8wO0 (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun expectNoEffects-8Mi8wO0$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public abstract fun expectNoHandlerErrors-8Mi8wO0 (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun expectNoHandlerErrors-8Mi8wO0$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun expectNoEventErrors-8Mi8wO0 (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun expectNoEventErrors-8Mi8wO0$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getPendingEffects ()Ljava/util/List;
-	public abstract fun getPendingHandlerErrors ()Ljava/util/List;
+	public abstract fun getPendingEventErrors ()Ljava/util/List;
 	public abstract fun getState ()Ljava/lang/Object;
 	public abstract fun getStateHistory ()Ljava/util/List;
 	public abstract fun send (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -22,10 +22,10 @@ public abstract interface class com/kitakkun/fusio/test/PresenterScenario {
 public final class com/kitakkun/fusio/test/PresenterScenario$DefaultImpls {
 	public static synthetic fun assertState$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun awaitEffect-8Mi8wO0$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static synthetic fun awaitHandlerError-8Mi8wO0$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun awaitEventError-8Mi8wO0$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun awaitState-dWUq8MI$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun expectNoEffects-8Mi8wO0$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static synthetic fun expectNoHandlerErrors-8Mi8wO0$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun expectNoEventErrors-8Mi8wO0$default (Lcom/kitakkun/fusio/test/PresenterScenario;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class com/kitakkun/fusio/test/TestPresenterKt {

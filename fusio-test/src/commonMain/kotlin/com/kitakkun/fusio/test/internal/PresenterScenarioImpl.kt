@@ -37,7 +37,7 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
     private val stateHolder: StateHolder<State>,
     override val stateHistory: List<State>,
     private val effectChannel: Channel<Effect>,
-    private val handlerErrorChannel: Channel<Throwable>,
+    private val eventErrorChannel: Channel<Throwable>,
     private val clock: BroadcastFrameClock,
     private val scheduler: TestCoroutineScheduler,
     private val recompositionError: ErrorRef,
@@ -45,7 +45,7 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
 
     private var frameTimeNanos = 0L
     private val _pendingEffects: MutableList<Effect> = mutableListOf()
-    private val _pendingHandlerErrors: MutableList<Throwable> = mutableListOf()
+    private val _pendingEventErrors: MutableList<Throwable> = mutableListOf()
 
     override val state: State
         get() {
@@ -63,10 +63,10 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
             return _pendingEffects.toList()
         }
 
-    override val pendingHandlerErrors: List<Throwable>
+    override val pendingEventErrors: List<Throwable>
         get() {
-            drainHandlerErrorChannel()
-            return _pendingHandlerErrors.toList()
+            drainEventErrorChannel()
+            return _pendingEventErrors.toList()
         }
 
     override suspend fun send(event: Event) {
@@ -168,39 +168,39 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
         }
     }
 
-    override suspend fun awaitHandlerError(message: String?, timeout: Duration): Throwable {
-        drainHandlerErrorChannel()
-        if (_pendingHandlerErrors.isNotEmpty()) return _pendingHandlerErrors.removeAt(0)
+    override suspend fun awaitEventError(message: String?, timeout: Duration): Throwable {
+        drainEventErrorChannel()
+        if (_pendingEventErrors.isNotEmpty()) return _pendingEventErrors.removeAt(0)
 
         checkError()
         return withTimeoutOrNull(timeout) {
-            handlerErrorChannel.receive()
+            eventErrorChannel.receive()
         } ?: throw AssertionError(
             buildFailureMessage(
-                header = "awaitHandlerError timed out after $timeout${message?.let { " ($it)" } ?: ""}.",
+                header = "awaitEventError timed out after $timeout${message?.let { " ($it)" } ?: ""}.",
                 extras = mapOf(
-                    "No handler error surfaced during the window" to "",
+                    "No event-processing error surfaced during the window" to "",
                     "Current state" to "${stateHolder.current}",
                 ),
             ),
         )
     }
 
-    override suspend fun expectNoHandlerErrors(message: String?, within: Duration) {
-        drainHandlerErrorChannel()
-        if (_pendingHandlerErrors.isNotEmpty()) {
+    override suspend fun expectNoEventErrors(message: String?, within: Duration) {
+        drainEventErrorChannel()
+        if (_pendingEventErrors.isNotEmpty()) {
             throw AssertionError(
                 buildFailureMessage(
-                    header = "expectNoHandlerErrors: ${_pendingHandlerErrors.size} error(s) already queued${message?.let { " ($it)" } ?: ""}.",
-                    extras = mapOf("Queued" to _pendingHandlerErrors.joinToString { it::class.simpleName ?: it.toString() }),
+                    header = "expectNoEventErrors: ${_pendingEventErrors.size} error(s) already queued${message?.let { " ($it)" } ?: ""}.",
+                    extras = mapOf("Queued" to _pendingEventErrors.joinToString { it::class.simpleName ?: it.toString() }),
                 ),
             )
         }
-        val received = withTimeoutOrNull(within) { handlerErrorChannel.receive() }
+        val received = withTimeoutOrNull(within) { eventErrorChannel.receive() }
         if (received != null) {
             throw AssertionError(
                 buildFailureMessage(
-                    header = "expectNoHandlerErrors: received ${received::class.simpleName ?: received} within $within${message?.let { " ($it)" } ?: ""}.",
+                    header = "expectNoEventErrors: received ${received::class.simpleName ?: received} within $within${message?.let { " ($it)" } ?: ""}.",
                     extras = emptyMap(),
                 ),
             )
@@ -237,9 +237,9 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
         if (_pendingEffects.isNotEmpty()) {
             appendLine("  Pending effects: $_pendingEffects")
         }
-        drainHandlerErrorChannel()
-        if (_pendingHandlerErrors.isNotEmpty()) {
-            appendLine("  Pending handler errors: ${_pendingHandlerErrors.joinToString { it::class.simpleName ?: it.toString() }}")
+        drainEventErrorChannel()
+        if (_pendingEventErrors.isNotEmpty()) {
+            appendLine("  Pending event errors: ${_pendingEventErrors.joinToString { it::class.simpleName ?: it.toString() }}")
         }
     }.trimEnd()
 
@@ -254,11 +254,11 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
         }
     }
 
-    private fun drainHandlerErrorChannel() {
+    private fun drainEventErrorChannel() {
         while (true) {
-            val result = handlerErrorChannel.tryReceive()
+            val result = eventErrorChannel.tryReceive()
             if (result.isSuccess) {
-                _pendingHandlerErrors += result.getOrThrow()
+                _pendingEventErrors += result.getOrThrow()
             } else {
                 break
             }

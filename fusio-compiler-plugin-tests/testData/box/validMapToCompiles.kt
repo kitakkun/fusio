@@ -21,7 +21,7 @@ fun box(): String {
     val presentation: Presentation<String, Child, Parent> = Presentation(
         state = "ready",
         effectFlow = emptyFlow(),
-        handlerErrors = emptyFlow(),
+        eventErrorFlow = emptyFlow(),
         send = {},
     )
     if (presentation.state != "ready") return "FAIL: state=${presentation.state}"

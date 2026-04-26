@@ -89,7 +89,7 @@ public fun <Event, State, Effect> testPresenter(
 ): TestResult = runTest(context = UnconfinedTestDispatcher() + context) {
     val clock = BroadcastFrameClock()
     val effectChannel = Channel<Effect>(Channel.UNLIMITED)
-    val handlerErrorChannel = Channel<Throwable>(Channel.UNLIMITED)
+    val eventErrorChannel = Channel<Throwable>(Channel.UNLIMITED)
     val stateHolder = StateHolder<State>()
     val history: MutableList<State> = mutableListOf()
     val errorRef = ErrorRef()
@@ -105,8 +105,8 @@ public fun <Event, State, Effect> testPresenter(
     // interleave with it. The exception handler catches crashes *inside
     // the recomposer loop itself* — things that throw during Compose's
     // change-apply phase. `on<>` handler crashes are now caught by the
-    // runtime and surface through `presentation.handlerErrors`, drained
-    // into [handlerErrorChannel] below for the scenario to assert on.
+    // runtime and surface through `presentation.eventErrorFlow`, drained
+    // into [eventErrorChannel] below for the scenario to assert on.
     val recomposer = Recomposer(coroutineContext + clock)
     val recomposerJob = launch(
         clock + CoroutineExceptionHandler { _, t -> errorRef.value = t },
@@ -133,8 +133,8 @@ public fun <Event, State, Effect> testPresenter(
         LaunchedEffect(presentation.effectFlow) {
             presentation.effectFlow.collect { effectChannel.send(it) }
         }
-        LaunchedEffect(presentation.handlerErrors) {
-            presentation.handlerErrors.collect { handlerErrorChannel.send(it) }
+        LaunchedEffect(presentation.eventErrorFlow) {
+            presentation.eventErrorFlow.collect { eventErrorChannel.send(it) }
         }
     }
 
@@ -147,7 +147,7 @@ public fun <Event, State, Effect> testPresenter(
         stateHolder = stateHolder,
         stateHistory = history,
         effectChannel = effectChannel,
-        handlerErrorChannel = handlerErrorChannel,
+        eventErrorChannel = eventErrorChannel,
         clock = clock,
         scheduler = testScheduler,
         recompositionError = errorRef,
