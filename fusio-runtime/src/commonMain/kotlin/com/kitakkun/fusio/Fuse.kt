@@ -6,30 +6,40 @@ import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
 /**
- * Fuses a sub-presenter's scope into the current one and returns its state.
- * Events declared with `@MapTo(ChildEvent::class)` on the parent event
- * sealed subtypes flow into the child's scope; effects emitted by the
- * sub-presenter via [PresenterScope.emitEffect] flow back up via the
- * `@MapFrom(ChildEffect::class)` mappings on the parent effect subtypes.
+ * Fuses a sub-presenter's scope into the current one and returns its
+ * state.
  *
- * This function is a stub — the Fusio compiler plugin rewrites every call
- * site at IR time into the actual event-mapping / effect-forwarding
- * plumbing. If the plugin is not applied the call throws at runtime.
+ * Use inside a parent presenter body to compose a child presenter
+ * declared as `@Composable fun PresenterScope<ChildEvent, ChildEffect>.foo()`:
  *
- * ## Why `inline` / no `@Composable`
+ * ```kotlin
+ * @Composable
+ * fun myScreenPresenter(): Presentation<MyScreenUiState, MyScreenEvent, MyScreenEffect> = buildPresenter {
+ *     val tasks  = fuse { taskList() }   // ChildEvent = TaskListEvent, etc.
+ *     val filter = fuse { filter() }
+ *     MyScreenUiState(tasks, filter)
+ * }
+ * ```
  *
- * Declared `inline` so the call site's @Composable context is what governs
- * the block lambda — this function itself doesn't need to be marked
- * @Composable. The IR transformer that rewrites `fuse` runs in
- * `IrGenerationExtension` which fires BEFORE inline lowering, so the call
- * is still visible to us and gets replaced before inlining would ever
- * expand the stub body.
+ * Routing between parent and child is declared by annotations — not by
+ * arguments to `fuse`:
  *
- * The [contract] tells the compiler the block can run at most once.
- * Statically the stub body throws before calling it (`AT_MOST_ONCE`); in
- * practice the IR transformer replaces the call so the block is invoked
- * exactly once in real code. AT_MOST_ONCE is the strongest the stub body
- * can honestly claim.
+ * - `@MapTo(ChildEvent.X::class)` on a parent event subtype → events of
+ *   that parent subtype are translated into the child subtype and fed
+ *   into the child's `on<>` handlers.
+ * - `@MapFrom(ChildEffect.Y::class)` on a parent effect subtype → effects
+ *   the child emits via [PresenterScope.emitEffect] are lifted into the
+ *   matching parent effect and surface on `Presentation.effectFlow`.
+ *
+ * The Fusio compiler plugin rewrites every `fuse { … }` call site at IR
+ * time to generate the event-mapping / effect-forwarding plumbing from
+ * those annotations. **If the Fusio Gradle plugin is not applied, this
+ * function throws at runtime** — apply `id("com.kitakkun.fusio")` in
+ * your build script.
+ *
+ * The block runs at most once per call (`InvocationKind.AT_MOST_ONCE`)
+ * — the compiler plugin's rewrite invokes it exactly once; the un-rewritten
+ * stub never reaches it.
  */
 @OptIn(ExperimentalContracts::class)
 public inline fun <ChildEvent, ChildEffect, ChildState> PresenterScope<*, *>.fuse(

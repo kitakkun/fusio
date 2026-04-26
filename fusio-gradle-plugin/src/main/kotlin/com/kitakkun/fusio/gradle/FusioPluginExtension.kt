@@ -3,26 +3,31 @@ package com.kitakkun.fusio.gradle
 import org.gradle.api.provider.Property
 
 /**
- * `fusio { … }` DSL block configuration. Apply the plugin and tweak from
+ * `fusio { … }` DSL block. Tune Fusio's compiler-plugin behaviour from
  * a consumer's `build.gradle.kts`:
  *
  * ```kotlin
+ * plugins {
+ *     id("com.kitakkun.fusio")
+ * }
+ *
  * fusio {
  *     eventHandlerExhaustiveSeverity = EventHandlerExhaustiveSeverity.ERROR
  * }
  * ```
  *
- * Every property is also resolvable from a Gradle property of the matching
- * `fusio.…` name, so CI overrides can inject values without editing the
- * build script.
+ * Each property also resolves from a matching `-Pfusio.…` Gradle
+ * property, so CI lanes can override values without editing the build
+ * script. The DSL value wins when both are set.
  */
 public abstract class FusioPluginExtension {
     /**
-     * Severity of the event-handler-exhaustiveness check.
+     * How loudly the event-handler exhaustiveness check should report
+     * uncovered `Event` subtypes — see [EventHandlerExhaustiveSeverity]
+     * for the available levels.
      *
-     * Default: [EventHandlerExhaustiveSeverity.WARNING]. Falls back to the
-     * `fusio.event-handler-exhaustive-severity` Gradle property when not
-     * set in the DSL.
+     * Default: [EventHandlerExhaustiveSeverity.WARNING]. Falls back to
+     * `-Pfusio.event-handler-exhaustive-severity=…` when unset.
      */
     public abstract val eventHandlerExhaustiveSeverity: Property<EventHandlerExhaustiveSeverity>
 }

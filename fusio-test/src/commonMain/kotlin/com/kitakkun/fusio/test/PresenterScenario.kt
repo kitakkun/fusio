@@ -5,43 +5,53 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Driver + assertion surface a [testPresenter] / [testSubPresenter] scenario
- * block runs against.
+ * Driver and assertion surface for the scenario block of [testPresenter]
+ * and [testSubPresenter].
  *
- * The scenario owns the headless Compose runtime behind it. Calls here push
- * events into the presenter, tick the frame clock, and inspect what the
- * presenter produced in return.
+ * Inside the scenario you push events with [send] (or just [advance] the
+ * frame clock), inspect produced state via [state] / [stateHistory] /
+ * [assertState] / [awaitState], pop side effects with
+ * [awaitEffect] / [pendingEffects], assert silence with [expectNoEffects],
+ * and handle event-processing errors with [awaitEventError] /
+ * [expectNoEventErrors].
  *
- * ## Read semantics
+ * ```kotlin
+ * testPresenter(presenter = { todoPresenter() }) {
+ *     send(TodoEvent.Add("milk"))
+ *     awaitState { it.items.size == 1 }
  *
- * [state] is a snapshot — calling it twice in a row returns the same value
- * unless a frame advanced between the calls. [stateHistory] records every
- * distinct state value observed since the scenario started, which lets tests
- * assert that a transient "loading" state was actually visible even if the
- * final state is "loaded".
+ *     val toast = awaitEffect<TodoEffect.Toast>()
+ *     assertEquals("added", toast.message)
+ *     expectNoEffects()
+ * }
+ * ```
  *
- * ## Effect semantics
+ * ## Reading state
  *
- * Effects are a queue, not a stream snapshot — [awaitEffect] pops the next
- * one, and [pendingEffects] reads the unpopped remainder. [expectNoEffects]
- * fails if anything is queued or arrives within its window, so pair it with
- * [awaitEffect] calls when you want to assert "exactly this one effect, no
- * more".
+ * [state] is the latest snapshot — back-to-back reads return the same
+ * value unless a frame advanced between them. [stateHistory] is every
+ * distinct state value observed since the scenario started, useful for
+ * asserting that a transient `loading = true` actually surfaced even if
+ * the final state is `loading = false`.
  *
- * ## Event-error semantics
+ * ## Effects and event errors
  *
- * Exceptions raised while processing events (caught by `on<E>`'s try/catch)
- * are routed into the root `PresenterScope.eventErrorFlow` stream
- * (including errors bubbled up from `fuse`d children). Same queue shape as
- * effects: [awaitEventError] pops, [pendingEventErrors] peeks. Useful for
- * asserting that a handler *does* throw on bad input without letting the
- * exception derail the rest of the scenario.
+ * Both are FIFO queues, not snapshots:
+ * - [awaitEffect] pops the next effect (suspending up to `timeout`);
+ *   [pendingEffects] is the unpopped remainder.
+ * - [awaitEventError] does the same for `on<E>`-handler exceptions
+ *   surfaced via `Presentation.eventErrorFlow`.
+ *
+ * Pair the await calls with [expectNoEffects] / [expectNoEventErrors]
+ * when you want to lock down "exactly the things I awaited, nothing
+ * extra".
  *
  * ## Timeouts
  *
- * All await-style methods accept a [Duration]. Under the virtual clock the
- * framework installs, 1-second defaults are generous — bump them only if a
- * presenter genuinely schedules work beyond that horizon.
+ * All await-style methods accept a [Duration]. Under the virtual clock
+ * `kotlinx-coroutines-test` installs, the 1-second defaults are virtual
+ * milliseconds — generous for most tests, bump only when a presenter
+ * genuinely schedules work beyond that horizon.
  */
 public interface PresenterScenario<Event, State, Effect> {
     /** The most-recent state produced by the presenter. */
@@ -63,12 +73,12 @@ public interface PresenterScenario<Event, State, Effect> {
     public suspend fun advance()
 
     /**
-     * Suspends until [predicate] matches on the current state, or fails if
-     * [timeout] elapses first. Returns the state that matched.
+     * Suspend until [predicate] matches the current state, returning the
+     * matched state. Fails the test if [timeout] elapses first.
      *
-     * [message] gets prepended to the timeout failure text so tests can
-     * annotate WHY they expected that state ("after login completes" etc.)
-     * without relying on recoverable predicate source.
+     * Pass [message] to annotate the timeout failure with the call site's
+     * intent (e.g. `"after login completes"`) — predicate source isn't
+     * otherwise recoverable in the failure text.
      */
     public suspend fun awaitState(
         message: String? = null,
@@ -77,56 +87,56 @@ public interface PresenterScenario<Event, State, Effect> {
     ): State
 
     /**
-     * Fail-fast sibling of [awaitState]: checks [predicate] against the
-     * current [state] once and throws [AssertionError] if it doesn't match.
-     * Use this after a [send] + [awaitState] pair when you want to layer
-     * additional assertions on the landed state without re-waiting.
-     *
-     * [message] gets prepended to the failure description to preserve the
-     * call-site intent — predicate source text isn't otherwise recoverable.
+     * Synchronous sibling of [awaitState] — checks [predicate] against the
+     * current [state] once and fails the test if it doesn't match. Use
+     * after a [send] + [awaitState] pair when you want to layer extra
+     * assertions on the already-landed state without re-waiting.
      */
     public fun assertState(message: String? = null, predicate: (State) -> Boolean): State
 
     /**
-     * Suspends until an effect is available and returns it. Fails if none
-     * arrives within [timeout]. [message] annotates the failure text.
+     * Suspend until the next effect is available and return it, or fail
+     * if [timeout] elapses with the queue still empty.
      */
     public suspend fun awaitEffect(message: String? = null, timeout: Duration = 1.seconds): Effect
 
     /**
-     * Fails if any effect is already queued or arrives within [within]. Use
-     * this to lock down "no extra effects beyond the ones I explicitly
-     * awaited". [message] annotates the failure text.
+     * Fail the test if any effect is already queued or arrives within
+     * [within]. Pair with [awaitEffect] to lock down "exactly the
+     * effects I awaited, nothing more".
      */
     public suspend fun expectNoEffects(message: String? = null, within: Duration = 50.milliseconds)
 
     /**
-     * Suspends until an event-processing error is available and returns it.
-     * Fails if none arrives within [timeout]. [message] annotates the failure text.
+     * Suspend until the next `on<E>`-handler exception is available and
+     * return it, or fail if [timeout] elapses with no error recorded.
      */
     public suspend fun awaitEventError(message: String? = null, timeout: Duration = 1.seconds): Throwable
 
     /**
-     * Fails if any event-processing error is already queued or arrives within
-     * [within]. Symmetric with [expectNoEffects] for asserting that the
-     * presenter's `on<>` handlers ran without swallowing any exception.
-     * [message] annotates the failure text.
+     * Fail the test if any event-processing error is already recorded or
+     * arrives within [within]. Symmetric with [expectNoEffects] for
+     * pinning down "no `on<E>` handler threw".
      */
     public suspend fun expectNoEventErrors(message: String? = null, within: Duration = 50.milliseconds)
 }
 
 /**
- * Reified sugar over [PresenterScenario.awaitEffect] that narrows the result
- * to a specific subtype [T]. Fails fast (Turbine-style) if the next effect
- * is a different subtype — skipping non-matching effects would mask bugs
- * where the wrong effect was emitted first.
+ * Pop the next effect and assert it's a [T], returning it narrowed.
  *
- * Uses star projections on the receiver so call sites only need to supply
- * [T] (`awaitEffect<Toast>()`); Kotlin would otherwise demand all four
- * type arguments because the interface's bare `awaitEffect(timeout)`
- * occupies the same name. The `T : Any` bound matches `reified`'s real
- * constraint — effects are the concrete payload of a sealed hierarchy and
- * are never themselves nullable at the call site.
+ * Fails the test if the next effect is a different subtype — skipping
+ * non-matching effects would let bugs that emit the wrong effect first
+ * slip past. Use it like:
+ *
+ * ```kotlin
+ * send(TodoEvent.Add("milk"))
+ * val toast = awaitEffect<TodoEffect.Toast>()
+ * assertEquals("added", toast.message)
+ * ```
+ *
+ * The receiver uses star projections so call sites supply only [T] —
+ * `awaitEffect<Toast>()` rather than spelling out every other type
+ * parameter.
  */
 public suspend inline fun <reified T : Any> PresenterScenario<*, *, *>.awaitEffect(
     message: String? = null,
@@ -146,10 +156,19 @@ public suspend inline fun <reified T : Any> PresenterScenario<*, *, *>.awaitEffe
 }
 
 /**
- * Reified sugar over [PresenterScenario.awaitEventError] that narrows
- * the result to a specific [Throwable] subtype [T]. Fails fast if the
- * next recorded error isn't a [T], matching the strictness of the
- * effect-side [awaitEffect].
+ * Pop the next event-processing error and assert it's a [T], returning it
+ * narrowed.
+ *
+ * Same shape as the effect-side [awaitEffect] reified overload: fails the
+ * test if the next recorded error isn't a [T]. Use it to pin both that an
+ * `on<E>` handler did throw on bad input and that it threw the *expected*
+ * exception type:
+ *
+ * ```kotlin
+ * send(TodoEvent.Add(""))
+ * val err = awaitEventError<EmptyTitleException>()
+ * assertEquals("title is empty", err.message)
+ * ```
  */
 public suspend inline fun <reified T : Throwable> PresenterScenario<*, *, *>.awaitEventError(
     message: String? = null,

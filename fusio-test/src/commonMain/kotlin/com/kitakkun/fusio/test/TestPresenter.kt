@@ -24,24 +24,22 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
 /**
- * Runs [presenter] inside a headless Compose runtime, then invokes [scenario]
- * against a [PresenterScenario] that can drive events and assert on state /
- * effects.
+ * Runs [presenter] inside a headless Compose runtime and exposes a
+ * [PresenterScenario] for driving events and asserting on the resulting
+ * state and effects.
  *
- * ## What the framework supplies, what you supply
- *
- * The framework calls [presenter] inside the headless composition; every
- * argument to your real presenter (repositories, user ids, dispatchers,
- * feature flags, …) is yours to bind inside the lambda — the same pattern
- * Compose UI tests use with `setContent { MyScreen(dep1, dep2) }`. Events
- * are pushed via the returned `presentation.send` (which the scenario's
- * [PresenterScenario.send] thinly wraps), so there's no event-flow argument
- * to plumb in from the test side.
+ * Use it from a `@Test` function exactly the way you'd use
+ * `runTest { … }` — the returned [TestResult] is whatever
+ * `kotlinx-coroutines-test` returns on the current platform (`Unit` on
+ * JVM / Android, `Promise` on JS / Wasm).
  *
  * ```kotlin
  * @Test
  * fun adds_a_task() = testPresenter(
  *     presenter = {
+ *         // Bind every real-presenter argument here — fakes, ids,
+ *         // dispatchers, feature flags, etc. Same shape as Compose's
+ *         // setContent { MyScreen(dep1, dep2) } pattern.
  *         todoPresenter(repo = FakeTodoRepo(), userId = "u1")
  *     },
  * ) {
@@ -53,31 +51,31 @@ import kotlin.coroutines.EmptyCoroutineContext
  * }
  * ```
  *
- * ## Timing model
+ * Events are pushed via the scenario's [PresenterScenario.send], which
+ * forwards into the presenter's internal event channel — no event-flow
+ * argument to plumb in from the test side.
  *
- * Driven by [kotlinx.coroutines.test.runTest] + [UnconfinedTestDispatcher],
- * so virtual time replaces wall-clock everywhere. `delay` / `withTimeout`
- * inside the presenter resolve instantly when the scenario advances its
- * frame clock, and `awaitState` / `awaitEffect` timeouts count virtual
- * milliseconds — tests run in microseconds regardless of how big the
- * declared timeouts are.
+ * ## Timing
  *
- * Pass a [TestDispatcher][kotlinx.coroutines.test.TestDispatcher] via
- * [context] if a fake collaborator needs to share the scheduler — e.g. to
- * coordinate a fake `CoroutineDispatcher` injected into a repository.
+ * Runs under `kotlinx-coroutines-test`'s virtual time:
+ * `delay` / `withTimeout` inside the presenter resolve instantly,
+ * `awaitState` / `awaitEffect` timeouts count virtual milliseconds, and
+ * the whole test completes in microseconds regardless of the declared
+ * timeouts. Pass a `TestDispatcher` through [context] when a fake
+ * collaborator needs to share the test scheduler.
  *
- * ## Lifecycle
+ * ## Recording state history
  *
- * The returned [TestResult] represents the test run; JVM / Android return
- * `Unit`, JS / Wasm return a `Promise`. Assign it from your `@Test` function
- * exactly the way you would assign `runTest { … }`.
+ * By default every distinct state value the presenter produces is
+ * captured into [PresenterScenario.stateHistory]. Pass
+ * `recordStateHistory = false` for long-running tests where the history
+ * list would grow large; `state` still reflects the latest value either
+ * way.
  *
- * ```
- * @Test fun myTest() = testPresenter(presenter = { … }) { … }
- * ```
+ * ## Cleanup
  *
- * The composition, recomposer, and driver coroutine are disposed in that
- * order before this function returns — presenters that register long-lived
+ * The composition, recomposer, and driver coroutine are torn down before
+ * this function returns — presenters that register long-lived
  * `LaunchedEffect`s don't leak across tests.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -172,15 +170,12 @@ public fun <Event, State, Effect> testPresenter(
 }
 
 /**
- * Sibling of [testPresenter] for sub-presenters — functions shaped like
- * `@Composable PresenterScope<Event, Effect>.() -> State` that return bare
- * [State] instead of a [Presentation] (the form sub-presenters take before
- * `fuse { }` wraps them).
+ * Sibling of [testPresenter] for sub-presenters declared as
+ * `@Composable PresenterScope<Event, Effect>.foo(): State`. Lets you
+ * unit-test the sub-presenter in isolation without constructing its
+ * parent or any `@MapTo` / `@MapFrom` plumbing.
  *
- * Internally delegates to [testPresenter] by wrapping [subPresenter] in
- * [buildPresenter], so the scenario API is identical. Useful when you want
- * to unit-test a sub-presenter in isolation without constructing the parent
- * and its `@MapTo` / `@MapFrom` plumbing.
+ * The scenario API is identical to [testPresenter]:
  *
  * ```kotlin
  * @Test

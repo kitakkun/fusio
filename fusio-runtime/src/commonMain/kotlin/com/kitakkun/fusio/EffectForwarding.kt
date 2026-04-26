@@ -4,16 +4,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 
 /**
- * Runtime helper used by Fusio's IR transformer to forward child presenter effects
- * back into the parent presenter's effect channel.
+ * Forwards effects from [childScope] to [parentScope] through the
+ * `@MapFrom`-derived [mapper] (subtypes that don't map produce `null`
+ * and are dropped).
  *
- * The compiler plugin generates the [mapper] lambda from `@MapFrom` annotations on
- * the parent Effect sealed subtypes. Each mapping becomes a branch in a `when`
- * expression.
- *
- * We keep this in runtime (not generated as raw IR) so the compiler plugin only
- * has to synthesize the mapping lambda body — not the whole LaunchedEffect /
- * collect / emit plumbing.
+ * **Not part of the user-facing API.** The Fusio compiler plugin emits
+ * a call to this function automatically next to every `fuse { … }`
+ * rewrite, with [mapper] generated from the parent effect type's
+ * `@MapFrom` annotations. Application code shouldn't need to invoke
+ * it directly. It's `public` only because the plugin-generated code
+ * lives in the consumer module and needs to reach this symbol.
  */
 @Composable
 public fun <ChildEffect, ParentEffect> forwardEffects(
@@ -21,12 +21,8 @@ public fun <ChildEffect, ParentEffect> forwardEffects(
     parentScope: PresenterScope<*, ParentEffect>,
     mapper: (ChildEffect) -> ParentEffect?,
 ) {
-    // Keyed on the two scopes so a reparented child (scope identity change)
-    // restarts collection against the new source instead of silently
-    // observing the original forever. Under the `remember { … }` wrap the
-    // IR transformer emits around the child scope's creation, identity is
-    // stable across recompositions — the keyed form pays nothing at
-    // steady state and correctly restarts when identity really shifts.
+    // Keyed on both scopes; see docs/13 ("Why each LaunchedEffect ... is
+    // keyed on both scopes") for the reparent-vs-steady-state reasoning.
     LaunchedEffect(childScope, parentScope) {
         childScope.internalEffectFlow.collect { childEffect ->
             val mapped = mapper(childEffect)

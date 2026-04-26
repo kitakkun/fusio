@@ -8,30 +8,47 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.filterIsInstance
 
 /**
- * Registers a handler for events of type [E] arriving on the enclosing
- * [PresenterScope]'s event flow.
+ * Subscribes to events of type [E] from the enclosing [PresenterScope] and
+ * runs [handler] for each one.
  *
- * ## Handler freshness
+ * Use this inside a presenter body — top-level (`buildPresenter { … }`) or
+ * sub-presenter (`@Composable PresenterScope<E, F>.foo()`) — to wire a
+ * sealed event subtype to its behaviour:
  *
- * [handler] is captured through [rememberUpdatedState] so each
- * recomposition's latest lambda wins — a closure that reads a
- * recomposition-dependent value (e.g. a `currentUser: User` parameter on
- * the enclosing presenter) sees the current value rather than the one at
- * first composition. The outer `LaunchedEffect(Unit)` stays put so
- * in-flight events aren't dropped by restart.
+ * ```kotlin
+ * @Composable
+ * fun PresenterScope<TaskListEvent, TaskListEffect>.taskList(): TaskListState {
+ *     var tasks by remember { mutableStateOf(listOf<Task>()) }
  *
- * ## Error handling
+ *     on<TaskListEvent.Add> { event ->
+ *         tasks = tasks + Task(event.title)
+ *     }
+ *     on<TaskListEvent.Remove> { event ->
+ *         tasks = tasks.filterNot { it.id == event.id }
+ *     }
  *
- * If [handler] throws, the exception is caught and routed into
- * [PresenterScope.eventErrorFlow] instead of propagating up the
- * `LaunchedEffect` scope (which would kill the composition). The offending
- * event is effectively dropped and subsequent events continue to flow.
- * [CancellationException] is always re-thrown so coroutine cooperative
- * cancellation keeps working.
+ *     return TaskListState(tasks)
+ * }
+ * ```
  *
- * Observe `scope.eventErrorFlow` at the root presenter (or on the parent
- * scope a child `fuse`d into) to react to crashes — log, emit a user-
- * facing error effect, increment a metric, etc.
+ * Calling `on<EventBase>` with the parent sealed type covers every subtype
+ * via `filterIsInstance`, so a single handler can catch-all if you want.
+ *
+ * ## Recomposition
+ *
+ * The latest [handler] lambda wins on every recomposition — closures over
+ * recomposition-dependent values (e.g. a `currentUser` parameter on the
+ * enclosing presenter) see fresh values, not the snapshot from first
+ * composition. Events in flight aren't dropped while the handler swaps.
+ *
+ * ## Errors
+ *
+ * If [handler] throws, the exception lands on
+ * [PresenterScope.eventErrorFlow] (and bubbles to the root presenter via
+ * `fuse`'s generated forwarding). The offending event is dropped, the
+ * presenter keeps running, and subsequent events flow normally — observe
+ * the error stream to log or report. `CancellationException` is rethrown
+ * so coroutine cancellation works as expected.
  */
 @Composable
 public inline fun <reified E> PresenterScope<*, *>.on(
@@ -39,6 +56,9 @@ public inline fun <reified E> PresenterScope<*, *>.on(
 ) {
     val flow = eventFlow
     val scope = this
+    // rememberUpdatedState so the LaunchedEffect doesn't restart every time
+    // the lambda identity changes — keeps the collect loop alive while
+    // letting it pick up the freshest closure.
     val currentHandler by rememberUpdatedState(handler)
     LaunchedEffect(Unit) {
         flow.filterIsInstance<E>().collect { event ->

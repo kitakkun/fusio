@@ -1,20 +1,30 @@
 package com.kitakkun.fusio.gradle
 
 /**
- * Severity of Fusio's event-handler-exhaustiveness check, configured via
- * [FusioPluginExtension.eventHandlerExhaustiveSeverity] or the
- * `fusio.event-handler-exhaustive-severity` Gradle property.
+ * Diagnostic severity for Fusio's event-handler exhaustiveness check.
  *
- * The check reports parent-Event sealed subtypes that no `on<E>` handler
- * covers and no `@MapTo` annotation routes through a `fuse { … }` child.
+ * The check fires on every `buildPresenter<E, F, S> { … }` call site and
+ * on every `@Composable PresenterScope<E, F>.foo()` sub-presenter
+ * declaration; it reports each sealed `Event` subtype that no `on<E>`
+ * handler covers and that no `@MapTo` annotation routes through a
+ * `fuse { … }` child.
+ *
+ * Set via [FusioPluginExtension.eventHandlerExhaustiveSeverity] or
+ * the `-Pfusio.event-handler-exhaustive-severity=…` Gradle property.
+ *
+ * ```kotlin
+ * fusio {
+ *     eventHandlerExhaustiveSeverity = EventHandlerExhaustiveSeverity.ERROR
+ * }
+ * ```
  */
 public enum class EventHandlerExhaustiveSeverity {
-    /** Treat missing handlers as a hard compile error. */
+    /** Missing handlers fail compilation. */
     ERROR,
 
-    /** Log a warning per missing handler; build still succeeds. (Default.) */
+    /** Missing handlers log a warning; the build still succeeds. (Default.) */
     WARNING,
 
-    /** Disable the check entirely. */
+    /** The check is disabled — nothing is reported. */
     NONE,
 }

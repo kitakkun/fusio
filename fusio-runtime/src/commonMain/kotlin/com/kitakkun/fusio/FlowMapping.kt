@@ -4,14 +4,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
 
 /**
- * Runtime helper used by Fusio's IR transformer to map parent events to child events.
+ * Maps a parent event flow into a child event flow, dropping unmapped
+ * subtypes.
  *
- * The compiler plugin generates the [mapper] lambda from `@MapTo` annotations on the
- * parent Event sealed subtypes. Each mapping becomes a branch in a `when` expression.
- *
- * This stays in runtime (not generated as raw IR) so we don't have to synthesize
- * Flow.mapNotNull + lambda from scratch — the compiler plugin only has to build the
- * mapping lambda body, which is much simpler.
+ * **Not part of the user-facing API.** Called from compiler-plugin-emitted
+ * code at every `fuse { … }` rewrite, where [mapper] is generated from
+ * the parent event type's `@MapTo` annotations. `@PublishedApi internal`
+ * because the generated call site is in the consumer module but this
+ * function shouldn't appear in IDE completion.
  */
 @PublishedApi
 internal fun <ParentEvent, ChildEvent> Flow<ParentEvent>.mapEvents(

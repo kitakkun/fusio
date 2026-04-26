@@ -4,46 +4,70 @@ import androidx.compose.runtime.Stable
 import kotlinx.coroutines.flow.Flow
 
 /**
- * The value a Fusio presenter produces: a snapshot of screen [state], the
- * [effectFlow] of side effects, the [eventErrorFlow] stream of any crashes
- * raised while processing events (i.e. swallowed by an `on<E>` handler's
- * try/catch), and a [send] entry point the UI uses to push events into the
- * presenter.
+ * The result a Fusio presenter exposes to its UI: the latest [state] to
+ * render, the [effectFlow] of one-shot side effects, the [eventErrorFlow]
+ * of unexpected exceptions raised while processing events, and a [send]
+ * entry point for pushing events back into the presenter.
  *
- * The name reflects what Fusio is doing at the call site — fusing the
- * sub-presenters' private state trees into one screen-level state and their
- * effect flows into one outbound channel, then returning both alongside the
- * input handle.
+ * ## Typical use
  *
- * ## Why not a `data class`
+ * Returned by [buildPresenter] inside a `@Composable` and consumed at the
+ * call site:
  *
- * `data class`es auto-generate `copy` / `componentN`, which pins the public
- * ABI to the exact field list — adding, removing, or reordering a field
- * becomes a binary-incompatible change for downstream consumers. A
- * Maven-Central-grade library shouldn't leak that surface; callers of
- * `Presentation` read `.state` / `.effectFlow` / `.eventErrorFlow` directly
- * and don't need destructuring or `copy()`. The explicit [equals] /
- * [hashCode] / [toString] below retain the ergonomics that actually matter
- * (structural equality in tests and readable log output) without the ABI tax.
+ * ```kotlin
+ * @Composable
+ * fun MyScreen() {
+ *     val presentation = myScreenPresenter()
  *
- * ## Why `@Stable`
+ *     // Render
+ *     MyScreenContent(state = presentation.state)
  *
- * Compose would otherwise treat `Presentation` as unstable because one of
- * its generic parameters appears as a `Flow<Effect>` — and Flows carry no
- * structural-equality guarantee. At the wrapper level this class IS stable:
- * the properties are `val`s set once at construction, the instance never
- * mutates observably, and `equals`/`hashCode` are consistent. Marking it
- * `@Stable` lets composables that take a `Presentation` parameter skip
- * recomposition when the same instance is passed twice.
+ *     // Drive input
+ *     Button(onClick = { presentation.send(MyEvent.Click) }) { Text("…") }
  *
- * ## All four properties are required
+ *     // Collect side effects
+ *     LaunchedEffect(presentation.effectFlow) {
+ *         presentation.effectFlow.collect { effect ->
+ *             when (effect) { … }
+ *         }
+ *     }
+ * }
+ * ```
  *
- * No defaults. A presenter author deciding not to propagate event-processing
- * errors should pass `emptyFlow()` explicitly, so the decision is visible at
- * the call site rather than being silently inherited from a default.
- * `buildPresenter` wires the real channels from its `PresenterScope`;
- * hand-rolled `Presentation(state, effectFlow, emptyFlow(), {})` is the
- * correct form when composing a presenter without `buildPresenter`.
+ * To bridge an external `Flow<Event>` (URL deeplink, navigation, etc.) into
+ * the presenter, forward it to [send]:
+ *
+ * ```kotlin
+ * LaunchedEffect(externalFlow) {
+ *     externalFlow.collect { presentation.send(it) }
+ * }
+ * ```
+ *
+ * ## Type-parameter order
+ *
+ * `<State, Event, Effect>` reflects the consumer's reading order: [state]
+ * is read every recomposition, [send]/[Event] is invoked on every UI
+ * interaction, [effectFlow]/[Effect] is collected once per
+ * `LaunchedEffect`. (The producer-side types — [buildPresenter] and
+ * [PresenterScope] — order their parameters event-first; from the
+ * producer's perspective `Event` is the input axis.)
+ *
+ * ## Errors vs effects
+ *
+ * Use [Effect] for *expected* outcomes the UI should react to (toasts,
+ * navigation, snackbars, validation feedback) — emit them explicitly from
+ * `on<E>` handlers via [PresenterScope.emitEffect]. [eventErrorFlow] is
+ * for *unexpected* exceptions: it carries whatever an `on<E>` handler
+ * threw without unwinding the composition, so observers can log, report,
+ * or telemetry-track them. Treat it as a bug-detection channel, not a
+ * recovery one.
+ *
+ * ## Compose stability
+ *
+ * `Presentation` is `@Stable`: holding the same instance across
+ * recompositions never observably mutates. A `@Composable` that takes a
+ * `Presentation` parameter therefore skips recomposition when the
+ * presenter returns the same instance.
  */
 @Stable
 public class Presentation<State, Event, Effect>(
@@ -52,6 +76,9 @@ public class Presentation<State, Event, Effect>(
     public val eventErrorFlow: Flow<Throwable>,
     public val send: (Event) -> Unit,
 ) {
+    // Hand-written equals / hashCode / toString instead of `data class`;
+    // see docs/13 ("Why Presentation is hand-written") for the ABI
+    // reasoning.
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Presentation<*, *, *>) return false

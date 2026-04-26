@@ -6,35 +6,52 @@ import androidx.compose.runtime.remember
 import kotlinx.coroutines.flow.MutableSharedFlow
 
 /**
- * ## Lifecycle semantics
- *
- * The internal event flow and the [PresenterScope] are both `remember`ed
- * with no key, so they survive every recomposition for the lifetime of the
- * surrounding composition. The flow is a `MutableSharedFlow` with
- * [EVENT_BUFFER_CAPACITY] extra slots — enough headroom for typical UI
- * burst patterns without unbounded memory.
- *
- * The [DisposableEffect] keyed on the scope calls [PresenterScope.close]
- * when the composition exits, so effect / handler-error channels close
- * deterministically and no background collector leaks.
- *
- * ## Bridging external event sources
- *
- * `Presentation.send` is the only input path. To drive a presenter from an
- * external `Flow<Event>` (URL deeplink, navigation event, …), bridge it in
- * the caller:
+ * Screen-level entry point. Runs [block] inside a freshly-`remember`ed
+ * [PresenterScope] and packages the result as a [Presentation] the UI
+ * can consume.
  *
  * ```kotlin
- * val presentation = buildPresenter<MyEvent, …, …> { /* body */ }
+ * @Composable
+ * fun myScreenPresenter(): Presentation<MyState, MyEvent, MyEffect> = buildPresenter {
+ *     var count by remember { mutableStateOf(0) }
+ *
+ *     on<MyEvent.Increment> { count += 1 }
+ *     on<MyEvent.Reset> { count = 0 }
+ *
+ *     MyState(count)
+ * }
+ * ```
+ *
+ * The returned `Presentation` carries:
+ * - `state` — what [block] returned, ready to render
+ * - `effectFlow` — every value passed to `emitEffect` inside [block]
+ * - `eventErrorFlow` — any exception thrown by an `on<E>` handler
+ * - `send` — the entry point to push an event back into [block]
+ *
+ * The internal event channel is allocated once per composition and lives
+ * for the lifetime of the call site. UI sends events via
+ * `presentation.send(event)`; there's no external `MutableSharedFlow` to
+ * thread in. To inject events from a separate `Flow` (deep link,
+ * navigation event, etc.), bridge it from the caller:
+ *
+ * ```kotlin
+ * val presentation = myScreenPresenter()
  * LaunchedEffect(externalFlow) {
  *     externalFlow.collect { presentation.send(it) }
  * }
  * ```
+ *
+ * When the surrounding composition exits, the scope's effect and
+ * event-error channels are closed and any background collectors are torn
+ * down — no extra cleanup required from the caller.
  */
 @Composable
 public fun <Event, Effect, UiState> buildPresenter(
     block: @Composable PresenterScope<Event, Effect>.() -> UiState,
 ): Presentation<UiState, Event, Effect> {
+    // remember without a key: the event flow and scope live for the whole
+    // composition lifetime. DisposableEffect closes channels on dispose so
+    // no background collector leaks.
     val eventFlow = remember {
         MutableSharedFlow<Event>(extraBufferCapacity = EVENT_BUFFER_CAPACITY)
     }
@@ -50,17 +67,12 @@ public fun <Event, Effect, UiState> buildPresenter(
         state = uiState,
         effectFlow = scope.internalEffectFlow,
         eventErrorFlow = scope.eventErrorFlow,
-        // tryEmit returns false on overflow; we ignore it. The buffer is
-        // sized so this shouldn't happen under realistic UI cadence; if a
-        // workload really needs back-pressure, expose buffer as a parameter.
+        // tryEmit drops on overflow; the 64-slot buffer below is sized for
+        // typical UI cadence so this shouldn't trip in practice.
         send = { event -> eventFlow.tryEmit(event) },
     )
 }
 
-/**
- * Buffer headroom for the internal `MutableSharedFlow`. Sized for typical
- * UI input cadence — clicks, text changes, navigation — without imposing
- * unbounded memory growth. If a real workload exceeds this, lift it to a
- * `buildPresenter` parameter.
- */
+// Buffer headroom for the internal MutableSharedFlow. 64 covers typical UI
+// input bursts (clicks, text changes, navigation) without unbounded growth.
 private const val EVENT_BUFFER_CAPACITY: Int = 64
