@@ -28,6 +28,11 @@ shadow = "9.4.1"
 # vanniktech maven-publish — Central Portal upload + signing + KMP-aware
 # publication wiring.
 vanniktech-publish = "0.34.0"
+# spotless + ktlint — Kotlin / Kotlin-Gradle source formatting.
+# Style is JetBrains' official Kotlin coding conventions
+# (`ktlint_code_style = intellij_idea` in .editorconfig).
+spotless = "7.0.4"
+ktlint = "1.6.0"
 
 [libraries]
 kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
@@ -84,3 +89,4 @@ binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibil
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-publish" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

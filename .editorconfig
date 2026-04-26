@@ -1,0 +1,31 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{kt,kts}]
+# JetBrains' official Kotlin coding conventions (the IntelliJ IDEA
+# default). ktlint maps this style to the `intellij_idea` value; without
+# it ktlint falls back to its own `ktlint_official` opinionated style.
+ktlint_code_style = intellij_idea
+max_line_length = off
+# Compose conventions use PascalCase for `@Composable` functions, JUnit
+# tests are conventionally named with descriptive snake_case / PascalCase,
+# and Kotlin compiler internals use UPPER_CASE constants — none of those
+# match ktlint's standard naming rules.
+ktlint_standard_function-naming = disabled
+ktlint_standard_property-naming = disabled
+# Per-Kotlin-version compat packages mirror their directory name
+# (`k240_beta2` ↔ Kotlin 2.4.0-Beta2); the underscore is deliberate.
+ktlint_standard_package-name = disabled
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{yml,yaml,toml}]
+indent_size = 2

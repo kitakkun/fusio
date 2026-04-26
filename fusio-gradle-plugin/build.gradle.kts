@@ -2,6 +2,19 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     `java-gradle-plugin`
     id("fusio.publish")
+    alias(libs.plugins.spotless)
+}
+
+spotless {
+    kotlin {
+        target("src/**/*.kt")
+        targetExclude("**/build/**", "**/generated/**")
+        ktlint(libs.versions.ktlint.get())
+    }
+    kotlinGradle {
+        target("*.gradle.kts")
+        ktlint(libs.versions.ktlint.get())
+    }
 }
 
 // fusio-gradle-plugin lives as a standalone included build so downstream

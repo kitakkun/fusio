@@ -5,6 +5,35 @@ plugins {
     alias(libs.plugins.compose.multiplatform) apply false
     alias(libs.plugins.binary.compatibility.validator)
     alias(libs.plugins.dokka)
+    alias(libs.plugins.spotless)
+}
+
+// Apply spotless to every subproject (and the root) so a single
+// `./gradlew spotlessCheck` / `spotlessApply` covers the umbrella build.
+// Included builds (fusio-gradle-plugin, build-logic) apply the plugin
+// independently — `allprojects` only iterates the umbrella.
+val ktlintVersion = libs.versions.ktlint.get()
+allprojects {
+    apply(plugin = "com.diffplug.spotless")
+
+    extensions.configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+        kotlin {
+            target("src/**/*.kt")
+            // testData/ holds intentionally-formatted compiler-plugin fixtures;
+            // generated/ and build/ are tool output.
+            targetExclude(
+                "**/build/**",
+                "**/generated/**",
+                "**/testData/**",
+            )
+            ktlint(ktlintVersion)
+        }
+        kotlinGradle {
+            target("*.gradle.kts", "**/*.gradle.kts")
+            targetExclude("**/build/**")
+            ktlint(ktlintVersion)
+        }
+    }
 }
 
 // Aggregate HTML documentation. `./gradlew :dokkaGenerate` produces a
