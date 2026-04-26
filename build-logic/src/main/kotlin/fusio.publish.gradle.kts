@@ -1,35 +1,21 @@
 /**
- * Shared publishing config.
+ * Shared publishing config. Modules apply via `plugins { id("fusio.publish") }`.
  *
- * Each module that needs to be published applies this convention via
- * `plugins { id("fusio.publish") }`. Responsibilities here:
+ * - Uploads to Maven Central via Sonatype's Central Portal (vanniktech plugin).
+ * - Pins POM metadata (name, description, URL, licence, developer, SCM)
+ *   that Maven Central requires for validation.
+ * - Auto-publishes sources + javadoc jars — vanniktech includes Dokka HTML
+ *   if the module applies the dokka plugin, and an empty stub otherwise.
+ * - Signs all publications when both `SIGNING_KEY` (ASCII-armored) and
+ *   `SIGNING_PASSWORD` are provided via gradle props or env. Local
+ *   `publishToMavenLocal` skips signing.
  *
- * - Apply `maven-publish` + `signing`.
- * - Pin group and version so every artifact matches (allprojects in root
- *   already sets these, but we mirror here so the convention is
- *   self-contained).
- * - Populate POM metadata Sonatype requires for Maven Central validation
- *   (name, description, url, licenses, developers, scm).
- * - Ensure every publication carries a javadoc jar. Sonatype rejects
- *   publications missing one. KMP publications get a shared empty
- *   javadoc jar since dokka isn't wired up yet; consumers who need API
- *   docs can read the sources.jar the KMP plugin already ships.
- * - Target repos:
- *     - `mavenLocal` always — seeds `:publishToMavenLocal` for the
- *       composite-build sample and any developer's local cache.
- *     - `sonatype` only when credentials are present (gradle properties
- *       `sonatypeUsername` / `sonatypePassword` or env
- *       `SONATYPE_USERNAME` / `SONATYPE_PASSWORD`). Absent creds means
- *       the task is registered but fails fast if invoked — no surprises
- *       during local builds.
- * - Signing activates only when `signingKey` (ASCII-armored) +
- *   `signingPassword` are provided via gradle props or `SIGNING_KEY` /
- *   `SIGNING_PASSWORD` env vars. Release publishing to Central must go
- *   through a signed pipeline; local `publishToMavenLocal` skips it.
+ * Credential lookup: the vanniktech plugin reads
+ * `mavenCentralUsername` / `mavenCentralPassword`, surfaced by the release
+ * workflow as the standard `ORG_GRADLE_PROJECT_…` env vars.
  */
 plugins {
-    `maven-publish`
-    signing
+    id("com.vanniktech.maven.publish")
 }
 
 group = "com.kitakkun.fusio"
@@ -37,116 +23,54 @@ group = "com.kitakkun.fusio"
 // -PVERSION_NAME from the release workflow. Don't re-assign here — that
 // would clobber the property for modules applying this convention.
 
-val sonatypeUsername: String? = providers.gradleProperty("sonatypeUsername").orNull
-    ?: System.getenv("SONATYPE_USERNAME")
-val sonatypePassword: String? = providers.gradleProperty("sonatypePassword").orNull
-    ?: System.getenv("SONATYPE_PASSWORD")
-
 val signingKey: String? = providers.gradleProperty("signingKey").orNull
     ?: System.getenv("SIGNING_KEY")
 val signingPassword: String? = providers.gradleProperty("signingPassword").orNull
     ?: System.getenv("SIGNING_PASSWORD")
 
-// A single javadoc jar shared across every publication in this project.
-// When the Dokka plugin is applied (fusio-annotations / fusio-runtime), we
-// bundle Dokka's HTML output into it. Modules without Dokka — the Gradle
-// plugin and any future JVM-only internal modules that still want to be
-// published — fall back to an empty jar, which is enough for Sonatype to
-// accept the publication.
-val javadocJar = tasks.register<Jar>("javadocJar") {
-    archiveClassifier.set("javadoc")
-}
-plugins.withId("org.jetbrains.dokka") {
-    val dokkaGenerate = tasks.named("dokkaGeneratePublicationHtml")
-    javadocJar.configure {
-        dependsOn(dokkaGenerate)
-        from(dokkaGenerate.map { it.outputs.files })
+mavenPublishing {
+    // Uploads but does *not* auto-release — the deployment sits in
+    // Central Portal's "Validated" state until manually published from
+    // the web UI. Switch to `publishToMavenCentral(automaticRelease = true)`
+    // if the manual gate becomes friction.
+    publishToMavenCentral()
+
+    if (signingKey != null && signingPassword != null) {
+        signAllPublications()
     }
-}
 
-publishing {
-    repositories {
-        mavenLocal()
-
-        maven {
-            name = "sonatype"
-            val releasesUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            val snapshotsUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsUrl else releasesUrl
-            credentials {
-                // Nullable on purpose — missing creds make the publish task
-                // fail at execution time rather than configuration time, so
-                // local dev builds don't trip on them.
-                username = sonatypeUsername
-                password = sonatypePassword
+    pom {
+        name.set(project.name)
+        description.set(
+            "Fusio: Kotlin compiler plugin and runtime for decomposing fat Composable presenters " +
+                "into reusable sub-presenters with compile-time event/effect bridging.",
+        )
+        url.set("https://github.com/kitakkun/fusio")
+        licenses {
+            license {
+                name.set("The Apache License, Version 2.0")
+                url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
             }
         }
-    }
-
-    publications.withType<MavenPublication>().configureEach {
-        artifact(javadocJar)
-
-        pom {
-            name.set("${project.name} (${this@configureEach.name})")
-            description.set(
-                "Fusio: Kotlin compiler plugin and runtime for decomposing fat Composable presenters " +
-                    "into reusable sub-presenters with compile-time event/effect bridging.",
-            )
+        developers {
+            developer {
+                id.set("kitakkun")
+                name.set("kitakkun")
+                url.set("https://github.com/kitakkun")
+            }
+        }
+        scm {
+            connection.set("scm:git:git://github.com/kitakkun/fusio.git")
+            developerConnection.set("scm:git:ssh://github.com:kitakkun/fusio.git")
             url.set("https://github.com/kitakkun/fusio")
-            licenses {
-                license {
-                    name.set("The Apache License, Version 2.0")
-                    url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
-                }
-            }
-            developers {
-                developer {
-                    id.set("kitakkun")
-                    name.set("kitakkun")
-                    url.set("https://github.com/kitakkun")
-                }
-            }
-            scm {
-                connection.set("scm:git:git://github.com/kitakkun/fusio.git")
-                developerConnection.set("scm:git:ssh://github.com:kitakkun/fusio.git")
-                url.set("https://github.com/kitakkun/fusio")
-            }
-        }
-    }
-
-    // For JVM-only modules the KMP plugin isn't present, so we still need to
-    // register a default `maven` publication from the `java` component.
-    // Handled in afterEvaluate because `components["java"]` only exists once
-    // the Java plugin has been applied by the consuming build script.
-    afterEvaluate {
-        val isKmp = plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")
-        if (!isKmp && publications.isEmpty()) {
-            val javaComponent = components.findByName("java")
-            if (javaComponent != null) {
-                publications.create<MavenPublication>("maven") {
-                    from(javaComponent)
-                }
-            }
         }
     }
 }
 
-// Signing — only active when a key is provided. useInMemoryPgpKeys keeps us
-// independent of the user's local keyring, which matters for CI. The
-// signing plugin is always applied so `signArchives` etc. exist, but it
-// no-ops when no key is set.
+// Route SIGNING_KEY / SIGNING_PASSWORD env vars through useInMemoryPgpKeys
+// so signing works on CI without a local GPG keyring.
 if (signingKey != null && signingPassword != null) {
-    signing {
+    extensions.configure<SigningExtension>("signing") {
         useInMemoryPgpKeys(signingKey, signingPassword)
-        sign(publishing.publications)
     }
-}
-
-// KMP publication side-quest: target-specific publications run before
-// signing tasks by default, which Gradle flags as implicit task ordering.
-// Pin the order so every sign-<target>-publication runs before every
-// publish-<target>-publication and the KMP variants don't race.
-tasks.withType<AbstractPublishToMaven>().configureEach {
-    val signingTasks = tasks.withType<Sign>()
-    mustRunAfter(signingTasks)
 }

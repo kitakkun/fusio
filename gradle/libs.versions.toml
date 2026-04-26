@@ -25,6 +25,9 @@ agp = "9.0.1"
 # gradleup/shadow — 9.x is required for Gradle 9. See fusio-compiler-plugin
 # for usage.
 shadow = "9.4.1"
+# vanniktech maven-publish — Central Portal upload + signing + KMP-aware
+# publication wiring.
+vanniktech-publish = "0.34.0"
 
 [libraries]
 kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
@@ -60,6 +63,10 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter" }
 kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime", version.ref = "kotlinx-benchmark" }
+# Plugin marker artifact for `com.vanniktech.maven.publish` — referenced from
+# build-logic's classpath so the `fusio.publish` precompiled script plugin
+# can apply it via `plugins { id(...) }`.
+vanniktech-maven-publish-gradle-plugin = { module = "com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin", version.ref = "vanniktech-publish" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -72,3 +79,4 @@ kotlin-allopen = { id = "org.jetbrains.kotlin.plugin.allopen", version.ref = "ko
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-publish" }
