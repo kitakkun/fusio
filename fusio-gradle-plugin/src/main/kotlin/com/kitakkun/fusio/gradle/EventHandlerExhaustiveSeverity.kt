@@ -3,8 +3,9 @@ package com.kitakkun.fusio.gradle
 /**
  * Diagnostic severity for Fusio's event-handler exhaustiveness check.
  *
- * The check fires on every `buildPresenter<E, F, S> { … }` call site and
- * on every `@Composable PresenterScope<E, F>.foo()` sub-presenter
+ * The check fires on every
+ * `buildPresenter<Event, Effect, UiState> { … }` call site and on every
+ * `@Composable PresenterScope<Event, Effect>.foo()` sub-presenter
  * declaration; it reports each sealed `Event` subtype that no `on<E>`
  * handler covers and that no `@MapTo` annotation routes through a
  * `fuse { … }` child.

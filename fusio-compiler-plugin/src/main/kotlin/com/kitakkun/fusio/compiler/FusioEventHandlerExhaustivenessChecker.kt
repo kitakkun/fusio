@@ -30,33 +30,31 @@ import org.jetbrains.kotlin.name.Name
  * Reports parent-Event sealed subtypes that no `on<E>` handler covers and
  * no `@MapTo` annotation routes through a `fuse { … }` child.
  *
- * The current implementation hooks `buildPresenter<E, F, S> { body }` call
- * sites only. Standalone sub-presenter declarations
- * (`@Composable fun PresenterScope<E, F>.foo(): S { body }`) aren't
- * checked at the declaration site itself — they're only reached
- * indirectly via the parent's `fuse` rewrite. Adding a declaration-site
- * checker would currently require a per-Kotlin-version compat shim
- * because the function-FIR class was renamed
- * (`FirSimpleFunction` → `FirNamedFunction`) inside the 2.3.x line, so
- * the bytecode signature of any `FirSimpleFunctionChecker` override
- * binds to one or the other and won't load against the off-version.
- * Top-level coverage is the higher-value half regardless — the user's
- * original missing-handler example was a `buildPresenter` body — so we
- * keep the simple form and revisit sub-presenter coverage if observed
- * pain justifies the per-version compat work.
+ * Two halves are registered against the same shared analysis:
  *
- * Inside the `buildPresenter` lambda body we walk once with
- * [OnFuseCollector], collect the `on<T>` type arguments and
- * `fuse<CE, …>` first type arguments, then compute coverage:
+ * - **Top-level** — fires on every `buildPresenter<Event, Effect, UiState> { body }`
+ *   call site. The lambda body is the "presenter body" and the first
+ *   type argument is the Event hierarchy.
+ * - **Sub-presenter** — fires on every
+ *   `@Composable fun PresenterScope<Event, Effect>.foo(): State { body }`
+ *   declaration. The function body is the "presenter body" and the
+ *   receiver's first type argument is the Event hierarchy. Routed
+ *   through [CompatContext] because `FirSimpleFunctionChecker.check`'s
+ *   parameter type was renamed mid-Kotlin-2.3.x; each kXXX compat impl
+ *   provides its own subclass.
  *
- * - A subtype X is **directly handled** if its supertype chain reaches
+ * Inside each presenter body we walk once with [OnFuseCollector],
+ * collect the `on<T>` type arguments and `fuse<ChildEvent, …>` first
+ * type arguments, then compute coverage:
+ *
+ * - A subtype `X` is **directly handled** if its supertype chain reaches
  *   the `T` of any `on<T>` (`on<EventBase>` covers all subtypes for free).
  *   Walked by class id rather than full type-system isSubtypeOf to keep
  *   the code stable across Kotlin minor releases — sealed Event
  *   hierarchies don't use type parameters in practice, so the loss of
  *   generic-substitution rigor doesn't matter here.
- * - A subtype X is **fuse-routed** if it carries `@MapTo(target = Y::class)`
- *   and Y is in the sealed hierarchy of any of the fused child Event types.
+ * - A subtype `X` is **fuse-routed** if it carries `@MapTo(target = Y::class)`
+ *   and `Y` is in the sealed hierarchy of any of the fused child Event types.
  *
  * Anything left after both passes is reported.
  *
@@ -258,11 +256,13 @@ class FusioEventHandlerExhaustivenessChecker(
 }
 
 /**
- * Visitor that gathers the type arguments of every `on<T>(…)` call and the
- * first type argument of every `fuse<CE, CEff, CS>(…)` call inside an
- * arbitrary FIR subtree. Descends into all children — works on if/when/try
- * blocks, lambdas, nested function calls — so a presenter body's structure
- * doesn't constrain how the user lays out their handlers.
+ * Visitor that gathers the type arguments of every `on<T>(…)` call and
+ * the first type argument of every
+ * `fuse<ChildEvent, ChildEffect, ChildState>(…)` call inside an
+ * arbitrary FIR subtree. Descends into all children — works on
+ * if/when/try blocks, lambdas, nested function calls — so a presenter
+ * body's structure doesn't constrain how the user lays out their
+ * handlers.
  */
 private class OnFuseCollector : FirDefaultVisitor<Unit, Unit>() {
     val onTypes = mutableListOf<ConeKotlinType>()

@@ -36,8 +36,8 @@ class FusioFirCheckersExtension(
     }
 
     // Top-level half of the on<>-exhaustiveness check, keyed on
-    // `buildPresenter<E, F, S> { … }` call sites. Stable parameter type
-    // (`FirFunctionCall`) — no compat shim required.
+    // `buildPresenter<Event, Effect, UiState> { … }` call sites.
+    // Stable parameter type (`FirFunctionCall`) — no compat shim required.
     override val expressionCheckers: ExpressionCheckers = object : ExpressionCheckers() {
         override val functionCallCheckers: Set<FirFunctionCallChecker> = setOf(
             eventHandlerExhaustiveness.callChecker(),

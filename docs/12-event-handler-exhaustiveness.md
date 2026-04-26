@@ -33,7 +33,7 @@ parent-Event sealed subtype `X` is **covered** iff one of:
    in practice, so the loss of generic-substitution rigor doesn't matter.
 2. **Fuse-routed**: `X` carries `@MapTo(target = Y::class)` and `Y` is
    in the sealed hierarchy of any of the fused child Event types
-   reached from `body` (`fuse<CE, …> { … }` calls).
+   reached from `body` (`fuse<ChildEvent, …> { … }` calls).
 
 Anything left after both passes is reported.
 
@@ -41,7 +41,7 @@ Anything left after both passes is reported.
 
 The implementation hooks `buildPresenter` call sites only. Standalone
 sub-presenter declarations
-(`@Composable fun PresenterScope<E, F>.foo(): S { body }`) **aren't
+(`@Composable fun PresenterScope<Event, Effect>.foo(): State { body }`) **aren't
 checked at the declaration site itself** — they're only reached
 indirectly via the parent's `fuse` rewrite.
 

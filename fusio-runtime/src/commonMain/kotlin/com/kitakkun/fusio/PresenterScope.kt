@@ -7,7 +7,8 @@ import kotlinx.coroutines.flow.receiveAsFlow
 
 /**
  * Receiver context for a presenter body — both top-level (`buildPresenter
- * { … }`) and sub-presenter (`@Composable fun PresenterScope<E, F>.foo()`).
+ * { … }`) and sub-presenter
+ * (`@Composable fun PresenterScope<Event, Effect>.foo()`).
  *
  * Inside the body you don't construct one of these directly; you read from
  * it via [on] (handle a typed event subtype) and write to it via

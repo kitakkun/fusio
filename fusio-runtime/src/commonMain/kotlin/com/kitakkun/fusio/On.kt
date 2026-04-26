@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.filterIsInstance
  * runs [handler] for each one.
  *
  * Use this inside a presenter body — top-level (`buildPresenter { … }`) or
- * sub-presenter (`@Composable PresenterScope<E, F>.foo()`) — to wire a
+ * sub-presenter (`@Composable PresenterScope<Event, Effect>.foo()`) — to wire a
  * sealed event subtype to its behaviour:
  *
  * ```kotlin

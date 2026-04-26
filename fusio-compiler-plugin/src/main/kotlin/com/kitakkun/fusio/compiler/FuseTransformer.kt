@@ -52,15 +52,16 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 
 /**
- * Rewrites every `fuse<CE, CEff, CS> { block }` call site into inline
- * IR that plumbs events in and effects out between the parent [PresenterScope]
- * and the child one that [block] runs against.
+ * Rewrites every `fuse<ChildEvent, ChildEffect, ChildState> { block }`
+ * call site into inline IR that plumbs events in and effects out between
+ * the parent [PresenterScope] and the child one that [block] runs
+ * against.
  *
  * Generated shape (pseudocode):
  * ```
  * run {
  *   val childEventFlow = parentScope.eventFlow.mapEvents { @MapTo-based when }
- *   val childScope = PresenterScope<CE, CEff>(childEventFlow)
+ *   val childScope = PresenterScope<ChildEvent, ChildEffect>(childEventFlow)
  *   forwardEffects(childScope, parentScope) { @MapFrom-based when }  // optional
  *   block.invoke(childScope)  // returns ChildState directly
  * }
@@ -163,7 +164,7 @@ class FuseTransformer(
      * ```
      * val childScope = remember {
      *     val childEventFlow = parentScope.eventFlow.mapEvents { @MapTo when }
-     *     PresenterScope<CE, CEff>(childEventFlow)
+     *     PresenterScope<ChildEvent, ChildEffect>(childEventFlow)
      * }
      * ```
      *
@@ -185,7 +186,7 @@ class FuseTransformer(
     ): IrVariable {
         val childScopeType = presenterScopeClass.typeWith(childEventType, childEffectType)
 
-        // The `remember`'s calculation lambda: () -> PresenterScope<CE, CEff>.
+        // The `remember`'s calculation lambda: () -> PresenterScope<ChildEvent, ChildEffect>.
         val calculationType = pluginContext.irBuiltIns.functionN(0).typeWith(childScopeType)
 
         val calculationFun = pluginContext.irFactory.buildFun {
