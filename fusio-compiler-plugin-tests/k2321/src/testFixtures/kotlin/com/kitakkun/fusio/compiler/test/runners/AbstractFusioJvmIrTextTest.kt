@@ -26,9 +26,7 @@ import org.jetbrains.kotlin.test.services.KotlinStandardLibrariesPathProvider
  * JDK / stdlib setup mirror exactly.
  */
 open class AbstractFusioJvmIrTextTest : AbstractFirLightTreeJvmIrTextTest() {
-    override fun createKotlinStandardLibrariesPathProvider(): KotlinStandardLibrariesPathProvider {
-        return EnvironmentBasedStandardLibrariesPathProvider
-    }
+    override fun createKotlinStandardLibrariesPathProvider(): KotlinStandardLibrariesPathProvider = EnvironmentBasedStandardLibrariesPathProvider
 
     override fun configure(builder: TestConfigurationBuilder) {
         super.configure(builder)

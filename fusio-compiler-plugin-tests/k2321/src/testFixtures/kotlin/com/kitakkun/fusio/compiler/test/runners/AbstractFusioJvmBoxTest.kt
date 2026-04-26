@@ -19,9 +19,7 @@ import org.jetbrains.kotlin.test.services.KotlinStandardLibrariesPathProvider
  * runtime behaviour will be caught here but not by diagnostic tests.
  */
 open class AbstractFusioJvmBoxTest : AbstractFirLightTreeBlackBoxCodegenTest() {
-    override fun createKotlinStandardLibrariesPathProvider(): KotlinStandardLibrariesPathProvider {
-        return EnvironmentBasedStandardLibrariesPathProvider
-    }
+    override fun createKotlinStandardLibrariesPathProvider(): KotlinStandardLibrariesPathProvider = EnvironmentBasedStandardLibrariesPathProvider
 
     override fun configure(builder: TestConfigurationBuilder) {
         super.configure(builder)

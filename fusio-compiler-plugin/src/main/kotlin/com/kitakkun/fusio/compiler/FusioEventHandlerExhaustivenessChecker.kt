@@ -82,8 +82,7 @@ class FusioEventHandlerExhaustivenessChecker(
      * the 2.3.x line. Each `kXXX` compat impl provides bytecode targeting
      * the right parameter name; both forward into [analyzer].
      */
-    fun functionChecker(compat: CompatContext): FirSimpleFunctionChecker =
-        compat.createSubPresenterChecker(SubPresenterAnalyzerImpl()) as FirSimpleFunctionChecker
+    fun functionChecker(compat: CompatContext): FirSimpleFunctionChecker = compat.createSubPresenterChecker(SubPresenterAnalyzerImpl()) as FirSimpleFunctionChecker
 
     private inner class SubPresenterAnalyzerImpl : SubPresenterAnalyzer {
         context(context: CheckerContext, reporter: DiagnosticReporter)

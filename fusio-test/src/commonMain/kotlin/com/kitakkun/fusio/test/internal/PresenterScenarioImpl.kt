@@ -220,8 +220,11 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
     ): String = buildString {
         appendLine(header)
         extras.forEach { (label, value) ->
-            if (value.isEmpty()) appendLine("  $label")
-            else appendLine("  $label: $value")
+            if (value.isEmpty()) {
+                appendLine("  $label")
+            } else {
+                appendLine("  $label: $value")
+            }
         }
         // Snapshot these before rendering so a concurrent mutation (in
         // principle impossible under our single-threaded dispatcher, but

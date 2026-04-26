@@ -43,8 +43,7 @@ import org.jetbrains.kotlin.name.Name
  *   are handled by the sibling `:k230` impl.
  */
 class CompatContextImpl : CompatContext {
-    override fun FirAnnotation.kclassArg(name: Name, session: FirSession): ConeKotlinType? =
-        getKClassArgument(name, session)
+    override fun FirAnnotation.kclassArg(name: Name, session: FirSession): ConeKotlinType? = getKClassArgument(name, session)
 
     override fun IrFunctionAccessExpression.setArg(index: Int, expr: IrExpression) {
         arguments[index] = expr
@@ -62,14 +61,11 @@ class CompatContextImpl : CompatContext {
         IrGenerationExtension.registerExtension(extension)
     }
 
-    override fun IrPluginContext.findClass(classId: ClassId): IrClassSymbol? =
-        finderForBuiltins().findClass(classId)
+    override fun IrPluginContext.findClass(classId: ClassId): IrClassSymbol? = finderForBuiltins().findClass(classId)
 
-    override fun IrPluginContext.findConstructors(classId: ClassId): Collection<IrConstructorSymbol> =
-        finderForBuiltins().findConstructors(classId)
+    override fun IrPluginContext.findConstructors(classId: ClassId): Collection<IrConstructorSymbol> = finderForBuiltins().findConstructors(classId)
 
-    override fun IrPluginContext.findFunctions(callableId: CallableId): Collection<IrSimpleFunctionSymbol> =
-        finderForBuiltins().findFunctions(callableId)
+    override fun IrPluginContext.findFunctions(callableId: CallableId): Collection<IrSimpleFunctionSymbol> = finderForBuiltins().findFunctions(callableId)
 
     override val localFunctionForLambdaOrigin: IrDeclarationOrigin
         get() = IrDeclarationOrigin.LOCAL_FUNCTION_FOR_LAMBDA
@@ -77,8 +73,7 @@ class CompatContextImpl : CompatContext {
     // 2.3.20+ renamed the FirSimpleFunctionChecker.check parameter from
     // FirSimpleFunction to FirNamedFunction. Bytecode here references
     // FirNamedFunction; the matching k230 impl uses the older name.
-    override fun createSubPresenterChecker(analyzer: SubPresenterAnalyzer): FirSimpleFunctionChecker =
-        K2320SubPresenterChecker(analyzer)
+    override fun createSubPresenterChecker(analyzer: SubPresenterAnalyzer): FirSimpleFunctionChecker = K2320SubPresenterChecker(analyzer)
 
     private class K2320SubPresenterChecker(
         private val analyzer: SubPresenterAnalyzer,

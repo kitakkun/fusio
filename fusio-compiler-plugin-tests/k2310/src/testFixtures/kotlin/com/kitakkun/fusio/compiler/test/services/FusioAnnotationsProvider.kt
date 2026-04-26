@@ -32,8 +32,7 @@ private class FusioRuntimeEnvironmentConfigurator(testServices: TestServices) : 
 }
 
 private class FusioRuntimeClasspathProvider(testServices: TestServices) : RuntimeClasspathProvider(testServices) {
-    override fun runtimeClassPaths(module: TestModule): List<File> =
-        if (module.targetPlatform(testServices).isJvm()) fusioRuntimeClasspath else emptyList()
+    override fun runtimeClassPaths(module: TestModule): List<File> = if (module.targetPlatform(testServices).isJvm()) fusioRuntimeClasspath else emptyList()
 }
 
 private val fusioRuntimeClasspath: List<File> = run {

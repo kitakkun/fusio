@@ -93,7 +93,7 @@ enum class MappingDirection(
             declaration: FirRegularClass,
             other: FirRegularClass,
         ): Pair<FirRegularClass, FirRegularClass> = other to declaration
-    };
+    }, ;
 
     abstract fun pickSourceTarget(
         declaration: FirRegularClass,

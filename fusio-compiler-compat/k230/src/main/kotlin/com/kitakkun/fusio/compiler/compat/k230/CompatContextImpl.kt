@@ -45,8 +45,7 @@ import org.jetbrains.kotlin.name.Name
  */
 @Suppress("DEPRECATION")
 class CompatContextImpl : CompatContext {
-    override fun FirAnnotation.kclassArg(name: Name, session: FirSession): ConeKotlinType? =
-        getKClassArgument(name, session)
+    override fun FirAnnotation.kclassArg(name: Name, session: FirSession): ConeKotlinType? = getKClassArgument(name, session)
 
     override fun IrFunctionAccessExpression.setArg(index: Int, expr: IrExpression) {
         arguments[index] = expr
@@ -64,14 +63,11 @@ class CompatContextImpl : CompatContext {
         IrGenerationExtension.registerExtension(extension)
     }
 
-    override fun IrPluginContext.findClass(classId: ClassId): IrClassSymbol? =
-        referenceClass(classId)
+    override fun IrPluginContext.findClass(classId: ClassId): IrClassSymbol? = referenceClass(classId)
 
-    override fun IrPluginContext.findConstructors(classId: ClassId): Collection<IrConstructorSymbol> =
-        referenceConstructors(classId)
+    override fun IrPluginContext.findConstructors(classId: ClassId): Collection<IrConstructorSymbol> = referenceConstructors(classId)
 
-    override fun IrPluginContext.findFunctions(callableId: CallableId): Collection<IrSimpleFunctionSymbol> =
-        referenceFunctions(callableId)
+    override fun IrPluginContext.findFunctions(callableId: CallableId): Collection<IrSimpleFunctionSymbol> = referenceFunctions(callableId)
 
     // In 2.3.0 the companion getter's return type is `IrDeclarationOriginImpl`;
     // the implicit upcast to `IrDeclarationOrigin` happens here in 2.3.0 bytecode.
@@ -81,8 +77,7 @@ class CompatContextImpl : CompatContext {
     // 2.3.0 / 2.3.10 keep the old name `FirSimpleFunction` on the
     // FirSimpleFunctionChecker.check parameter; bytecode compiled here
     // references that name and loads cleanly only on the 2.3.0 line.
-    override fun createSubPresenterChecker(analyzer: SubPresenterAnalyzer): FirSimpleFunctionChecker =
-        K230SubPresenterChecker(analyzer)
+    override fun createSubPresenterChecker(analyzer: SubPresenterAnalyzer): FirSimpleFunctionChecker = K230SubPresenterChecker(analyzer)
 
     private class K230SubPresenterChecker(
         private val analyzer: SubPresenterAnalyzer,

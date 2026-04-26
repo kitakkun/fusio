@@ -74,7 +74,8 @@ import org.jetbrains.kotlin.name.Name
 class FuseTransformer(
     private val pluginContext: IrPluginContext,
     compat: CompatContext,
-) : IrElementTransformerVoidWithContext(), CompatContext by compat {
+) : IrElementTransformerVoidWithContext(),
+    CompatContext by compat {
 
     // Lookups route through CompatContext (findClass / findConstructors /
     // findFunctions) so the shaded plugin jar works on the whole 2.3.0+ range:
@@ -220,7 +221,9 @@ class FuseTransformer(
                                 mc.setArg(0, parentEventFlowCall)
                                 mc.setArg(1, mapper)
                             }
-                        } else null
+                        } else {
+                            null
+                        }
                     }
                     ?: parentEventFlowCall
 
@@ -411,8 +414,11 @@ class FuseTransformer(
                 continue
             }
 
-            val (fromSub, toSub) = if (reverseDirection) otherSymbol to annotatedSubSymbol
-                                   else annotatedSubSymbol to otherSymbol
+            val (fromSub, toSub) = if (reverseDirection) {
+                otherSymbol to annotatedSubSymbol
+            } else {
+                annotatedSubSymbol to otherSymbol
+            }
             add(Mapping(fromSub, toSub))
         }
     }

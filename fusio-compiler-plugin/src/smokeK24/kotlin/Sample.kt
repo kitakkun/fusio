@@ -9,9 +9,9 @@
 package smoke
 
 import androidx.compose.runtime.Composable
-import com.kitakkun.fusio.Presentation
 import com.kitakkun.fusio.MapFrom
 import com.kitakkun.fusio.MapTo
+import com.kitakkun.fusio.Presentation
 import com.kitakkun.fusio.PresenterScope
 import com.kitakkun.fusio.buildPresenter
 import com.kitakkun.fusio.fuse
@@ -40,8 +40,7 @@ data class ParentState(val child: ChildState)
 fun PresenterScope<ChildEvent, ChildEffect>.child(): ChildState = ChildState(count = 0)
 
 @Composable
-fun parent(): Presentation<ParentState, ParentEvent, ParentEffect> =
-    buildPresenter {
-        val childState = fuse { child() }
-        ParentState(child = childState)
-    }
+fun parent(): Presentation<ParentState, ParentEvent, ParentEffect> = buildPresenter {
+    val childState = fuse { child() }
+    ParentState(child = childState)
+}

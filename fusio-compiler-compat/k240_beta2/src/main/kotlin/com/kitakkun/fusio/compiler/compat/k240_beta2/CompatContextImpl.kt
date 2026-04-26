@@ -3,7 +3,6 @@ package com.kitakkun.fusio.compiler.compat.k240_beta2
 import com.kitakkun.fusio.compiler.compat.CompatContext
 import com.kitakkun.fusio.compiler.compat.Version
 import com.kitakkun.fusio.compiler.compat.VersionRange
-import com.kitakkun.fusio.compiler.compat.k2320.CompatContextImpl as K2320CompatContextImpl
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.fir.FirSession
@@ -13,6 +12,7 @@ import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
 import org.jetbrains.kotlin.name.Name
+import com.kitakkun.fusio.compiler.compat.k2320.CompatContextImpl as K2320CompatContextImpl
 
 /**
  * Kotlin 2.4.x [CompatContext]. Targets 2.4.0 through (excluding) 2.5.0.

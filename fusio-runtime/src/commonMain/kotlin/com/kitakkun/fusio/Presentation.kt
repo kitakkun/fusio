@@ -96,6 +96,5 @@ public class Presentation<State, Event, Effect>(
         return result
     }
 
-    override fun toString(): String =
-        "Presentation(state=$state, effectFlow=$effectFlow, eventErrorFlow=$eventErrorFlow, send=$send)"
+    override fun toString(): String = "Presentation(state=$state, effectFlow=$effectFlow, eventErrorFlow=$eventErrorFlow, send=$send)"
 }

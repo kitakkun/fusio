@@ -5,8 +5,8 @@ import org.jetbrains.kotlin.diagnostics.KtDiagnosticsContainer
 import org.jetbrains.kotlin.diagnostics.error1
 import org.jetbrains.kotlin.diagnostics.error2
 import org.jetbrains.kotlin.diagnostics.error3
-import org.jetbrains.kotlin.diagnostics.warning2
 import org.jetbrains.kotlin.diagnostics.rendering.BaseDiagnosticRendererFactory
+import org.jetbrains.kotlin.diagnostics.warning2
 import org.jetbrains.kotlin.psi.KtElement
 
 object FusioErrors : KtDiagnosticsContainer() {

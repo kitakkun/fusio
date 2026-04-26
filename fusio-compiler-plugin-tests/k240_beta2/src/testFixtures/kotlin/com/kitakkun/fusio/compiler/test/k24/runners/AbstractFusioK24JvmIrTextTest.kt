@@ -22,9 +22,7 @@ import org.jetbrains.kotlin.test.services.KotlinStandardLibrariesPathProvider
  *   ./gradlew :fusio-compiler-plugin-tests:tests-k240_beta2:test -Pkotlin.test.update.test.data=true
  */
 open class AbstractFusioK24JvmIrTextTest : AbstractFirLightTreeJvmIrTextTest() {
-    override fun createKotlinStandardLibrariesPathProvider(): KotlinStandardLibrariesPathProvider {
-        return EnvironmentBasedStandardLibrariesPathProvider
-    }
+    override fun createKotlinStandardLibrariesPathProvider(): KotlinStandardLibrariesPathProvider = EnvironmentBasedStandardLibrariesPathProvider
 
     override fun configure(builder: NonGroupingPhaseTestConfigurationBuilder) {
         super.configure(builder)

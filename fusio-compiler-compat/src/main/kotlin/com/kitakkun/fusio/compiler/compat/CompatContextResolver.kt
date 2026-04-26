@@ -1,7 +1,7 @@
 package com.kitakkun.fusio.compiler.compat
 
-import java.util.ServiceLoader
 import org.jetbrains.kotlin.config.KotlinCompilerVersion
+import java.util.ServiceLoader
 
 /**
  * Picks the correct [CompatContext] for the Kotlin compiler currently running

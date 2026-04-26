@@ -19,9 +19,7 @@ import org.jetbrains.kotlin.test.services.KotlinStandardLibrariesPathProvider
  * (2.4) and Kotlin won't let one class override both signatures.
  */
 open class AbstractFusioK24JvmBoxTest : AbstractFirLightTreeBlackBoxCodegenTest() {
-    override fun createKotlinStandardLibrariesPathProvider(): KotlinStandardLibrariesPathProvider {
-        return EnvironmentBasedStandardLibrariesPathProvider
-    }
+    override fun createKotlinStandardLibrariesPathProvider(): KotlinStandardLibrariesPathProvider = EnvironmentBasedStandardLibrariesPathProvider
 
     override fun configure(builder: NonGroupingPhaseTestConfigurationBuilder) {
         super.configure(builder)

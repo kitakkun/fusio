@@ -82,9 +82,12 @@ class TestPresenterTest {
         // async, so `awaitState` between sends makes sure each intermediate
         // value actually lands before the next send overwrites it.
         awaitState { it == 0 }
-        send(CounterEvent.Increment); awaitState { it == 1 }
-        send(CounterEvent.Increment); awaitState { it == 2 }
-        send(CounterEvent.Reset); awaitState { it == 0 }
+        send(CounterEvent.Increment)
+        awaitState { it == 1 }
+        send(CounterEvent.Increment)
+        awaitState { it == 2 }
+        send(CounterEvent.Reset)
+        awaitState { it == 0 }
         assertTrue(
             stateHistory.containsAll(listOf(0, 1, 2)),
             "stateHistory=$stateHistory",
@@ -140,8 +143,7 @@ class TestPresenterTest {
     // ---- testSubPresenter ---------------------------------------------
 
     @Test
-    fun testSubPresenter_wraps_a_sub_presenter_in_buildPresenter() =
-        // Explicit <E, S, Eff> — this sub-presenter doesn't emit any effect,
+    fun testSubPresenter_wraps_a_sub_presenter_in_buildPresenter() = // Explicit <E, S, Eff> — this sub-presenter doesn't emit any effect,
         // so the compiler has nothing to infer the Effect type from.
         testSubPresenter<CounterEvent, Int, CounterEffect>(
             subPresenter = {
@@ -267,8 +269,8 @@ class TestPresenterTest {
     // ---- Handler freshness (rememberUpdatedState regression guard) ----
 
     private sealed interface FreshnessEvent {
-        data object Tick : FreshnessEvent     // bumps recomposition-varying local
-        data object Echo : FreshnessEvent     // replays the currently-captured value
+        data object Tick : FreshnessEvent // bumps recomposition-varying local
+        data object Echo : FreshnessEvent // replays the currently-captured value
     }
 
     private sealed interface FreshnessEffect {
@@ -299,7 +301,7 @@ class TestPresenterTest {
         awaitState { it == 0 }
 
         send(FreshnessEvent.Tick)
-        awaitState { it == 1 }  // count bumped, block re-executed, capturedCount == 1
+        awaitState { it == 1 } // count bumped, block re-executed, capturedCount == 1
 
         send(FreshnessEvent.Echo)
         val first = awaitEffect<FreshnessEffect.Captured>()
