@@ -37,6 +37,24 @@ jobs:
           # the configuration cache store under ~/.gradle/.
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
+      # `~/.konan/` holds the Kotlin/Native toolchain (~1-2 GB) and the
+      # cinterop platform libraries the iosArm64 / iosSimulatorArm64 /
+      # macosArm64 targets compile against. setup-gradle caches `~/.gradle/`
+      # but not `~/.konan/`, so without this step every CI run re-downloads
+      # the native toolchain — adding ~3-5 minutes to a cold build.
+      #
+      # Key on the version files that pin Kotlin and Gradle: when either
+      # bumps, the cache invalidates and we pay one re-download instead of
+      # carrying stale toolchain forward. PRs and release tags fall back to
+      # the most recent main-branch cache via the prefix restore-keys.
+      - name: Cache Konan (Kotlin/Native toolchain + platform libs)
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            konan-${{ runner.os }}-
+
       # `build` runs assemble + check on every module, and check pulls in test.
       # That exercises:
       #   - :fusio-runtime:allTests (commonTest on 7 KMP variants)

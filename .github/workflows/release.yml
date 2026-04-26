@@ -27,6 +27,27 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          # Releases are infrequent and reuse main's already-warmed Gradle
+          # cache. Read-only so a release run can't accidentally overwrite
+          # main-branch cache entries with anything tag-specific.
+          #
+          # Note: only the Gradle dependency cache (`~/.gradle/caches/`) is
+          # restored here — checksums on every Maven artifact mean a poisoned
+          # entry would fail verification. The Kotlin/Native toolchain in
+          # `~/.konan/` is *deliberately not cached* in this workflow; see
+          # the comment below for the rationale.
+          cache-read-only: true
+
+      # Konan (Kotlin/Native compiler + platform libs) is intentionally
+      # downloaded fresh on every release. It's the binary that compiles the
+      # release artifacts; reusing a cached toolchain would mean trusting
+      # whatever bits happen to be in `~/.konan/` from the most recent main
+      # CI run. Maven Central artifacts are immutable once published, so
+      # we'd rather pay the 3-5 minute fresh-download cost than carry any
+      # risk of a stale or corrupted toolchain into a release we can't take
+      # back. ci.yml caches Konan because the trade-off there (cost vs.
+      # reproducibility-of-throwaway-PR-builds) tips the other way.
 
       - name: Extract version from tag
         id: version
