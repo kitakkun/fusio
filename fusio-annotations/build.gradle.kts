@@ -18,7 +18,9 @@ kotlin {
     androidLibrary {
         namespace = "com.kitakkun.fusio"
         compileSdk = 36
-        minSdk = 24
+        // 21 is the Compose Multiplatform floor; Fusio's annotations are
+        // pure Kotlin and don't reach for any Android API that needs more.
+        minSdk = 21
     }
 
     iosArm64()

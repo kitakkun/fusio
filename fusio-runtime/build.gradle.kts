@@ -93,7 +93,8 @@ kotlin {
     androidLibrary {
         namespace = "com.kitakkun.fusio.runtime"
         compileSdk = 36
-        minSdk = 24
+        // Matches fusio-annotations' floor (Compose Multiplatform-supported 21).
+        minSdk = 21
     }
 
     iosArm64()
