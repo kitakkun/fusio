@@ -26,6 +26,25 @@ tasks.named("check") {
     dependsOn(gradle.includedBuild("fusio-gradle-plugin").task(":check"))
 }
 
+// Same fan-out for `publishToMavenLocal`. Without this, the umbrella build
+// publishes everything except `fusio-gradle-plugin`, leaving consumers'
+// mavenLocal with a stale (or missing) plugin jar — which silently sends
+// KGP back to its default behaviour of resolving the compiler plugin GAV
+// at the consumer's Kotlin version (`com.kitakkun.fusio:fusio-compiler-plugin:2.x.y`),
+// which doesn't exist on Maven Central.
+//
+// The root project doesn't apply maven-publish itself, so attach the
+// dependency to every subproject's `publishToMavenLocal` instead. Gradle
+// dedups the included-build task so it only runs once even though N
+// subprojects declare the dependency.
+subprojects {
+    plugins.withId("maven-publish") {
+        tasks.named("publishToMavenLocal") {
+            dependsOn(rootProject.gradle.includedBuild("fusio-gradle-plugin").task(":publishToMavenLocal"))
+        }
+    }
+}
+
 allprojects {
     group = "com.kitakkun.fusio"
     // Release workflow passes `-PVERSION_NAME=1.2.3` to produce non-SNAPSHOT

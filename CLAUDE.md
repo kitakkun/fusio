@@ -39,7 +39,7 @@ Build: Gradle 9.3.0, shadow 9.4.1, Kotlin 2.3.21 (+ 2.4.0-Beta2 via smokeK24). C
 ./gradlew :demo:jvmTest                                     # demo's own tests (TaskList / Filter / MyScreen) — doubles as fusio-test showcase
 cd demo && ../gradlew runJvm                               # launch Compose Desktop demo
 ./gradlew :fusio-compiler-plugin-tests:k2321:test -Pkotlin.test.update.test.data=true  # auto-update diagnostic markers
-./gradlew publishToMavenLocal                              # seed ~/.m2
+./gradlew publishToMavenLocal                              # seed ~/.m2 (umbrella + included fusio-gradle-plugin in one shot)
 ```
 
 mavenLocal is content-filtered to `com.kitakkun.fusio` in settings so external KMP deps always resolve from mavenCentral with proper `.module` metadata. Don't remove that filter — doing so will silently pin kotlinx-coroutines-core to its JVM variant in commonMain compile.
