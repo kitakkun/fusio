@@ -1,6 +1,6 @@
 # Step 11: Presentation owns event sending
 
-Status: **landing.** `Presentation<Event, Effect, State>` now exposes `send: (Event) -> Unit`; `buildPresenter` no longer takes an external event flow.
+Status: **landing.** `Presentation<State, Event, Effect>` now exposes `send: (Event) -> Unit`; `buildPresenter` no longer takes an external event flow.
 
 ## Problem
 
@@ -41,7 +41,7 @@ Button(onClick = { presentation.send(MyScreenEvent.Click) }) { … }
 
 ### Round 3 — type-parameter cost
 
-`Presentation<State, Effect>` becomes `Presentation<Event, Effect, State>` to align with the existing `buildPresenter<Event, Effect, UiState>` and `PresenterScope<Event, Effect>` orderings — Event first, Effect second, State third across the entire public API. (An earlier round of this design used `<State, Effect, Event>` reading "result, side effect, input" — but the inconsistency with the other two types caused real confusion in practice and was rejected.)
+`Presentation<State, Effect>` becomes `Presentation<State, Event, Effect>`. Type-parameter order is intentionally consumer-facing — `state` first because UI renders it every frame, `event` second because UI sends one on every interaction, `effect` last because UI collects it once via `LaunchedEffect`. The producer-side types (`buildPresenter<Event, Effect, UiState>`, `PresenterScope<Event, Effect>`) keep their event-first ordering for the same reason: from the producer's perspective, `Event` is the input axis. Two perspectives, two orderings — the inconsistency is real but each side reads naturally for its caller.
 
 ### Round 4 — bin compat impact
 
@@ -86,14 +86,14 @@ Internal flow uses `extraBufferCapacity = 64` matching the previous testPresente
 @Composable
 fun <Event, Effect, UiState> buildPresenter(
     block: @Composable PresenterScope<Event, Effect>.() -> UiState,
-): Presentation<Event, Effect, UiState>
+): Presentation<UiState, Event, Effect>
 ```
 
 No external-flow overload. `Presentation` carries `send`. `PresenterScope` is unchanged (it still takes `Flow<Event>` from the constructor — supplied internally by `buildPresenter`).
 
 ## Decision
 
-Ship the single-overload form. `Presentation<Event, Effect, State>`, `send: (Event) -> Unit`. External-flow bridging is a documented one-liner using `LaunchedEffect`.
+Ship the single-overload form. `Presentation<State, Event, Effect>`, `send: (Event) -> Unit`. External-flow bridging is a documented one-liner using `LaunchedEffect`.
 
 ## Implementation plan
 

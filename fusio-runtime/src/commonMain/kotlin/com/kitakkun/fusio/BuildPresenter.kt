@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 @Composable
 public fun <Event, Effect, UiState> buildPresenter(
     block: @Composable PresenterScope<Event, Effect>.() -> UiState,
-): Presentation<Event, Effect, UiState> {
+): Presentation<UiState, Event, Effect> {
     val eventFlow = remember {
         MutableSharedFlow<Event>(extraBufferCapacity = EVENT_BUFFER_CAPACITY)
     }

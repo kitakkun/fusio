@@ -791,7 +791,7 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
           then: CALL 'public final fun traceEventEnd (): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
       RETURN type=<root>.ChildState from='public final fun child (<this>: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): <root>.ChildState declared in <root>'
         GET_VAR 'val tmp_6: <root>.ChildState declared in <root>.child' type=<root>.ChildState origin=null
-  FUN name:screenPresenter visibility:public modality:FINAL returnType:com.kitakkun.fusio.Presentation<<root>.ParentEvent, <root>.ParentEffect, <root>.ScreenState>
+  FUN name:screenPresenter visibility:public modality:FINAL returnType:com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEvent, <root>.ParentEffect>
     VALUE_PARAMETER kind:Regular name:$composer index:0 type:androidx.compose.runtime.Composer? [assignable]
     VALUE_PARAMETER kind:Regular name:$changed index:1 type:kotlin.Int
     annotations:
@@ -805,8 +805,8 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
             ARG dirty1: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter' type=kotlin.Int origin=null
             ARG dirty2: CONST Int type=kotlin.Int value=-1
             ARG info: CONST String type=kotlin.String value="screenPresenter (fuseRewrite.kt:47)"
-      VAR IR_TEMPORARY_VARIABLE name:tmp_7 type:com.kitakkun.fusio.Presentation<<root>.ParentEvent, <root>.ParentEffect, <root>.ScreenState> [val]
-        CALL 'public final fun buildPresenter <Event, Effect, UiState> (block: @[ExtensionFunctionType] kotlin.Function3<com.kitakkun.fusio.PresenterScope<Event of com.kitakkun.fusio.buildPresenter, Effect of com.kitakkun.fusio.buildPresenter>, androidx.compose.runtime.Composer, kotlin.Int, UiState of com.kitakkun.fusio.buildPresenter>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): com.kitakkun.fusio.Presentation<Event of com.kitakkun.fusio.buildPresenter, Effect of com.kitakkun.fusio.buildPresenter, UiState of com.kitakkun.fusio.buildPresenter> declared in com.kitakkun.fusio' type=com.kitakkun.fusio.Presentation<<root>.ParentEvent, <root>.ParentEffect, <root>.ScreenState> origin=null
+      VAR IR_TEMPORARY_VARIABLE name:tmp_7 type:com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEvent, <root>.ParentEffect> [val]
+        CALL 'public final fun buildPresenter <Event, Effect, UiState> (block: @[ExtensionFunctionType] kotlin.Function3<com.kitakkun.fusio.PresenterScope<Event of com.kitakkun.fusio.buildPresenter, Effect of com.kitakkun.fusio.buildPresenter>, androidx.compose.runtime.Composer, kotlin.Int, UiState of com.kitakkun.fusio.buildPresenter>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): com.kitakkun.fusio.Presentation<UiState of com.kitakkun.fusio.buildPresenter, Event of com.kitakkun.fusio.buildPresenter, Effect of com.kitakkun.fusio.buildPresenter> declared in com.kitakkun.fusio' type=com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEvent, <root>.ParentEffect> origin=null
           TYPE_ARG Event: <root>.ParentEvent
           TYPE_ARG Effect: <root>.ParentEffect
           TYPE_ARG UiState: <root>.ScreenState
@@ -971,5 +971,5 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
         BRANCH
           if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime' type=kotlin.Boolean origin=null
           then: CALL 'public final fun traceEventEnd (): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
-      RETURN type=com.kitakkun.fusio.Presentation<<root>.ParentEvent, <root>.ParentEffect, <root>.ScreenState> from='public final fun screenPresenter ($composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): com.kitakkun.fusio.Presentation<<root>.ParentEvent, <root>.ParentEffect, <root>.ScreenState> declared in <root>'
-        GET_VAR 'val tmp_7: com.kitakkun.fusio.Presentation<<root>.ParentEvent, <root>.ParentEffect, <root>.ScreenState> declared in <root>.screenPresenter' type=com.kitakkun.fusio.Presentation<<root>.ParentEvent, <root>.ParentEffect, <root>.ScreenState> origin=null
+      RETURN type=com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEvent, <root>.ParentEffect> from='public final fun screenPresenter ($composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEvent, <root>.ParentEffect> declared in <root>'
+        GET_VAR 'val tmp_7: com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEvent, <root>.ParentEffect> declared in <root>.screenPresenter' type=com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEvent, <root>.ParentEffect> origin=null

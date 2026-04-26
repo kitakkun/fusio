@@ -14,7 +14,7 @@ downstream consumer:
 
 ```kotlin
 @Composable
-fun timetableScreenPresenter(): Presentation<TimetableScreenAction, …, …> = buildPresenter {
+fun timetableScreenPresenter(): Presentation<…, TimetableScreenAction, …> = buildPresenter {
     // on<…> calls all commented out; ToggleBookmark and friends
     // never reach a handler. Compiler is silent.
     TimetableScreenUiState()

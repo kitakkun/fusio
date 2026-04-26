@@ -38,7 +38,7 @@ fun PresenterScope<ChildEvent, ChildEffect>.counter(): Int {
 }
 
 @Composable
-fun screen(): Presentation<ParentEvent, ParentEffect, Int> =
+fun screen(): Presentation<Int, ParentEvent, ParentEffect> =
     buildPresenter { fuse { counter() } }
 
 fun box(): String {

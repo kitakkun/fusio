@@ -46,8 +46,8 @@ mavenLocal is content-filtered to `com.kitakkun.fusio` in settings so external K
 
 ## Rules of thumb
 
-- Sub-presenters return `State`, **not** `Presentation<Event, Effect, State>`. Effects flow through `emitEffect`.
-- `Presentation<Event, Effect, State>` carries `send: (Event) -> Unit` (Step 11). `buildPresenter { … }` owns the internal event flow; UI calls `presentation.send(...)`. No external `MutableSharedFlow` to plumb.
+- Sub-presenters return `State`, **not** `Presentation<State, Event, Effect>`. Effects flow through `emitEffect`.
+- `Presentation<State, Event, Effect>` carries `send: (Event) -> Unit` (Step 11). `buildPresenter { … }` owns the internal event flow; UI calls `presentation.send(...)`. No external `MutableSharedFlow` to plumb.
 - Event-handler exhaustiveness: an FIR checker fires on each `buildPresenter<E, F, S> { … }` call AND on each `@Composable fun PresenterScope<E, F>.foo()` declaration. Every sealed subtype of `E` must be reached by some `on<T>` (with `T :> subtype`) or routed via `@MapTo` to a fused child. Severity from `fusio { eventHandlerExhaustiveSeverity = … }` DSL (or `-Pfusio.event-handler-exhaustive-severity=error|warning|none`); default WARNING. The sub-presenter half is plumbed through `CompatContext` because `FirSimpleFunctionChecker.check`'s parameter type was renamed (`FirSimpleFunction` → `FirNamedFunction`) mid-2.3.x — each kXXX compat impl provides its own subclass.
 - `fuse` is `inline` (not `@Composable`); inline carries caller's Composable context.
 - Diagnostic types use `org.jetbrains.kotlin.psi.KtElement`, not IntelliJ `PsiElement` (shading mismatch between embeddable / non-embeddable kotlin-compiler).

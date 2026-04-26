@@ -79,7 +79,7 @@ class FusioK24HeadlessRunnerSourceProvider(testServices: TestServices) : Additio
             }
 
             fun <E, S, Eff> runHeadless(
-                present: @Composable () -> Presentation<E, Eff, S>,
+                present: @Composable () -> Presentation<S, E, Eff>,
                 block: suspend Inputs<E, S, Eff>.() -> Unit,
             ) = runBlocking {
                 val sendRef = mutableStateOf<((E) -> Unit)?>(null)

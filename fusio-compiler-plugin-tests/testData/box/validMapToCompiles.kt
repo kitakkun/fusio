@@ -18,7 +18,7 @@ sealed interface Parent {
 }
 
 fun box(): String {
-    val presentation: Presentation<Parent, Child, String> = Presentation(
+    val presentation: Presentation<String, Parent, Child> = Presentation(
         state = "ready",
         effectFlow = emptyFlow(),
         eventErrorFlow = emptyFlow(),

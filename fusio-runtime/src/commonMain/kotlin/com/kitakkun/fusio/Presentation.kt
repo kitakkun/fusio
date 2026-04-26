@@ -46,7 +46,7 @@ import kotlinx.coroutines.flow.Flow
  * correct form when composing a presenter without `buildPresenter`.
  */
 @Stable
-public class Presentation<Event, Effect, State>(
+public class Presentation<State, Event, Effect>(
     public val state: State,
     public val effectFlow: Flow<Effect>,
     public val eventErrorFlow: Flow<Throwable>,

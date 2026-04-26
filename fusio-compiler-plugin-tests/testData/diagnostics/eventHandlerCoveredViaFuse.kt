@@ -41,7 +41,7 @@ fun PresenterScope<ChildEvent, ChildEffect>.child(): ChildState {
 // `Flip` is fuse-routed via @MapTo to ChildEvent.Toggle; `Local` is handled
 // directly. Both subtypes covered — no diagnostic should fire.
 @Composable
-fun screenPresenter(): Presentation<ParentEvent, ParentEffect, ScreenState> = buildPresenter {
+fun screenPresenter(): Presentation<ScreenState, ParentEvent, ParentEffect> = buildPresenter {
     val childState = fuse { child() }
     on<ParentEvent.Local> { }
     ScreenState(childState)

@@ -355,11 +355,11 @@ fun PresenterScope<ChildEvent, ChildEffect>.child(/* var */ $composer: Composer?
 }
 
 @Composable
-fun screenPresenter(/* var */ $composer: Composer?, $changed: Int): Presentation<ParentEvent, ParentEffect, ScreenState> {
+fun screenPresenter(/* var */ $composer: Composer?, $changed: Int): Presentation<ScreenState, ParentEvent, ParentEffect> {
   when {
     isTraceInProgress() -> traceEventStart(key = 758050293, dirty1 = $changed, dirty2 = -1, info = "screenPresenter (fuseRewrite.kt:47)")
   }
-  val tmp_7: Presentation<ParentEvent, ParentEffect, ScreenState> = buildPresenter<ParentEvent, ParentEffect, ScreenState>(block =   @Composable
+  val tmp_7: Presentation<ScreenState, ParentEvent, ParentEffect> = buildPresenter<ParentEvent, ParentEffect, ScreenState>(block =   @Composable
 local fun PresenterScope<ParentEvent, ParentEffect>.<anonymous>(/* var */ $composer: Composer?, $changed: Int): ScreenState {
     $composer.startReplaceGroup(key = -1686836381)
     when {

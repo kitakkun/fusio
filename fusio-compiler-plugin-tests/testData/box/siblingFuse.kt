@@ -68,7 +68,7 @@ fun PresenterScope<BEvent, BEffect>.bChild(): BState {
 }
 
 @Composable
-fun screenPresenter(): Presentation<ParentEvent, ParentEffect, ScreenState> = buildPresenter {
+fun screenPresenter(): Presentation<ScreenState, ParentEvent, ParentEffect> = buildPresenter {
     val a = fuse { aChild() }
     val b = fuse { bChild() }
     ScreenState(a, b)

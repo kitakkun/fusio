@@ -11,7 +11,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * Unit tests for `taskList` — the TaskList sub-presenter in isolation.
  *
  * Uses [testSubPresenter] because `taskList` returns `TaskListState`
- * directly (the sub-presenter shape) rather than a `Presentation<_, _, _>` (Event, Effect, State).
+ * directly (the sub-presenter shape) rather than a `Presentation<_, _, _>` (State, Event, Effect).
  * No parent, no `@MapTo` / `@MapFrom` wiring in scope — this is the
  * smallest blast radius a bug can have in a decomposed presenter tree.
  */

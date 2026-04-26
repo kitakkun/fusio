@@ -65,7 +65,7 @@ fun PresenterScope<MidEvent, MidEffect>.mid(): MidState {
 }
 
 @Composable
-fun screen(): Presentation<ScreenEvent, ScreenEffect, ScreenState> =
+fun screen(): Presentation<ScreenState, ScreenEvent, ScreenEffect> =
     buildPresenter {
         val midState = fuse { mid() }
         ScreenState(midState)

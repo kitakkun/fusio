@@ -20,7 +20,7 @@ import com.kitakkun.fusio.fuse
  *   - Snackbar payloads                        (@MapFrom wiring generates the forwarding)
  */
 @Composable
-fun myScreenPresenter(): Presentation<MyScreenEvent, MyScreenEffect, MyScreenUiState> = buildPresenter {
+fun myScreenPresenter(): Presentation<MyScreenUiState, MyScreenEvent, MyScreenEffect> = buildPresenter {
     val tasks = fuse { taskList() }
     val filter = fuse { filter() }
 
