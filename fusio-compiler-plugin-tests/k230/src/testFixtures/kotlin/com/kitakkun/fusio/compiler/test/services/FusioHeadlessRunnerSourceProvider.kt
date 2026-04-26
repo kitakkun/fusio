@@ -15,15 +15,13 @@ import org.jetbrains.kotlin.test.services.temporaryDirectoryManager
  * adds the helper source below to that module's compilation. Tests then drive
  * a presenter with:
  *
- *     FusioHeadlessRunner().use { runner ->
- *         runner.setContent { screenPresenter(runner.events /* of your event type */) }
- *         runner.pump()
- *         runner.emit(MyEvent.Something)
- *         runner.pump()
- *         // assert on runner.state / runner.effects
+ *     runHeadless<MyEvent, State, Effect>(::screenPresenter) {
+ *         emit(MyEvent.Something)
+ *         // assert on state / effects
  *     }
  *
- * The real type Flow<E> is parameterised per test, so the helper is generic.
+ * `Presentation.send` (introduced in Step 11) owns the event channel, so the
+ * helper no longer plumbs an external Flow.
  */
 object FusioDirectives : SimpleDirectivesContainer() {
     val WITH_FUSIO_HEADLESS by directive("Include the headless Compose runner helper")
@@ -72,6 +70,7 @@ class FusioHeadlessRunnerSourceProvider(testServices: TestServices) : Additional
             import androidx.compose.runtime.Composable
             import androidx.compose.runtime.Composition
             import androidx.compose.runtime.LaunchedEffect
+            import androidx.compose.runtime.MutableState
             import androidx.compose.runtime.Recomposer
             import androidx.compose.runtime.mutableStateOf
             import androidx.compose.runtime.snapshots.Snapshot
@@ -79,8 +78,6 @@ class FusioHeadlessRunnerSourceProvider(testServices: TestServices) : Additional
             import kotlinx.coroutines.CoroutineScope
             import kotlinx.coroutines.Job
             import kotlinx.coroutines.delay
-            import kotlinx.coroutines.flow.Flow
-            import kotlinx.coroutines.flow.MutableSharedFlow
             import kotlinx.coroutines.launch
             import kotlinx.coroutines.runBlocking
 
@@ -97,12 +94,16 @@ class FusioHeadlessRunnerSourceProvider(testServices: TestServices) : Additional
              * an Inputs<E, State, Effect> that lets it emit events, drain collected
              * effects, read current state, and pump frames. The run cleans up
              * Composition/Recomposer/Job before returning.
+             *
+             * Step 11 moved the event channel inside `Presentation`, so the helper
+             * captures the latest `presentation.send` into a Compose state and
+             * exposes it via `Inputs.emit`. No external Flow plumbing required.
              */
             fun <E, S, Eff> runHeadless(
-                present: @Composable (Flow<E>) -> Presentation<S, Eff>,
+                present: @Composable () -> Presentation<S, Eff, E>,
                 block: suspend Inputs<E, S, Eff>.() -> Unit,
             ) = runBlocking {
-                val events = MutableSharedFlow<E>(extraBufferCapacity = 64)
+                val sendRef = mutableStateOf<((E) -> Unit)?>(null)
                 val clock = BroadcastFrameClock()
                 val ctx = coroutineContext + clock + Job(coroutineContext[Job])
                 val recomposer = Recomposer(ctx)
@@ -114,14 +115,15 @@ class FusioHeadlessRunnerSourceProvider(testServices: TestServices) : Additional
 
                 val composition = Composition(HeadlessApplier(), recomposer)
                 composition.setContent {
-                    val presentation = present(events)
+                    val presentation = present()
+                    sendRef.value = presentation.send
                     currentState.value = presentation.state
                     LaunchedEffect(presentation.effectFlow) {
                         presentation.effectFlow.collect { collectedEffects.add(it) }
                     }
                 }
 
-                val inputs = Inputs(events, currentState, collectedEffects, clock)
+                val inputs = Inputs(sendRef, currentState, collectedEffects, clock)
                 try {
                     inputs.pump()
                     inputs.block()
@@ -133,15 +135,17 @@ class FusioHeadlessRunnerSourceProvider(testServices: TestServices) : Additional
             }
 
             class Inputs<E, S, Eff>(
-                private val events: MutableSharedFlow<E>,
-                private val stateHolder: androidx.compose.runtime.MutableState<S?>,
+                private val sendRef: MutableState<((E) -> Unit)?>,
+                private val stateHolder: MutableState<S?>,
                 val effects: MutableList<Eff>,
                 private val clock: BroadcastFrameClock,
             ) {
                 val state: S? get() = stateHolder.value
 
                 suspend fun emit(event: E) {
-                    events.emit(event)
+                    val send = sendRef.value
+                        ?: error("Presenter has not been composed yet — call pump() first.")
+                    send(event)
                     pump()
                 }
 

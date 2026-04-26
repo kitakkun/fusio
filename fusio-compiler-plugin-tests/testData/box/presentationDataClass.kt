@@ -5,16 +5,17 @@
 import com.kitakkun.fusio.Presentation
 import kotlinx.coroutines.flow.emptyFlow
 
-// Pin the structural-equality contract of Presentation<S, E>. It used to be
+// Pin the structural-equality contract of Presentation<S, E, Ev>. It used to be
 // a data class; now it's a regular class with hand-written equals / hashCode /
 // toString. Destructuring / `copy` are intentionally gone — this test
 // guards only the behaviour a library consumer should be able to rely on.
 fun box(): String {
     val flow = emptyFlow<String>()
     val errors = emptyFlow<Throwable>()
-    val a = Presentation(state = 42, effectFlow = flow, handlerErrors = errors)
-    val b = Presentation(state = 42, effectFlow = flow, handlerErrors = errors)
-    val c = Presentation(state = 7, effectFlow = flow, handlerErrors = errors)
+    val send: (Int) -> Unit = {}
+    val a = Presentation(state = 42, effectFlow = flow, handlerErrors = errors, send = send)
+    val b = Presentation(state = 42, effectFlow = flow, handlerErrors = errors, send = send)
+    val c = Presentation(state = 7, effectFlow = flow, handlerErrors = errors, send = send)
 
     if (a != b) return "FAIL: equal states should be equal: $a vs $b"
     if (a.hashCode() != b.hashCode()) return "FAIL: equal instances should share hashCode"

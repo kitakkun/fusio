@@ -8,7 +8,6 @@ import androidx.compose.runtime.setValue
 import com.kitakkun.fusio.Presentation
 import com.kitakkun.fusio.buildPresenter
 import com.kitakkun.fusio.on
-import kotlinx.coroutines.flow.Flow
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -36,15 +35,16 @@ class TestPresenterTest {
     }
 
     /**
-     * A realistic presenter: takes extra arguments (the [initial] seed)
-     * alongside the event flow, so this exercises the "bind your own
-     * dependencies inside the lambda" path documented in the design doc.
+     * A realistic presenter: takes an [initial] seed argument, so this
+     * exercises the "bind your own dependencies inside the lambda" path
+     * documented in the design doc. The event flow is owned and managed
+     * by `buildPresenter` itself; the scenario's `send` drives input
+     * through the resulting `presentation.send`.
      */
     @Composable
     private fun counterPresenter(
-        events: Flow<CounterEvent>,
         initial: Int,
-    ): Presentation<Int, CounterEffect> = buildPresenter(events) {
+    ): Presentation<Int, CounterEffect, CounterEvent> = buildPresenter {
         var count by remember { mutableStateOf(initial) }
         on<CounterEvent.Increment> { count += 1 }
         on<CounterEvent.Reset> {
@@ -58,14 +58,14 @@ class TestPresenterTest {
 
     @Test
     fun initial_state_is_visible_before_any_event() = testPresenter(
-        presenter = { events -> counterPresenter(events, initial = 42) },
+        presenter = { counterPresenter(initial = 42) },
     ) {
         assertEquals(42, state)
     }
 
     @Test
     fun send_advances_state_and_awaitState_unblocks() = testPresenter(
-        presenter = { events -> counterPresenter(events, initial = 0) },
+        presenter = { counterPresenter(initial = 0) },
     ) {
         awaitState { it == 0 }
         send(CounterEvent.Increment)
@@ -76,7 +76,7 @@ class TestPresenterTest {
 
     @Test
     fun stateHistory_records_every_distinct_state() = testPresenter(
-        presenter = { events -> counterPresenter(events, initial = 0) },
+        presenter = { counterPresenter(initial = 0) },
     ) {
         // Event -> LaunchedEffect collector -> state write -> next frame is
         // async, so `awaitState` between sends makes sure each intermediate
@@ -93,7 +93,7 @@ class TestPresenterTest {
 
     @Test
     fun awaitEffect_returns_emitted_effect() = testPresenter(
-        presenter = { events -> counterPresenter(events, initial = 5) },
+        presenter = { counterPresenter(initial = 5) },
     ) {
         send(CounterEvent.Reset)
         val toast = awaitEffect<CounterEffect.Toast>()
@@ -102,7 +102,7 @@ class TestPresenterTest {
 
     @Test
     fun awaitEffect_fails_on_type_mismatch() = testPresenter(
-        presenter = { events -> counterPresenter(events, initial = 0) },
+        presenter = { counterPresenter(initial = 0) },
     ) {
         send(CounterEvent.Reset) // emits Toast
         assertFailsWith<AssertionError> {
@@ -112,7 +112,7 @@ class TestPresenterTest {
 
     @Test
     fun expectNoEffects_passes_when_quiet() = testPresenter(
-        presenter = { events -> counterPresenter(events, initial = 0) },
+        presenter = { counterPresenter(initial = 0) },
     ) {
         send(CounterEvent.Increment) // no effect emitted
         expectNoEffects(within = 20.milliseconds)
@@ -120,7 +120,7 @@ class TestPresenterTest {
 
     @Test
     fun expectNoEffects_fails_when_effect_is_queued() = testPresenter(
-        presenter = { events -> counterPresenter(events, initial = 0) },
+        presenter = { counterPresenter(initial = 0) },
     ) {
         send(CounterEvent.Reset) // emits Toast
         assertFailsWith<AssertionError> {
@@ -130,7 +130,7 @@ class TestPresenterTest {
 
     @Test
     fun awaitState_times_out_when_predicate_never_matches() = testPresenter(
-        presenter = { events -> counterPresenter(events, initial = 0) },
+        presenter = { counterPresenter(initial = 0) },
     ) {
         assertFailsWith<AssertionError> {
             awaitState(timeout = 50.milliseconds) { it == 99 }
@@ -159,7 +159,7 @@ class TestPresenterTest {
 
     @Test
     fun assertState_returns_current_state_when_predicate_matches() = testPresenter(
-        presenter = { events -> counterPresenter(events, initial = 7) },
+        presenter = { counterPresenter(initial = 7) },
     ) {
         val snapshot = assertState { it == 7 }
         assertEquals(7, snapshot)
@@ -167,7 +167,7 @@ class TestPresenterTest {
 
     @Test
     fun assertState_fails_fast_without_waiting() = testPresenter(
-        presenter = { events -> counterPresenter(events, initial = 0) },
+        presenter = { counterPresenter(initial = 0) },
     ) {
         val err = assertFailsWith<AssertionError> {
             assertState(message = "expected 99") { it == 99 }
@@ -184,7 +184,7 @@ class TestPresenterTest {
 
     @Test
     fun awaitState_timeout_message_includes_history_and_pending_effects() = testPresenter(
-        presenter = { events -> counterPresenter(events, initial = 0) },
+        presenter = { counterPresenter(initial = 0) },
     ) {
         send(CounterEvent.Reset) // emits Toast into the effect queue
         val err = assertFailsWith<AssertionError> {
@@ -197,7 +197,7 @@ class TestPresenterTest {
 
     @Test
     fun await_message_annotation_threads_into_failure_text() = testPresenter(
-        presenter = { events -> counterPresenter(events, initial = 0) },
+        presenter = { counterPresenter(initial = 0) },
     ) {
         val err = assertFailsWith<AssertionError> {
             awaitState(message = "after reset", timeout = 20.milliseconds) { it == 99 }
@@ -222,7 +222,7 @@ class TestPresenterTest {
     @Test
     fun recordStateHistory_false_leaves_history_empty() = testPresenter(
         recordStateHistory = false,
-        presenter = { events -> counterPresenter(events, initial = 0) },
+        presenter = { counterPresenter(initial = 0) },
     ) {
         send(CounterEvent.Increment)
         awaitState { it == 1 }
@@ -238,8 +238,8 @@ class TestPresenterTest {
 
     @Test
     fun awaitHandlerError_returns_exception_thrown_inside_on() = testPresenter<CounterEvent, Int, CounterEffect>(
-        presenter = { events ->
-            buildPresenter(events) {
+        presenter = {
+            buildPresenter {
                 on<CounterEvent.Increment> {
                     throw IllegalStateException("handler crashed")
                 }
@@ -257,7 +257,7 @@ class TestPresenterTest {
 
     @Test
     fun expectNoHandlerErrors_passes_when_handlers_run_cleanly() = testPresenter(
-        presenter = { events -> counterPresenter(events, initial = 0) },
+        presenter = { counterPresenter(initial = 0) },
     ) {
         send(CounterEvent.Increment)
         awaitState { it == 1 }
@@ -286,8 +286,8 @@ class TestPresenterTest {
      */
     @Test
     fun on_handler_captures_latest_recomposition_value() = testPresenter<FreshnessEvent, Int, FreshnessEffect>(
-        presenter = { events ->
-            buildPresenter(events) {
+        presenter = {
+            buildPresenter {
                 var count by remember { mutableStateOf(0) }
                 val capturedCount = count
                 on<FreshnessEvent.Tick> { count += 1 }

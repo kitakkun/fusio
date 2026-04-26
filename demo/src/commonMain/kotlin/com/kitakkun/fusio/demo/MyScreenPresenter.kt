@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import com.kitakkun.fusio.Presentation
 import com.kitakkun.fusio.buildPresenter
 import com.kitakkun.fusio.fuse
-import kotlinx.coroutines.flow.Flow
 
 /**
  * Root presenter for the Todo demo. Composes the TaskList and Filter
@@ -21,9 +20,7 @@ import kotlinx.coroutines.flow.Flow
  *   - Snackbar payloads                        (@MapFrom wiring generates the forwarding)
  */
 @Composable
-fun myScreenPresenter(
-    eventFlow: Flow<MyScreenEvent>,
-): Presentation<MyScreenUiState, MyScreenEffect> = buildPresenter(eventFlow) {
+fun myScreenPresenter(): Presentation<MyScreenUiState, MyScreenEffect, MyScreenEvent> = buildPresenter {
     val tasks = fuse { taskList() }
     val filter = fuse { filter() }
 

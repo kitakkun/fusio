@@ -24,7 +24,7 @@ class MyScreenPresenterTest {
 
     @Test
     fun AddTask_routes_through_to_child_and_Added_lifts_as_ShowTaskAdded() = testPresenter(
-        presenter = { events -> myScreenPresenter(events) },
+        presenter = { myScreenPresenter() },
     ) {
         send(MyScreenEvent.AddTask("Buy milk"))
         awaitState { it.visibleTasks.any { t -> t.title == "Buy milk" } }
@@ -37,7 +37,7 @@ class MyScreenPresenterTest {
 
     @Test
     fun SelectFilter_applies_in_the_parent_body() = testPresenter(
-        presenter = { events -> myScreenPresenter(events) },
+        presenter = { myScreenPresenter() },
     ) {
         send(MyScreenEvent.AddTask("Active task"))
         awaitState { it.totalCount == 1 }
@@ -64,7 +64,7 @@ class MyScreenPresenterTest {
 
     @Test
     fun counters_reflect_fused_child_state() = testPresenter(
-        presenter = { events -> myScreenPresenter(events) },
+        presenter = { myScreenPresenter() },
     ) {
         repeat(3) { i ->
             send(MyScreenEvent.AddTask("Task ${i + 1}"))

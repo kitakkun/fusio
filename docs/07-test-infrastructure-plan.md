@@ -222,7 +222,7 @@ fun main() = generateTestGroupSuiteWithJUnit5 {
 | `box/fuseRoundTrip.kt` | Driving a parent event → child handler → parent effect returns OK | ✅ landed |
 | `box/nestedFuse.kt` | Three-level (screen / mid / leaf) nesting from the sample | ✅ landed |
 | `box/dataObjectSubtype.kt` | `data object` target uses `irGetObject`, not a constructor call | ✅ landed |
-| `box/presentationDataClass.kt` | Runtime Presentation<S, E> data-class shape is stable | ✅ landed (bonus) |
+| `box/presentationDataClass.kt` | Runtime Presentation<S, E, Ev> shape is stable | ✅ landed (bonus) |
 | `box/composableCompiles.kt` | Compose plugin is live in the test harness | ✅ landed (bonus) |
 | `box/validMapToCompiles.kt` | Valid @MapTo usage emits bytecode without regressions | ✅ landed (bonus) |
 | `ir/fuseRewrite.kt` | Golden-file IR dump for the full @MapTo/@MapFrom round-trip — regression sentinel for `FuseTransformer` | ✅ landed (post-Phase 2) |

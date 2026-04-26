@@ -30,20 +30,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.MutableSharedFlow
 
 /**
- * Todo demo. The Compose tree only pushes MyScreenEvent values onto the
- * flow and reads the assembled MyScreenUiState — the fact that two
- * sibling sub-presenters (TaskList and Filter) are actually producing
- * that state is invisible to the UI.
+ * Todo demo. The Compose tree only pushes MyScreenEvent values via
+ * `presentation.send` and reads the assembled MyScreenUiState — the fact
+ * that two sibling sub-presenters (TaskList and Filter) are actually
+ * producing that state is invisible to the UI.
  */
 @Composable
 fun App() {
-    val eventFlow = remember { MutableSharedFlow<MyScreenEvent>(extraBufferCapacity = 64) }
     val effects = remember { mutableStateListOf<MyScreenEffect>() }
 
-    val presentation = myScreenPresenter(eventFlow)
+    val presentation = myScreenPresenter()
     val state = presentation.state
 
     LaunchedEffect(presentation.effectFlow) {
@@ -66,18 +64,18 @@ fun App() {
                 )
 
                 NewTaskInput(
-                    onSubmit = { title -> eventFlow.tryEmit(MyScreenEvent.AddTask(title)) },
+                    onSubmit = { title -> presentation.send(MyScreenEvent.AddTask(title)) },
                 )
 
                 FilterChips(
                     current = state.filter,
-                    onSelect = { eventFlow.tryEmit(MyScreenEvent.SelectFilter(it)) },
+                    onSelect = { presentation.send(MyScreenEvent.SelectFilter(it)) },
                 )
 
                 TaskListView(
                     tasks = state.visibleTasks,
-                    onToggle = { eventFlow.tryEmit(MyScreenEvent.ToggleTask(it)) },
-                    onRemove = { eventFlow.tryEmit(MyScreenEvent.RemoveTask(it)) },
+                    onToggle = { presentation.send(MyScreenEvent.ToggleTask(it)) },
+                    onRemove = { presentation.send(MyScreenEvent.RemoveTask(it)) },
                     modifier = Modifier.weight(1f, fill = true),
                 )
 

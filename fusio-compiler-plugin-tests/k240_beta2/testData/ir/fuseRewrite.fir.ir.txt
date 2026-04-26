@@ -791,10 +791,9 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
           then: CALL 'public final fun traceEventEnd (): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
       RETURN type=<root>.ChildState from='public final fun child (<this>: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): <root>.ChildState declared in <root>'
         GET_VAR 'val tmp_6: <root>.ChildState declared in <root>.child' type=<root>.ChildState origin=null
-  FUN name:screenPresenter visibility:public modality:FINAL returnType:com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEffect>
-    VALUE_PARAMETER kind:Regular name:events index:0 type:kotlinx.coroutines.flow.Flow<<root>.ParentEvent>
-    VALUE_PARAMETER kind:Regular name:$composer index:1 type:androidx.compose.runtime.Composer? [assignable]
-    VALUE_PARAMETER kind:Regular name:$changed index:2 type:kotlin.Int
+  FUN name:screenPresenter visibility:public modality:FINAL returnType:com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEffect, <root>.ParentEvent>
+    VALUE_PARAMETER kind:Regular name:$composer index:0 type:androidx.compose.runtime.Composer? [assignable]
+    VALUE_PARAMETER kind:Regular name:$changed index:1 type:kotlin.Int
     annotations:
       Composable
     BLOCK_BODY
@@ -802,16 +801,15 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
         BRANCH
           if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime' type=kotlin.Boolean origin=null
           then: CALL 'public final fun traceEventStart (key: kotlin.Int, dirty1: kotlin.Int, dirty2: kotlin.Int, info: kotlin.String): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
-            ARG key: CONST Int type=kotlin.Int value=-1226651325
+            ARG key: CONST Int type=kotlin.Int value=758050293
             ARG dirty1: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter' type=kotlin.Int origin=null
             ARG dirty2: CONST Int type=kotlin.Int value=-1
-            ARG info: CONST String type=kotlin.String value="screenPresenter (fuseRewrite.kt:49)"
-      VAR IR_TEMPORARY_VARIABLE name:tmp_7 type:com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEffect> [val]
-        CALL 'public final fun buildPresenter <Event, Effect, UiState> (eventFlow: kotlinx.coroutines.flow.Flow<Event of com.kitakkun.fusio.buildPresenter>, block: @[ExtensionFunctionType] kotlin.Function3<com.kitakkun.fusio.PresenterScope<Event of com.kitakkun.fusio.buildPresenter, Effect of com.kitakkun.fusio.buildPresenter>, androidx.compose.runtime.Composer, kotlin.Int, UiState of com.kitakkun.fusio.buildPresenter>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): com.kitakkun.fusio.Presentation<UiState of com.kitakkun.fusio.buildPresenter, Effect of com.kitakkun.fusio.buildPresenter> declared in com.kitakkun.fusio' type=com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEffect> origin=null
+            ARG info: CONST String type=kotlin.String value="screenPresenter (fuseRewrite.kt:47)"
+      VAR IR_TEMPORARY_VARIABLE name:tmp_7 type:com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEffect, <root>.ParentEvent> [val]
+        CALL 'public final fun buildPresenter <Event, Effect, UiState> (block: @[ExtensionFunctionType] kotlin.Function3<com.kitakkun.fusio.PresenterScope<Event of com.kitakkun.fusio.buildPresenter, Effect of com.kitakkun.fusio.buildPresenter>, androidx.compose.runtime.Composer, kotlin.Int, UiState of com.kitakkun.fusio.buildPresenter>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): com.kitakkun.fusio.Presentation<UiState of com.kitakkun.fusio.buildPresenter, Effect of com.kitakkun.fusio.buildPresenter, Event of com.kitakkun.fusio.buildPresenter> declared in com.kitakkun.fusio' type=com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEffect, <root>.ParentEvent> origin=null
           TYPE_ARG Event: <root>.ParentEvent
           TYPE_ARG Effect: <root>.ParentEffect
           TYPE_ARG UiState: <root>.ScreenState
-          ARG eventFlow: GET_VAR 'events: kotlinx.coroutines.flow.Flow<<root>.ParentEvent> declared in <root>.screenPresenter' type=kotlinx.coroutines.flow.Flow<<root>.ParentEvent> origin=null
           ARG block: FUN_EXPR type=@[ExtensionFunctionType] kotlin.Function3<com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect>, androidx.compose.runtime.Composer, kotlin.Int, <root>.ScreenState> origin=LAMBDA
             FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL returnType:<root>.ScreenState
               VALUE_PARAMETER kind:ExtensionReceiver name:$this$buildPresenter index:0 type:com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect>
@@ -822,15 +820,15 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
               BLOCK_BODY
                 CALL 'public abstract fun startReplaceGroup (key: kotlin.Int): kotlin.Unit declared in androidx.compose.runtime.Composer' type=kotlin.Unit origin=null
                   ARG <this>: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
-                  ARG key: CONST Int type=kotlin.Int value=-1511966000
+                  ARG key: CONST Int type=kotlin.Int value=-1686836381
                 WHEN type=kotlin.Unit origin=IF
                   BRANCH
                     if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime' type=kotlin.Boolean origin=null
                     then: CALL 'public final fun traceEventStart (key: kotlin.Int, dirty1: kotlin.Int, dirty2: kotlin.Int, info: kotlin.String): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
-                      ARG key: CONST Int type=kotlin.Int value=-1511966000
+                      ARG key: CONST Int type=kotlin.Int value=-1686836381
                       ARG dirty1: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter.<anonymous>' type=kotlin.Int origin=null
                       ARG dirty2: CONST Int type=kotlin.Int value=-1
-                      ARG info: CONST String type=kotlin.String value="screenPresenter.<anonymous> (fuseRewrite.kt:50)"
+                      ARG info: CONST String type=kotlin.String value="screenPresenter.<anonymous> (fuseRewrite.kt:48)"
                 VAR name:childState type:<root>.ChildState [val]
                   BLOCK type=<root>.ChildState origin=null
                     VAR IR_TEMPORARY_VARIABLE name:tmp_8 type:com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect> [val]
@@ -929,15 +927,15 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
                           BLOCK_BODY
                             CALL 'public abstract fun startReplaceGroup (key: kotlin.Int): kotlin.Unit declared in androidx.compose.runtime.Composer' type=kotlin.Unit origin=null
                               ARG <this>: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=androidx.compose.runtime.Composer? origin=null
-                              ARG key: CONST Int type=kotlin.Int value=-2111360969
+                              ARG key: CONST Int type=kotlin.Int value=6532170
                             WHEN type=kotlin.Unit origin=IF
                               BRANCH
                                 if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime' type=kotlin.Boolean origin=null
                                 then: CALL 'public final fun traceEventStart (key: kotlin.Int, dirty1: kotlin.Int, dirty2: kotlin.Int, info: kotlin.String): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
-                                  ARG key: CONST Int type=kotlin.Int value=-2111360969
+                                  ARG key: CONST Int type=kotlin.Int value=6532170
                                   ARG dirty1: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=kotlin.Int origin=null
                                   ARG dirty2: CONST Int type=kotlin.Int value=-1
-                                  ARG info: CONST String type=kotlin.String value="screenPresenter.<anonymous>.<anonymous> (fuseRewrite.kt:50)"
+                                  ARG info: CONST String type=kotlin.String value="screenPresenter.<anonymous>.<anonymous> (fuseRewrite.kt:48)"
                             VAR IR_TEMPORARY_VARIABLE name:tmp_11 type:<root>.ChildState [val]
                               CALL 'public final fun child (<this>: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): <root>.ChildState declared in <root>' type=<root>.ChildState origin=null
                                 ARG <this>: GET_VAR '$this$fuse: com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> declared in <root>.screenPresenter.<anonymous>.<anonymous>' type=com.kitakkun.fusio.PresenterScope<<root>.ChildEvent, <root>.ChildEffect> origin=IMPLICIT_ARGUMENT
@@ -968,12 +966,10 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
                 RETURN type=<root>.ScreenState from='local final fun <anonymous> ($this$buildPresenter: com.kitakkun.fusio.PresenterScope<<root>.ParentEvent, <root>.ParentEffect>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): <root>.ScreenState declared in <root>.screenPresenter'
                   GET_VAR 'val tmp_12: <root>.ScreenState declared in <root>.screenPresenter.<anonymous>' type=<root>.ScreenState origin=null
           ARG $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? declared in <root>.screenPresenter' type=androidx.compose.runtime.Composer? origin=null
-          ARG $changed: CALL 'public final fun and (other: kotlin.Int): kotlin.Int declared in kotlin.Int' type=kotlin.Int origin=null
-            ARG <this>: CONST Int type=kotlin.Int value=14
-            ARG other: GET_VAR '$changed: kotlin.Int declared in <root>.screenPresenter' type=kotlin.Int origin=null
+          ARG $changed: CONST Int type=kotlin.Int value=0
       WHEN type=kotlin.Unit origin=IF
         BRANCH
           if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime' type=kotlin.Boolean origin=null
           then: CALL 'public final fun traceEventEnd (): kotlin.Unit declared in androidx.compose.runtime' type=kotlin.Unit origin=null
-      RETURN type=com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEffect> from='public final fun screenPresenter (events: kotlinx.coroutines.flow.Flow<<root>.ParentEvent>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEffect> declared in <root>'
-        GET_VAR 'val tmp_7: com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEffect> declared in <root>.screenPresenter' type=com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEffect> origin=null
+      RETURN type=com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEffect, <root>.ParentEvent> from='public final fun screenPresenter ($composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEffect, <root>.ParentEvent> declared in <root>'
+        GET_VAR 'val tmp_7: com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEffect, <root>.ParentEvent> declared in <root>.screenPresenter' type=com.kitakkun.fusio.Presentation<<root>.ScreenState, <root>.ParentEffect, <root>.ParentEvent> origin=null

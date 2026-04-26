@@ -59,6 +59,7 @@ class FusioK24HeadlessRunnerSourceProvider(testServices: TestServices) : Additio
             import androidx.compose.runtime.Composable
             import androidx.compose.runtime.Composition
             import androidx.compose.runtime.LaunchedEffect
+            import androidx.compose.runtime.MutableState
             import androidx.compose.runtime.Recomposer
             import androidx.compose.runtime.mutableStateOf
             import androidx.compose.runtime.snapshots.Snapshot
@@ -66,8 +67,6 @@ class FusioK24HeadlessRunnerSourceProvider(testServices: TestServices) : Additio
             import kotlinx.coroutines.CoroutineScope
             import kotlinx.coroutines.Job
             import kotlinx.coroutines.delay
-            import kotlinx.coroutines.flow.Flow
-            import kotlinx.coroutines.flow.MutableSharedFlow
             import kotlinx.coroutines.launch
             import kotlinx.coroutines.runBlocking
 
@@ -80,10 +79,10 @@ class FusioK24HeadlessRunnerSourceProvider(testServices: TestServices) : Additio
             }
 
             fun <E, S, Eff> runHeadless(
-                present: @Composable (Flow<E>) -> Presentation<S, Eff>,
+                present: @Composable () -> Presentation<S, Eff, E>,
                 block: suspend Inputs<E, S, Eff>.() -> Unit,
             ) = runBlocking {
-                val events = MutableSharedFlow<E>(extraBufferCapacity = 64)
+                val sendRef = mutableStateOf<((E) -> Unit)?>(null)
                 val clock = BroadcastFrameClock()
                 val ctx = coroutineContext + clock + Job(coroutineContext[Job])
                 val recomposer = Recomposer(ctx)
@@ -95,14 +94,15 @@ class FusioK24HeadlessRunnerSourceProvider(testServices: TestServices) : Additio
 
                 val composition = Composition(HeadlessApplier(), recomposer)
                 composition.setContent {
-                    val presentation = present(events)
+                    val presentation = present()
+                    sendRef.value = presentation.send
                     currentState.value = presentation.state
                     LaunchedEffect(presentation.effectFlow) {
                         presentation.effectFlow.collect { collectedEffects.add(it) }
                     }
                 }
 
-                val inputs = Inputs(events, currentState, collectedEffects, clock)
+                val inputs = Inputs(sendRef, currentState, collectedEffects, clock)
                 try {
                     inputs.pump()
                     inputs.block()
@@ -114,15 +114,17 @@ class FusioK24HeadlessRunnerSourceProvider(testServices: TestServices) : Additio
             }
 
             class Inputs<E, S, Eff>(
-                private val events: MutableSharedFlow<E>,
-                private val stateHolder: androidx.compose.runtime.MutableState<S?>,
+                private val sendRef: MutableState<((E) -> Unit)?>,
+                private val stateHolder: MutableState<S?>,
                 val effects: MutableList<Eff>,
                 private val clock: BroadcastFrameClock,
             ) {
                 val state: S? get() = stateHolder.value
 
                 suspend fun emit(event: E) {
-                    events.emit(event)
+                    val send = sendRef.value
+                        ?: error("Presenter has not been composed yet — call pump() first.")
+                    send(event)
                     pump()
                 }
 

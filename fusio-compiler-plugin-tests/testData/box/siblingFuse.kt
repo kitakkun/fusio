@@ -68,9 +68,7 @@ fun PresenterScope<BEvent, BEffect>.bChild(): BState {
 }
 
 @Composable
-fun screenPresenter(
-    events: kotlinx.coroutines.flow.Flow<ParentEvent>,
-): Presentation<ScreenState, ParentEffect> = buildPresenter(events) {
+fun screenPresenter(): Presentation<ScreenState, ParentEffect, ParentEvent> = buildPresenter {
     val a = fuse { aChild() }
     val b = fuse { bChild() }
     ScreenState(a, b)

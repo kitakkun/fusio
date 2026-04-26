@@ -6,7 +6,6 @@ import com.kitakkun.fusio.test.PresenterScenario
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
@@ -34,7 +33,7 @@ import kotlin.time.Duration
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PresenterScenarioImpl<Event, State, Effect>(
-    private val events: MutableSharedFlow<Event>,
+    private val sendDelegate: (Event) -> Unit,
     private val stateHolder: StateHolder<State>,
     override val stateHistory: List<State>,
     private val effectChannel: Channel<Effect>,
@@ -72,7 +71,7 @@ internal class PresenterScenarioImpl<Event, State, Effect>(
 
     override suspend fun send(event: Event) {
         checkError()
-        events.emit(event)
+        sendDelegate(event)
         advance()
     }
 

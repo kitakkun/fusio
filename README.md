@@ -16,7 +16,7 @@ The name isn't decorative. Every screen Fusio produces is literally a **fusion**
 - the children's effect flows back into the parent's single effect channel
 - the parent's event flow routed into each child's scope via declared mappings
 
-The library's core data type, `Presentation<State, Effect>`, *is* that fusion expressed as a pair — a state value and the effect stream the presenter produced alongside it.
+The library's core data type, `Presentation<State, Effect, Event>`, *is* that fusion: a state value, the effect stream the presenter produced alongside it, and a `send: (Event) -> Unit` entry point the UI uses to push input back in.
 
 ## The problem
 
@@ -24,7 +24,7 @@ Without decomposition, a screen-level presenter grows like this:
 
 ```kotlin
 @Composable
-fun myScreenPresenter(eventFlow: Flow<MyScreenEvent>): MyScreenUiState {
+fun myScreenPresenter(): MyScreenUiState {
     var tasks by remember { mutableStateOf(listOf<Task>()) }
     var filter by remember { mutableStateOf(TaskFilter.All) }
     var nextId by remember { mutableStateOf(1L) }
@@ -69,7 +69,7 @@ a narrow, typed slice of the parent's flows.
 
 ## What you write
 
-- `buildPresenter(eventFlow) { … }` — screen-level entry, returns `Presentation<State, Effect>`
+- `buildPresenter { … }` — screen-level entry, returns `Presentation<State, Effect, Event>` (UI calls `presentation.send(event)` to drive input)
 - `on<Event> { … }` — typed handler reading from the current scope's event flow
 - `fuse { subPresenter() }` — the fusion point above
 - `@MapTo(ChildEvent::class)` on a *parent-event* sealed subtype — "route me into this child"
@@ -144,8 +144,8 @@ The screen-level presenter fuses them:
 
 ```kotlin
 @Composable
-fun myScreenPresenter(eventFlow: Flow<MyScreenEvent>): Presentation<MyScreenUiState, MyScreenEffect> =
-    buildPresenter(eventFlow) {
+fun myScreenPresenter(): Presentation<MyScreenUiState, MyScreenEffect, MyScreenEvent> =
+    buildPresenter {
         val tasks  = fuse { taskList() }
         val filter = fuse { filter() }
 
@@ -158,7 +158,12 @@ fun myScreenPresenter(eventFlow: Flow<MyScreenEvent>): Presentation<MyScreenUiSt
     }
 ```
 
-At runtime, a `MyScreenEvent.AddTask("Buy milk")` emitted on the parent flow is:
+The UI side keeps a single `presentation` reference and calls
+`presentation.send(MyScreenEvent.AddTask("Buy milk"))` from `onClick` / similar
+handlers — `buildPresenter` owns the underlying event channel internally, so
+there's no `MutableSharedFlow` to remember at the call site.
+
+At runtime, a `MyScreenEvent.AddTask("Buy milk")` sent through `presentation.send` is:
 
 1. routed by the `@MapTo` into `TaskListEvent.Add("Buy milk")` on the child scope,
 2. handled by `taskList()`'s `on<TaskListEvent.Add>`,
@@ -174,7 +179,7 @@ See `demo/` for the runnable version — launch with `cd demo && ../gradlew runJ
 Decomposition pays off twice. The first time is at the maintenance level
 covered above. The second is in tests.
 
-Because sub-presenters return plain `State` (not `Presentation<State, Effect>`),
+Because sub-presenters return plain `State` (not `Presentation<State, Effect, Event>`),
 they're callable as ordinary `@Composable` functions — no wrapper, no synthetic
 scope, no mocks. Because parent events are typed into each child via `@MapTo`
 and effects lift out via `@MapFrom`, *only* the event input and effect output
@@ -308,7 +313,7 @@ presenter landed on, and here's what it never produced".
 plain interface; Kotest matchers work on its fields without any adapter:
 
 ```kotlin
-testPresenter(presenter = { events -> myScreenPresenter(events) }) {
+testPresenter(presenter = { myScreenPresenter() }) {
     send(MyScreenEvent.AddTask("milk"))
     awaitState { it.totalCount == 1 }
 
@@ -330,8 +335,8 @@ same suite, there's no conflict — fusio-test runs on
 
 **With real fakes.** The `presenter` lambda binds whatever parameters your
 presenter needs — `FakeRepository()`, a hand-rolled
-`TestDispatcher`-backed Clock, etc. fusio-test only supplies the event
-flow; everything else is ordinary dependency passing.
+`TestDispatcher`-backed Clock, etc. fusio-test drives input via
+`presentation.send`; everything else is ordinary dependency passing.
 
 See `demo/src/jvmTest/` for a runnable showcase — `TaskListPresenterTest`,
 `FilterPresenterTest`, and `MyScreenPresenterTest` together prove that

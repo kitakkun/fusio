@@ -65,8 +65,8 @@ fun PresenterScope<MidEvent, MidEffect>.mid(): MidState {
 }
 
 @Composable
-fun screen(events: kotlinx.coroutines.flow.Flow<ScreenEvent>): Presentation<ScreenState, ScreenEffect> =
-    buildPresenter(events) {
+fun screen(): Presentation<ScreenState, ScreenEffect, ScreenEvent> =
+    buildPresenter {
         val midState = fuse { mid() }
         ScreenState(midState)
     }

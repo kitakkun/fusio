@@ -38,8 +38,8 @@ fun PresenterScope<ChildEvent, ChildEffect>.counter(): Int {
 }
 
 @Composable
-fun screen(events: kotlinx.coroutines.flow.Flow<ParentEvent>): Presentation<Int, ParentEffect> =
-    buildPresenter(events) { fuse { counter() } }
+fun screen(): Presentation<Int, ParentEffect, ParentEvent> =
+    buildPresenter { fuse { counter() } }
 
 fun box(): String {
     var result = "uninitialised"

@@ -57,7 +57,7 @@ Real presenters take more than just `Flow<E>` — a `TodoPresenter` will pull in
  */
 public fun <E, S, Eff> testPresenter(
     context: CoroutineContext = EmptyCoroutineContext,
-    presenter: @Composable (Flow<E>) -> Presentation<S, Eff>,
+    presenter: @Composable () -> Presentation<S, Eff, E>,
     scenario: suspend PresenterScenario<E, S, Eff>.() -> Unit,
 )
 

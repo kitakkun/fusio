@@ -15,7 +15,6 @@ import com.kitakkun.fusio.MapTo
 import com.kitakkun.fusio.PresenterScope
 import com.kitakkun.fusio.buildPresenter
 import com.kitakkun.fusio.fuse
-import kotlinx.coroutines.flow.Flow
 
 // --- Child sub-presenter types ---
 sealed interface ChildEvent {
@@ -41,8 +40,8 @@ data class ParentState(val child: ChildState)
 fun PresenterScope<ChildEvent, ChildEffect>.child(): ChildState = ChildState(count = 0)
 
 @Composable
-fun parent(eventFlow: Flow<ParentEvent>): Presentation<ParentState, ParentEffect> =
-    buildPresenter(eventFlow) {
+fun parent(): Presentation<ParentState, ParentEffect, ParentEvent> =
+    buildPresenter {
         val childState = fuse { child() }
         ParentState(child = childState)
     }

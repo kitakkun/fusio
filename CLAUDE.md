@@ -46,7 +46,8 @@ mavenLocal is content-filtered to `com.kitakkun.fusio` in settings so external K
 
 ## Rules of thumb
 
-- Sub-presenters return `State`, **not** `Presentation<State, Effect>`. Effects flow through `emitEffect`.
+- Sub-presenters return `State`, **not** `Presentation<State, Effect, Event>`. Effects flow through `emitEffect`.
+- `Presentation<State, Effect, Event>` carries `send: (Event) -> Unit` (Step 11). `buildPresenter { … }` owns the internal event flow; UI calls `presentation.send(...)`. No external `MutableSharedFlow` to plumb.
 - `fuse` is `inline` (not `@Composable`); inline carries caller's Composable context.
 - Diagnostic types use `org.jetbrains.kotlin.psi.KtElement`, not IntelliJ `PsiElement` (shading mismatch between embeddable / non-embeddable kotlin-compiler).
 - IR transformer registers BEFORE Compose (insertion order in `ExtensionStorage`).

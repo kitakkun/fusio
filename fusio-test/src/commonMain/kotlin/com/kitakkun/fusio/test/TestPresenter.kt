@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Composition
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Recomposer
+import androidx.compose.runtime.mutableStateOf
 import com.kitakkun.fusio.Presentation
 import com.kitakkun.fusio.PresenterScope
 import com.kitakkun.fusio.buildPresenter
@@ -15,8 +16,6 @@ import com.kitakkun.fusio.test.internal.StateHolder
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -31,16 +30,19 @@ import kotlin.coroutines.EmptyCoroutineContext
  *
  * ## What the framework supplies, what you supply
  *
- * The framework passes a synthetic `Flow<Event>` into [presenter]. Every
- * other parameter of your real presenter (repositories, user ids,
- * dispatchers, feature flags, …) is yours to bind inside the lambda — the
- * same pattern Compose UI tests use with `setContent { MyScreen(dep1, dep2) }`.
+ * The framework calls [presenter] inside the headless composition; every
+ * argument to your real presenter (repositories, user ids, dispatchers,
+ * feature flags, …) is yours to bind inside the lambda — the same pattern
+ * Compose UI tests use with `setContent { MyScreen(dep1, dep2) }`. Events
+ * are pushed via the returned `presentation.send` (which the scenario's
+ * [PresenterScenario.send] thinly wraps), so there's no event-flow argument
+ * to plumb in from the test side.
  *
  * ```kotlin
  * @Test
  * fun adds_a_task() = testPresenter(
- *     presenter = { events ->
- *         todoPresenter(events = events, repo = FakeTodoRepo(), userId = "u1")
+ *     presenter = {
+ *         todoPresenter(repo = FakeTodoRepo(), userId = "u1")
  *     },
  * ) {
  *     send(TodoEvent.Add("milk"))
@@ -82,16 +84,22 @@ import kotlin.coroutines.EmptyCoroutineContext
 public fun <Event, State, Effect> testPresenter(
     context: CoroutineContext = EmptyCoroutineContext,
     recordStateHistory: Boolean = true,
-    presenter: @Composable (Flow<Event>) -> Presentation<State, Effect>,
+    presenter: @Composable () -> Presentation<State, Effect, Event>,
     scenario: suspend PresenterScenario<Event, State, Effect>.() -> Unit,
 ): TestResult = runTest(context = UnconfinedTestDispatcher() + context) {
-    val events = MutableSharedFlow<Event>(extraBufferCapacity = EVENT_BUFFER_CAPACITY)
     val clock = BroadcastFrameClock()
     val effectChannel = Channel<Effect>(Channel.UNLIMITED)
     val handlerErrorChannel = Channel<Throwable>(Channel.UNLIMITED)
     val stateHolder = StateHolder<State>()
     val history: MutableList<State> = mutableListOf()
     val errorRef = ErrorRef()
+
+    // The presenter creates its own internal event flow and exposes a
+    // `send: (Event) -> Unit` lambda on the returned Presentation. We
+    // capture the latest send into a Compose state so the scenario's
+    // `PresenterScenarioImpl.send` can call it directly. Compose's
+    // re-composition keeps this fresh as the presenter re-runs.
+    val sendRef = mutableStateOf<((Event) -> Unit)?>(null)
 
     // Recomposer runs in its own coroutine so the scenario body can
     // interleave with it. The exception handler catches crashes *inside
@@ -112,7 +120,8 @@ public fun <Event, State, Effect> testPresenter(
 
     val composition = Composition(HeadlessApplier(), recomposer)
     composition.setContent {
-        val presentation = presenter(events)
+        val presentation = presenter()
+        sendRef.value = presentation.send
         val nextState = presentation.state
         if (stateHolder.current != nextState) {
             stateHolder.current = nextState
@@ -129,8 +138,12 @@ public fun <Event, State, Effect> testPresenter(
         }
     }
 
-    val impl = PresenterScenarioImpl(
-        events = events,
+    val impl = PresenterScenarioImpl<Event, State, Effect>(
+        sendDelegate = { event ->
+            val current = sendRef.value
+                ?: error("Scenario tried to send before the presenter's first composition. Call advance() first.")
+            current(event)
+        },
         stateHolder = stateHolder,
         stateHistory = history,
         effectChannel = effectChannel,
@@ -187,8 +200,6 @@ public fun <Event, State, Effect> testSubPresenter(
 ): TestResult = testPresenter(
     context = context,
     recordStateHistory = recordStateHistory,
-    presenter = { events -> buildPresenter(events, subPresenter) },
+    presenter = { buildPresenter(subPresenter) },
     scenario = scenario,
 )
-
-private const val EVENT_BUFFER_CAPACITY: Int = 64

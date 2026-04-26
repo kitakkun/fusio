@@ -29,8 +29,8 @@ public final class com/kitakkun/fusio/test/PresenterScenario$DefaultImpls {
 }
 
 public final class com/kitakkun/fusio/test/TestPresenterKt {
-	public static final fun testPresenter (Lkotlin/coroutines/CoroutineContext;ZLkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;)V
-	public static synthetic fun testPresenter$default (Lkotlin/coroutines/CoroutineContext;ZLkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
+	public static final fun testPresenter (Lkotlin/coroutines/CoroutineContext;ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;)V
+	public static synthetic fun testPresenter$default (Lkotlin/coroutines/CoroutineContext;ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
 	public static final fun testSubPresenter (Lkotlin/coroutines/CoroutineContext;ZLkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;)V
 	public static synthetic fun testSubPresenter$default (Lkotlin/coroutines/CoroutineContext;ZLkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
 }
