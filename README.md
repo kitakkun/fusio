@@ -203,10 +203,11 @@ and the entire scenario fits in one call:
 ```kotlin
 @Test
 fun adds_a_task_and_shows_toast() = testPresenter(
-    presenter = { events ->
-        // The framework supplies `events`; bind every other real-presenter
-        // parameter here — fakes, ids, dispatchers, feature flags, etc.
-        myScreenPresenter(events)
+    presenter = {
+        // Bind every real-presenter parameter here — fakes, ids,
+        // dispatchers, feature flags, etc. The harness drives input
+        // through the returned presentation's `send`.
+        myScreenPresenter()
     },
 ) {
     send(MyScreenEvent.AddTask("Buy milk"))
@@ -244,7 +245,7 @@ test can assert on the crash directly:
 
 ```kotlin
 @Test
-fun add_rejects_duplicate_title() = testPresenter(presenter = { events -> todoPresenter(events) }) {
+fun add_rejects_duplicate_title() = testPresenter(presenter = { todoPresenter() }) {
     send(TodoEvent.Add("milk"))
     send(TodoEvent.Add("milk")) // handler throws DuplicateTitleException
 
