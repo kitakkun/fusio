@@ -16,6 +16,11 @@ jobs:
     # macOS runner so Apple klib targets (iosArm64, iosSimulatorArm64,
     # macosArm64) build. See the `library` job in ci.yml for the same choice.
     runs-on: macos-latest
+    # Sonatype + signing credentials live in the Release environment, so the
+    # GitHub Actions runtime only injects them once the deployment to Release
+    # has been approved. Required-reviewer rules on the environment can gate
+    # publishing if needed.
+    environment: Release
     steps:
       - uses: actions/checkout@v4
 
