@@ -6,7 +6,8 @@ Todo screen end-to-end.
 
 ## The problem Fusio solves
 
-Without decomposition, a screen-level presenter grows like this:
+Without decomposition, a screen-level presenter accretes every
+feature into one body:
 
 ```kotlin
 @Composable
@@ -27,10 +28,33 @@ fun myScreenPresenter(): MyScreenUiState {
 }
 ```
 
-Splitting the feature-rules into sub-presenters turns the parent into a
-composition step instead of a junk drawer — *if* you're willing to hand-
-write every event-routing and effect-lifting branch between them. Fusio
-turns that plumbing into annotations the compiler reads.
+The natural fix is to split it. But the *manual* split forces I/O
+boilerplate at every seam — the parent has to thread a callback into
+each child, and each child has to invoke that callback to send
+anything back:
+
+```kotlin
+@Composable
+fun myScreenPresenter(): MyScreenUiState {
+    var lastSnack by remember { mutableStateOf<String?>(null) }
+
+    val tasks = taskListPresenter(
+        onAdded = { title -> lastSnack = "Added: $title" },          // <-- callback in
+        onCompleted = { title -> lastSnack = "Completed: $title" },  // <-- callback in
+    )
+    val filter = filterPresenter(
+        onChanged = { f -> lastSnack = "Filter → $f" },              // <-- callback in
+    )
+    // … and you have to teach each child to fire those callbacks at the right moments.
+    return MyScreenUiState(tasks, filter, lastSnack)
+}
+```
+
+That's the I/O boilerplate Fusio resolves. You declare the routing
+**once**, on the parent's sealed event/effect types, and the compiler
+synthesises the per-seam plumbing — the children stay parameterless
+extensions on `PresenterScope<…>`, the parent stays a composition
+step.
 
 ## The fusion point
 

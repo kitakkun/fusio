@@ -2,20 +2,28 @@
 
 > ⚠️ Experimental — research project building on DroidKaigi 2024 / 2025-style Compose architectures.
 
-**Fusio** — *Latin, "to pour together, to fuse"* — is a Kotlin compiler
-plugin for Compose presenters that stay small as a screen grows.
+**Fusio** — *Latin, "to pour together, to fuse"* — is a Kotlin
+compiler plugin that decomposes Compose presenters without the usual
+I/O boilerplate at the seams.
 
-A single `@Composable` presenter for a whole screen accumulates state,
-`LaunchedEffect`s, and event branches until nobody wants to touch it.
-Splitting it into sub-presenters normally means hand-plumbing every
-parent event down to the right child and every child effect back up.
-Fusio does that plumbing for you, at compile time, from a pair of
-annotations.
+A `@Composable` presenter that grows past a few features wants to be
+split into smaller pieces. But splitting forces I/O boilerplate at
+every seam: callback lambdas the parent threads down to each child,
+event invocations the children fire back up to the parent. That
+boilerplate scales with every new feature you add.
 
-The library's core data type, `Presentation<State, Event, Effect>`, is
-a state value, the effect stream the presenter produced alongside it,
-and a `send: (Event) -> Unit` entry point the UI uses to push input
-back in.
+Fusio resolves those seams at compile time — *fusion* in the literal
+sense. Two sealed-type annotations declare which parent event routes
+into which child and which child effect lifts back up as which parent
+effect; the compiler synthesises the callback-and-invocation plumbing
+between them. The decomposed presenters end up reading as plain
+functions — no callback parameters threaded through, no manual event
+forwarding.
+
+The library's core data type, `Presentation<State, Event, Effect>`,
+is a state value, the effect stream the presenter produced alongside
+it, and a `send: (Event) -> Unit` entry point the UI uses to push
+input back in.
 
 ## Quick start
 
