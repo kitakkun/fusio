@@ -1,9 +1,13 @@
 package com.kitakkun.fusio.compiler.compat
 
+import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
+import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
+import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.FirSession
+import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
@@ -129,6 +133,33 @@ interface CompatContext {
     val localFunctionForLambdaOrigin: IrDeclarationOrigin
 
     /**
+     * Builds a `FirSimpleFunctionChecker` subclass whose `check(...)` body
+     * extracts a function declaration's `receiverParameter` / `body` /
+     * `source` and forwards them to [analyzer].
+     *
+     * Routed through CompatContext because the parameter type of
+     * `FirSimpleFunctionChecker.check` was renamed inside the 2.3.x line:
+     *
+     * - Kotlin 2.3.0 – 2.3.10: `check(declaration: FirSimpleFunction)`
+     * - Kotlin 2.3.20+:        `check(declaration: FirNamedFunction)`
+     *
+     * Each `kXXX` impl can subclass against the right type for its compiler
+     * jar, so the resulting bytecode loads cleanly under both shapes. The
+     * shared analysis function takes only Kotlin-version-stable types
+     * (`ConeKotlinType`, `FirElement`, `KtSourceElement`).
+     *
+     * Return type is `Any` rather than `FirSimpleFunctionChecker` because
+     * `FirSimpleFunctionChecker`'s generic supertype shifts between
+     * `FirDeclarationChecker<FirSimpleFunction>` (2.3.0–2.3.10) and
+     * `FirDeclarationChecker<FirNamedFunction>` (2.3.20+), which Kotlin's
+     * variance check rejects as a non-subtype across the abstract method.
+     * Callers cast the result to `FirSimpleFunctionChecker` — runtime
+     * checkcast only inspects the raw class identity, which is identical
+     * across versions.
+     */
+    fun createSubPresenterChecker(analyzer: SubPresenterAnalyzer): Any
+
+    /**
      * Registered per subproject via META-INF/services. [CompatContextResolver]
      * instantiates the first factory whose [supportedRange] contains the
      * running Kotlin compiler's version.
@@ -140,6 +171,22 @@ interface CompatContext {
         /** Instantiates the matching [CompatContext]. Called at most once per run. */
         fun create(): CompatContext
     }
+}
+
+/**
+ * Stable surface the per-version sub-presenter checker forwards into. All
+ * three parameters are Kotlin-version-stable types — receiver type as
+ * `ConeKotlinType`, body as `FirElement`, source as `KtSourceElement` —
+ * so the shared analysis side never has to care which `FirNamedFunction`
+ * vs `FirSimpleFunction` the checker overrode.
+ */
+interface SubPresenterAnalyzer {
+    context(context: CheckerContext, reporter: DiagnosticReporter)
+    fun analyze(
+        receiverType: ConeKotlinType?,
+        body: FirElement?,
+        source: KtSourceElement?,
+    )
 }
 
 /**

@@ -73,6 +73,12 @@ public class FusioK24JvmDiagnosticTestGenerated extends AbstractFusioK24JvmDiagn
   }
 
   @Test
+  @TestMetadata("missingEventHandlerInSubPresenter.kt")
+  public void testMissingEventHandlerInSubPresenter() {
+    run("missingEventHandlerInSubPresenter.kt");
+  }
+
+  @Test
   @TestMetadata("missingEventMappings.kt")
   public void testMissingEventMappings() {
     run("missingEventMappings.kt");

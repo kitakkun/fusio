@@ -26,6 +26,10 @@ kotlin {
     compilerOptions {
         optIn.add("org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi")
         optIn.add("org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI")
+        // The sub-presenter checker subclass uses context(...) parameters to
+        // line up with FIR's `context(CheckerContext, DiagnosticReporter)`
+        // checker convention. Same opt-in fusio-compiler-compat itself sets.
+        freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
 

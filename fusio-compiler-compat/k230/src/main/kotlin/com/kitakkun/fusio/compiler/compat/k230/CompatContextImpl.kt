@@ -1,17 +1,24 @@
 package com.kitakkun.fusio.compiler.compat.k230
 
 import com.kitakkun.fusio.compiler.compat.CompatContext
+import com.kitakkun.fusio.compiler.compat.SubPresenterAnalyzer
 import com.kitakkun.fusio.compiler.compat.Version
 import com.kitakkun.fusio.compiler.compat.VersionRange
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
+import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.fir.FirSession
+import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
+import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
+import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirSimpleFunctionChecker
+import org.jetbrains.kotlin.fir.declarations.FirSimpleFunction
 import org.jetbrains.kotlin.fir.declarations.getKClassArgument
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
+import org.jetbrains.kotlin.fir.types.coneType
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
@@ -70,6 +77,27 @@ class CompatContextImpl : CompatContext {
     // the implicit upcast to `IrDeclarationOrigin` happens here in 2.3.0 bytecode.
     override val localFunctionForLambdaOrigin: IrDeclarationOrigin
         get() = IrDeclarationOrigin.LOCAL_FUNCTION_FOR_LAMBDA
+
+    // 2.3.0 / 2.3.10 keep the old name `FirSimpleFunction` on the
+    // FirSimpleFunctionChecker.check parameter; bytecode compiled here
+    // references that name and loads cleanly only on the 2.3.0 line.
+    override fun createSubPresenterChecker(analyzer: SubPresenterAnalyzer): FirSimpleFunctionChecker =
+        K230SubPresenterChecker(analyzer)
+
+    private class K230SubPresenterChecker(
+        private val analyzer: SubPresenterAnalyzer,
+    ) : FirSimpleFunctionChecker(MppCheckerKind.Common) {
+        context(context: CheckerContext, reporter: DiagnosticReporter)
+        override fun check(declaration: FirSimpleFunction) {
+            with(analyzer) {
+                analyze(
+                    receiverType = declaration.receiverParameter?.typeRef?.coneType,
+                    body = declaration.body,
+                    source = declaration.source,
+                )
+            }
+        }
+    }
 
     class Factory : CompatContext.Factory {
         override val supportedRange: VersionRange = VersionRange(

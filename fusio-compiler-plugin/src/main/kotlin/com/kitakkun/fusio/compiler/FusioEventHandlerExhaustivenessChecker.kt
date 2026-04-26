@@ -1,6 +1,7 @@
 package com.kitakkun.fusio.compiler
 
 import com.kitakkun.fusio.compiler.compat.CompatContext
+import com.kitakkun.fusio.compiler.compat.SubPresenterAnalyzer
 import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.diagnostics.reportOn
@@ -8,6 +9,7 @@ import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
+import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirSimpleFunctionChecker
 import org.jetbrains.kotlin.fir.analysis.checkers.expression.FirFunctionCallChecker
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
 import org.jetbrains.kotlin.fir.declarations.getAnnotationByClassId
@@ -74,6 +76,38 @@ class FusioEventHandlerExhaustivenessChecker(
 
     /** Registers this checker's `buildPresenter`-call half. */
     fun callChecker(): FirFunctionCallChecker = CallShell()
+
+    /**
+     * Builds the sub-presenter declaration-side half via [CompatContext]
+     * because the underlying `FirSimpleFunctionChecker.check(...)` parameter
+     * type was renamed (`FirSimpleFunction` → `FirNamedFunction`) inside
+     * the 2.3.x line. Each `kXXX` compat impl provides bytecode targeting
+     * the right parameter name; both forward into [analyzer].
+     */
+    fun functionChecker(compat: CompatContext): FirSimpleFunctionChecker =
+        compat.createSubPresenterChecker(SubPresenterAnalyzerImpl()) as FirSimpleFunctionChecker
+
+    private inner class SubPresenterAnalyzerImpl : SubPresenterAnalyzer {
+        context(context: CheckerContext, reporter: DiagnosticReporter)
+        override fun analyze(
+            receiverType: ConeKotlinType?,
+            body: FirElement?,
+            source: KtSourceElement?,
+        ) {
+            if (severity == EventHandlerExhaustiveSeverity.NONE) return
+            val rType = receiverType ?: return
+            val rClassId = rType.classId ?: return
+            if (rClassId != FusioClassIds.PRESENTER_SCOPE) return
+
+            // First type argument of PresenterScope<Event, Effect> is the Event hierarchy.
+            val firstArg = rType.typeArguments.firstOrNull() ?: return
+            val eventType = (firstArg as? org.jetbrains.kotlin.fir.types.ConeKotlinTypeProjection)
+                ?.type ?: return
+            val bodyEl = body ?: return
+
+            checkExhaustiveness(eventType, bodyEl, source)
+        }
+    }
 
     private inner class CallShell : FirFunctionCallChecker(MppCheckerKind.Common) {
         context(context: CheckerContext, reporter: DiagnosticReporter)

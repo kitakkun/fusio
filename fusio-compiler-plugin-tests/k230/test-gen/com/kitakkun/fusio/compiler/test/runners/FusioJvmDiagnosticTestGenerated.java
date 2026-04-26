@@ -69,6 +69,12 @@ public class FusioJvmDiagnosticTestGenerated extends AbstractFusioJvmDiagnosticT
   }
 
   @Test
+  @TestMetadata("missingEventHandlerInSubPresenter.kt")
+  public void testMissingEventHandlerInSubPresenter() {
+    runTest("fusio-compiler-plugin-tests/testData/diagnostics/missingEventHandlerInSubPresenter.kt");
+  }
+
+  @Test
   @TestMetadata("missingEventMappings.kt")
   public void testMissingEventMappings() {
     runTest("fusio-compiler-plugin-tests/testData/diagnostics/missingEventMappings.kt");

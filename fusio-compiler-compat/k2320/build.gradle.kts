@@ -19,6 +19,8 @@ kotlin {
     compilerOptions {
         optIn.add("org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi")
         optIn.add("org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI")
+        // See k230 for the sub-presenter-checker rationale.
+        freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
 

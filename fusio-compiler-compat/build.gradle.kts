@@ -23,6 +23,10 @@ kotlin {
     compilerOptions {
         optIn.add("org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi")
         optIn.add("org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI")
+        // SubPresenterAnalyzer.analyze uses context(...) parameters to keep the
+        // signature aligned with FIR's CheckerContext / DiagnosticReporter
+        // ambient pattern; same opt-in the per-version compat impls already use.
+        freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
 

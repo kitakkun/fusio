@@ -4,6 +4,7 @@ import com.kitakkun.fusio.compiler.compat.CompatContextResolver
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.DeclarationCheckers
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
+import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirSimpleFunctionChecker
 import org.jetbrains.kotlin.fir.analysis.checkers.expression.ExpressionCheckers
 import org.jetbrains.kotlin.fir.analysis.checkers.expression.FirFunctionCallChecker
 import org.jetbrains.kotlin.fir.analysis.extensions.FirAdditionalCheckersExtension
@@ -24,12 +25,19 @@ class FusioFirCheckersExtension(
             FusioMappingChecker(compat, MappingDirection.MAP_FROM),
             FusioExhaustivenessChecker(compat),
         )
+
+        // Sub-presenter declaration half. Routed through CompatContext so the
+        // checker bytecode (which references `FirSimpleFunction` on Kotlin
+        // 2.3.0–2.3.10 and `FirNamedFunction` on 2.3.20+) is provided by
+        // the matching k** compat impl rather than baked into this jar.
+        override val simpleFunctionCheckers: Set<FirSimpleFunctionChecker> = setOf(
+            eventHandlerExhaustiveness.functionChecker(compat),
+        )
     }
 
     // Top-level half of the on<>-exhaustiveness check, keyed on
-    // `buildPresenter<E, F, S> { … }` call sites. Sub-presenter declaration
-    // checking is intentionally absent — see [FusioEventHandlerExhaustivenessChecker]
-    // for the per-Kotlin-version compat reasoning.
+    // `buildPresenter<E, F, S> { … }` call sites. Stable parameter type
+    // (`FirFunctionCall`) — no compat shim required.
     override val expressionCheckers: ExpressionCheckers = object : ExpressionCheckers() {
         override val functionCallCheckers: Set<FirFunctionCallChecker> = setOf(
             eventHandlerExhaustiveness.callChecker(),
