@@ -21,7 +21,7 @@ public fun <ChildEffect, ParentEffect> forwardEffects(
     parentScope: PresenterScope<*, ParentEffect>,
     mapper: (ChildEffect) -> ParentEffect?,
 ) {
-    // Keyed on both scopes; see docs/13 ("Why each LaunchedEffect ... is
+    // Keyed on both scopes; see docs/runtime-implementation-notes.md ("Why each LaunchedEffect ... is
     // keyed on both scopes") for the reparent-vs-steady-state reasoning.
     LaunchedEffect(childScope, parentScope) {
         childScope.internalEffectFlow.collect { childEffect ->

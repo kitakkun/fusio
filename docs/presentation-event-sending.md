@@ -115,4 +115,4 @@ Ship the single-overload form. `Presentation<State, Event, Effect>`, `send: (Eve
 ## Open questions
 
 - Should the buffer capacity be a `buildPresenter` parameter? Defer until a real workload demonstrates 64 isn't enough.
-- Does Step 10's sub-presenter ergonomics work intersect with this change? No — sub-presenters return `State`, not `Presentation`, so they're untouched by Step 11. (Step 10's `presenter { }` factory was later withdrawn for unrelated reasons; see docs/10.)
+- Does Step 10's sub-presenter ergonomics work intersect with this change? No — sub-presenters return `State`, not `Presentation`, so they're untouched by Step 11. (Step 10's `presenter { }` factory was later withdrawn for unrelated reasons; see presenter-signature-ergonomics.md.)

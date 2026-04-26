@@ -77,7 +77,7 @@ public class Presentation<State, Event, Effect>(
     public val send: (Event) -> Unit,
 ) {
     // Hand-written equals / hashCode / toString instead of `data class`;
-    // see docs/13 ("Why Presentation is hand-written") for the ABI
+    // see docs/runtime-implementation-notes.md ("Why Presentation is hand-written") for the ABI
     // reasoning.
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

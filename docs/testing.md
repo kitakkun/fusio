@@ -1,7 +1,7 @@
 # Testing Fusio presenters
 
 Decomposition pays off twice — at the maintenance level
-([docs/14](14-getting-started.md)), and in tests.
+([getting-started.md](getting-started.md)), and in tests.
 
 Sub-presenters return plain `State` (not `Presentation<…>`), so
 they're callable as ordinary `@Composable` functions — no wrapper, no

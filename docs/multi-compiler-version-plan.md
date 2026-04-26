@@ -598,4 +598,4 @@ This centralises dep resolution across subprojects.
 
 - `reference_fusio_gotchas.md` (memory) — itemised list of which APIs we touch and why they're sensitive
 - `project_fusio_current_state.md` (memory) — as-built shape; Phase 0 preserves it
-- `docs/07-test-infrastructure-plan.md` — adjacent pattern of landed-status-per-item for test cases; this doc follows the same format
+- `docs/test-infrastructure-plan.md` — adjacent pattern of landed-status-per-item for test cases; this doc follows the same format

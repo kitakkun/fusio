@@ -47,7 +47,7 @@ public class PresenterScope<Event, Effect>(
     @PublishedApi internal val eventFlow: Flow<Event>,
 ) {
     // Channel rather than MutableSharedFlow, bounded capacity, default
-    // SUSPEND-overflow. See docs/13 ("Why Channel ... backs effects and
+    // SUSPEND-overflow. See docs/runtime-implementation-notes.md ("Why Channel ... backs effects and
     // event errors") for the buffer-vs-replay rationale.
     private val _effectChannel = Channel<Effect>(capacity = BUFFER_CAPACITY)
     internal val internalEffectFlow: Flow<Effect> = _effectChannel.receiveAsFlow()

@@ -71,16 +71,16 @@ cd demo
 
 ## Documentation
 
-- **[Getting started](docs/14-getting-started.md)** — motivation,
+- **[Getting started](docs/getting-started.md)** — motivation,
   what you write, full Todo example walkthrough, project layout, build
   commands.
-- **[Testing](docs/15-testing.md)** — `fusio-test` headless harness,
+- **[Testing](docs/testing.md)** — `fusio-test` headless harness,
   scenario API, sub-presenter testing, integration with Kotest /
   Turbine.
-- **[Implementation notes](docs/13-runtime-implementation-notes.md)**
+- **[Implementation notes](docs/runtime-implementation-notes.md)**
   — for contributors touching `fusio-runtime` internals.
-- **[Design docs](docs/)** — numbered design notes for each step
-  (`07-…` through `15-…`).
+- **[`docs/`](docs/)** — additional design notes (event-handler
+  exhaustiveness, multi-compiler-version layer, etc.).
 
 ## Compatibility
 

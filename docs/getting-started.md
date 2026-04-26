@@ -2,7 +2,7 @@
 
 Long-form walkthrough that the README links to.
 
-## The problem Fusio solves
+## Motivation
 
 Without decomposition, a presenter accretes every feature into one body:
 
@@ -119,7 +119,7 @@ Both work for events and (symmetrically) for effects. Both pay:
 FIR checkers enforce: same-name/type properties on mapped subtypes,
 `@MapFrom` exhaustiveness, and `on<E>` exhaustiveness (configurable
 via `fusio { eventHandlerExhaustiveSeverity = … }` —
-see [docs/12](12-event-handler-exhaustiveness.md)).
+see [event-handler-exhaustiveness.md](event-handler-exhaustiveness.md)).
 
 ## Example: a Todo screen with two sibling sub-presenters
 
