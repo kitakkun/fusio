@@ -91,6 +91,82 @@ class FusioGradlePluginTest {
     }
 
     @Test
+    fun `KMP consumer gets fusio-runtime in commonMainImplementation`() {
+        // Verifies the KMP-detection callback in apply() — that
+        // `pluginManager.withPlugin(KMP_PLUGIN_ID)` actually fires and
+        // routes the runtime dep to the right configuration. The earlier
+        // "applies cleanly" test only asserts BUILD SUCCESSFUL, which
+        // would pass even if no dep was added at all (the regression
+        // would only surface when a consumer wrote `import com.kitakkun.fusio.…`).
+        writeSettings()
+        writeBuild(
+            """
+            plugins {
+                kotlin("multiplatform") version "2.3.21"
+                id("com.kitakkun.fusio")
+            }
+            repositories { mavenCentral() }
+            kotlin { jvm() }
+
+            tasks.register("printFusioDep") {
+                doLast {
+                    configurations.getByName("commonMainImplementation")
+                        .dependencies
+                        .forEach { dep -> println("FUSIO_DEP: " + dep.group + ":" + dep.name) }
+                }
+            }
+            """.trimIndent(),
+        )
+
+        val result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments("printFusioDep", "--stacktrace")
+            .withPluginClasspath()
+            .build()
+
+        assertTrue(
+            result.output.contains("FUSIO_DEP: com.kitakkun.fusio:fusio-runtime"),
+            "fusio-runtime should be added to commonMainImplementation. full output:\n${result.output}",
+        )
+    }
+
+    @Test
+    fun `kotlin-jvm consumer gets fusio-runtime in implementation`() {
+        // Mirror of the KMP-side test for the plain-JVM path: the
+        // `org.jetbrains.kotlin.jvm` callback routes to `implementation`
+        // because non-KMP layouts don't have `commonMainImplementation`.
+        writeSettings()
+        writeBuild(
+            """
+            plugins {
+                kotlin("jvm") version "2.3.21"
+                id("com.kitakkun.fusio")
+            }
+            repositories { mavenCentral() }
+
+            tasks.register("printFusioDep") {
+                doLast {
+                    configurations.getByName("implementation")
+                        .dependencies
+                        .forEach { dep -> println("FUSIO_DEP: " + dep.group + ":" + dep.name) }
+                }
+            }
+            """.trimIndent(),
+        )
+
+        val result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments("printFusioDep", "--stacktrace")
+            .withPluginClasspath()
+            .build()
+
+        assertTrue(
+            result.output.contains("FUSIO_DEP: com.kitakkun.fusio:fusio-runtime"),
+            "fusio-runtime should be added to implementation. full output:\n${result.output}",
+        )
+    }
+
+    @Test
     fun `plugin id matches implementationClass mapping`() {
         // Simple metadata check — catches the "plugin id declared but no
         // implementationClass" mismatch that breaks apply lazily.
