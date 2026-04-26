@@ -64,4 +64,4 @@ Single shaded `fusio-compiler-plugin` jar covers every supported Kotlin version.
 
 Shadow plugin in `fusio-compiler-plugin/build.gradle.kts` bundles all four jars and merges their `META-INF/services/…/CompatContext$Factory` files. `CompatContextResolver.resolve()` picks the matching factory via `KotlinCompilerVersion.VERSION` at plugin init.
 
-Adding Kotlin 2.5 support: create `fusio-compiler-compat/k250/` mirroring `k240_beta2/`, declare its `supportedRange`, add it to the `shaded` configuration in `fusio-compiler-plugin/build.gradle.kts`. See `docs/08-multi-compiler-version-plan.md` for the full outline.
+Adding Kotlin 2.5 support: create `fusio-compiler-compat/k250/` mirroring `k240_beta2/`, declare its `supportedRange`, add it to the `shaded` configuration in `fusio-compiler-plugin/build.gradle.kts`, and add the new patch versions to `fusio-compiler-compat/supported-kotlin-versions.txt` (single source of truth for the gradle plugin's apply-time version warning). See `docs/08-multi-compiler-version-plan.md` for the full outline.

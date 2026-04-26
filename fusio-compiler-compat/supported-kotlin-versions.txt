@@ -1,0 +1,19 @@
+# Kotlin compiler versions Fusio is tested against.
+#
+# Single source of truth for the gradle plugin's apply-time version check —
+# `fusio-gradle-plugin` reads this file at build time and bakes it into a
+# resource consumed at apply time. The min..max of the listed versions is
+# the range Fusio claims to support.
+#
+# When adding support for a new Kotlin patch:
+#   1. Add the patch here.
+#   2. Make sure a `fusio-compiler-compat/kXXX/CompatContextImpl.kt` exists
+#      whose `supportedRange` covers it (or extend an existing impl's range).
+#   3. Bump the matching `fusio-compiler-plugin-tests/kXXX` lane (if needed).
+#
+# Blank lines and comments (lines starting with `#`) are ignored.
+2.3.0
+2.3.10
+2.3.20
+2.3.21
+2.4.0-Beta2

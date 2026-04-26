@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
+import org.jetbrains.kotlin.gradle.plugin.kotlinToolingVersion
 import java.util.Properties
 
 class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
@@ -26,13 +27,58 @@ class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
             // KMP projects (including the Android KMP library variant)
             // expose `commonMainImplementation` for shared-source deps.
             target.dependencies.add("commonMainImplementation", coordinate)
+            warnIfKotlinUnsupported(target)
         }
         target.pluginManager.withPlugin(KOTLIN_JVM_PLUGIN_ID) {
             target.dependencies.add("implementation", coordinate)
+            warnIfKotlinUnsupported(target)
         }
         target.pluginManager.withPlugin(KOTLIN_ANDROID_PLUGIN_ID) {
             target.dependencies.add("implementation", coordinate)
+            warnIfKotlinUnsupported(target)
         }
+    }
+
+    /**
+     * Surfaces an apply-time warning if the consumer's Kotlin compiler version
+     * sits outside the range Fusio is tested against. The actual runtime
+     * `CompatContextResolver` would still throw at compile time on an
+     * unsupported version — this just shifts the diagnostic earlier so the
+     * consumer sees it during gradle config rather than buried in a compile
+     * stacktrace.
+     *
+     * Suppress with `-Pfusio.version.check=false` (or the matching env var)
+     * when the consumer is intentionally running on a Kotlin version Fusio
+     * hasn't been cut against yet.
+     */
+    private fun warnIfKotlinUnsupported(target: Project) {
+        val checkEnabled = target.providers.gradleProperty(VERSION_CHECK_PROPERTY)
+            .orNull
+            ?.equals("false", ignoreCase = true)
+            ?.not()
+            ?: true
+        if (!checkEnabled) return
+
+        val consumer = readConsumerKotlinVersion(target) ?: return
+        if (consumer in SUPPORTED_RANGE) return
+
+        target.logger.warn(
+            "Fusio $FUSIO_VERSION is tested against Kotlin ${SUPPORTED_RANGE.min}–${SUPPORTED_RANGE.max}; " +
+                "consumer ${target.path} uses $consumer. Compilation may fail at the Fusio compiler " +
+                "plugin's CompatContextResolver. Suppress this warning with " +
+                "-P$VERSION_CHECK_PROPERTY=false.",
+        )
+    }
+
+    /**
+     * Reads the Kotlin compiler version the consumer is configured to use via
+     * KGP's [kotlinToolingVersion] extension. Returns null when the version
+     * isn't readable for any reason (KGP API absent, parse failure) — the
+     * caller treats null as "skip the check" rather than failing the build.
+     */
+    private fun readConsumerKotlinVersion(target: Project): KotlinPatch? {
+        val raw = runCatching { target.kotlinToolingVersion.toString() }.getOrNull() ?: return null
+        return KotlinPatch.parse(raw)
     }
 
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
@@ -77,6 +123,9 @@ class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
         const val KOTLIN_JVM_PLUGIN_ID = "org.jetbrains.kotlin.jvm"
         const val KOTLIN_ANDROID_PLUGIN_ID = "org.jetbrains.kotlin.android"
 
+        /** Gradle property name that disables the apply-time Kotlin version warning. */
+        const val VERSION_CHECK_PROPERTY = "fusio.version.check"
+
         /**
          * Read from a `version.properties` resource baked by the
          * `generateFusioVersionResource` Gradle task during the plugin's own
@@ -91,5 +140,65 @@ class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
                 "fusio-gradle-plugin: version.properties not found on classpath. " +
                     "The plugin jar was likely built without the generateFusioVersionResource task.",
             )
+
+        /**
+         * Min..max Kotlin patch range Fusio is tested against, parsed from the
+         * `supported-kotlin-versions.txt` resource baked by the plugin's own
+         * build. Kept lazy so the resource read happens once, after the class
+         * is first used by an apply().
+         */
+        val SUPPORTED_RANGE: KotlinPatchRange = readSupportedRange()
+
+        private fun readSupportedRange(): KotlinPatchRange {
+            val resource = FusioGradlePlugin::class.java.classLoader
+                .getResourceAsStream("com/kitakkun/fusio/gradle/supported-kotlin-versions.txt")
+                ?: error(
+                    "fusio-gradle-plugin: supported-kotlin-versions.txt not found on classpath. " +
+                        "The plugin jar was likely built without copySupportedKotlinVersions.",
+                )
+            val versions = resource.bufferedReader().useLines { lines ->
+                lines
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() && !it.startsWith("#") }
+                    .mapNotNull { KotlinPatch.parse(it) }
+                    .toList()
+            }
+            require(versions.isNotEmpty()) {
+                "fusio-gradle-plugin: supported-kotlin-versions.txt parsed empty"
+            }
+            return KotlinPatchRange(versions.min(), versions.max())
+        }
     }
+}
+
+/**
+ * Parsed Kotlin patch version with pre-release qualifiers stripped to a numeric
+ * `major.minor.patch` triple. `2.4.0-Beta2` → `2.4.0`. Comparable, so the
+ * containing-range check is straight numeric.
+ *
+ * Internal to the gradle plugin; no relation to (or dependency on) the
+ * `Version` type used inside `fusio-compiler-compat` at runtime.
+ */
+internal data class KotlinPatch(val major: Int, val minor: Int, val patch: Int) :
+    Comparable<KotlinPatch> {
+    override fun compareTo(other: KotlinPatch): Int {
+        if (major != other.major) return major.compareTo(other.major)
+        if (minor != other.minor) return minor.compareTo(other.minor)
+        return patch.compareTo(other.patch)
+    }
+
+    override fun toString(): String = "$major.$minor.$patch"
+
+    companion object {
+        fun parse(raw: String): KotlinPatch? {
+            val parts = raw.split('.', '-', '_', '+').mapNotNull { it.toIntOrNull() }
+            if (parts.size < 2) return null
+            return KotlinPatch(parts[0], parts[1], parts.getOrElse(2) { 0 })
+        }
+    }
+}
+
+/** Inclusive Kotlin patch range used for the apply-time supported-version check. */
+internal data class KotlinPatchRange(val min: KotlinPatch, val max: KotlinPatch) {
+    operator fun contains(version: KotlinPatch): Boolean = version in min..max
 }

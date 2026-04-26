@@ -166,6 +166,74 @@ class FusioGradlePluginTest {
         )
     }
 
+    // ---- Kotlin version compatibility check ---------------------------------
+
+    @Test
+    fun `supported Kotlin version produces no warning`() {
+        // 2.3.21 sits inside the supported range listed in
+        // fusio-compiler-compat/supported-kotlin-versions.txt — apply should
+        // not log the unsupported-version warning.
+        writeSettings()
+        writeBuild(
+            """
+            plugins {
+                kotlin("jvm") version "2.3.21"
+                id("com.kitakkun.fusio")
+            }
+            repositories { mavenCentral() }
+            """.trimIndent(),
+        )
+
+        val result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments("help", "--stacktrace", "--warning-mode=all")
+            .withPluginClasspath()
+            .build()
+
+        assertTrue(
+            !result.output.contains("Fusio") ||
+                !result.output.contains("is tested against Kotlin"),
+            "Supported Kotlin version should not trigger the version warning. " +
+                "full output:\n${result.output}",
+        )
+    }
+
+    @Test
+    fun `unsupported Kotlin version is suppressed by gradle property`() {
+        // Even on a Kotlin version outside the supported range, the warning
+        // can be silenced with -Pfusio.version.check=false. We can't easily
+        // simulate "Kotlin 99.0.0" in TestKit (the apply step needs a real
+        // KGP that exists on Maven Central), so we exercise the suppression
+        // path with a supported version + the override property and assert
+        // BUILD SUCCESSFUL — the property is read regardless of whether the
+        // version is in or out of range, so this guards "the property is at
+        // least wired through" from regressions.
+        writeSettings()
+        writeBuild(
+            """
+            plugins {
+                kotlin("jvm") version "2.3.21"
+                id("com.kitakkun.fusio")
+            }
+            repositories { mavenCentral() }
+            """.trimIndent(),
+        )
+
+        val result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments("help", "-Pfusio.version.check=false", "--stacktrace")
+            .withPluginClasspath()
+            .build()
+
+        assertTrue(
+            result.output.contains("BUILD SUCCESSFUL"),
+            "apply with version-check disabled should still succeed. " +
+                "full output:\n${result.output}",
+        )
+    }
+
+    // ---- plugin metadata ----------------------------------------------------
+
     @Test
     fun `plugin id matches implementationClass mapping`() {
         // Simple metadata check — catches the "plugin id declared but no

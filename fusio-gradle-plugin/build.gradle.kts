@@ -13,6 +13,10 @@ version = providers.gradleProperty("VERSION_NAME").orNull ?: "0.1.0-SNAPSHOT"
 
 dependencies {
     implementation(libs.kotlin.gradle.plugin.api)
+    // compileOnly because the consumer always has KGP on its buildscript
+    // classpath; we just need the symbols (e.g. `kotlinToolingVersion`)
+    // visible at compile time without bundling them into the plugin jar.
+    compileOnly(libs.kotlin.gradle.plugin)
 
     testImplementation(gradleTestKit())
     testImplementation(libs.kotlin.test.junit5)
@@ -37,12 +41,31 @@ val generateFusioVersionResource by tasks.registering {
     }
 }
 
+// Copy `fusio-compiler-compat/supported-kotlin-versions.txt` into the
+// plugin jar so `FusioGradlePlugin` can read it at apply time and warn the
+// consumer if their Kotlin version sits outside Fusio's tested range.
+// `compiler-compat/` keeps the file as the single source of truth — adding
+// support for a new Kotlin patch updates this file plus a CompatContextImpl,
+// not the gradle plugin source.
+//
+// fusio-gradle-plugin is an included build, so `rootProject` here points at
+// the plugin itself rather than the umbrella repo. Reach the sibling
+// fusio-compiler-compat directory via a relative file().
+val supportedKotlinVersionsSource = file("../fusio-compiler-compat/supported-kotlin-versions.txt")
+val copySupportedKotlinVersions by tasks.registering(Copy::class) {
+    from(supportedKotlinVersionsSource)
+    into(layout.buildDirectory.dir("generated/resources/fusio/com/kitakkun/fusio/gradle"))
+}
+
+// Single shared src dir for everything baked into the plugin's resources.
+// Both generators (version.properties + supported-kotlin-versions.txt)
+// write into here; processResources depends on both so the directory is
+// populated by the time it runs.
 sourceSets.main {
-    resources.srcDir(
-        generateFusioVersionResource.map {
-            layout.buildDirectory.dir("generated/resources/fusio")
-        },
-    )
+    resources.srcDir(layout.buildDirectory.dir("generated/resources/fusio"))
+}
+tasks.named("processResources") {
+    dependsOn(generateFusioVersionResource, copySupportedKotlinVersions)
 }
 
 gradlePlugin {

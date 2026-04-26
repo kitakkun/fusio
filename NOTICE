@@ -12,8 +12,14 @@ distribution) is inspired by the `compiler-compat` module of ZacSweers/Metro:
 
   https://github.com/ZacSweers/metro
 
+The same project also informed Fusio's gradle-plugin apply-time Kotlin
+version warning: a single `supported-kotlin-versions.txt` source-of-truth
+file is read at build time, baked as a resource, and consulted at apply
+time to warn the consumer when their Kotlin compiler sits outside the
+tested range. The pattern is adopted; the implementation is independent.
+
 Metro is Copyright Zac Sweers and contributors, and is distributed under the
 Apache License, Version 2.0.
 
 No source code from Metro is incorporated into Fusio; only the architectural
-pattern is adopted. This notice exists to acknowledge that intellectual debt.
+patterns are adopted. This notice exists to acknowledge that intellectual debt.

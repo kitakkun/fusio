@@ -52,6 +52,10 @@ kotlin-compose-compiler-plugin-k24 = { module = "org.jetbrains.kotlin:kotlin-com
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime-desktop", version.ref = "compose-multiplatform" }
 compose-runtime-multiplatform = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 kotlin-gradle-plugin-api = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin-api", version.ref = "kotlin" }
+# Full KGP jar — needed at compile time for `kotlinToolingVersion` extension
+# property used by FusioGradlePlugin's apply-time version check. compileOnly
+# at runtime; consumers' own KGP supplies the implementation.
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
