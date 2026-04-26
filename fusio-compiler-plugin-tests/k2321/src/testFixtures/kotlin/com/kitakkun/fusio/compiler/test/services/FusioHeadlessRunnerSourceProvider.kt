@@ -100,7 +100,7 @@ class FusioHeadlessRunnerSourceProvider(testServices: TestServices) : Additional
              * exposes it via `Inputs.emit`. No external Flow plumbing required.
              */
             fun <E, S, Eff> runHeadless(
-                present: @Composable () -> Presentation<S, Eff, E>,
+                present: @Composable () -> Presentation<E, Eff, S>,
                 block: suspend Inputs<E, S, Eff>.() -> Unit,
             ) = runBlocking {
                 val sendRef = mutableStateOf<((E) -> Unit)?>(null)

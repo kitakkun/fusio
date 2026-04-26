@@ -17,7 +17,7 @@ data class MyState(val n: Int = 0)
 
 // Both subtypes have handlers — no diagnostic should fire.
 @Composable
-fun screenPresenter(): Presentation<MyState, MyEffect, MyEvent> = buildPresenter {
+fun screenPresenter(): Presentation<MyEvent, MyEffect, MyState> = buildPresenter {
     on<MyEvent.Foo> { }
     on<MyEvent.Bar> { }
     MyState()

@@ -40,7 +40,7 @@ data class ParentState(val child: ChildState)
 fun PresenterScope<ChildEvent, ChildEffect>.child(): ChildState = ChildState(count = 0)
 
 @Composable
-fun parent(): Presentation<ParentState, ParentEffect, ParentEvent> =
+fun parent(): Presentation<ParentEvent, ParentEffect, ParentState> =
     buildPresenter {
         val childState = fuse { child() }
         ParentState(child = childState)

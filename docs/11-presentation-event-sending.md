@@ -1,6 +1,6 @@
 # Step 11: Presentation owns event sending
 
-Status: **landing.** `Presentation<State, Effect, Event>` now exposes `send: (Event) -> Unit`; `buildPresenter` no longer takes an external event flow.
+Status: **landing.** `Presentation<Event, Effect, State>` now exposes `send: (Event) -> Unit`; `buildPresenter` no longer takes an external event flow.
 
 ## Problem
 
@@ -41,7 +41,7 @@ Button(onClick = { presentation.send(MyScreenEvent.Click) }) { … }
 
 ### Round 3 — type-parameter cost
 
-`Presentation<State, Effect>` becomes `Presentation<State, Effect, Event>`. One more type parameter, but the read order ("result, side effect, input") is meaningful — reading `Presentation<S, F, E>` left-to-right matches the consumer's mental model: "state first (what I render), effect (what fires), event (what I send back)".
+`Presentation<State, Effect>` becomes `Presentation<Event, Effect, State>` to align with the existing `buildPresenter<Event, Effect, UiState>` and `PresenterScope<Event, Effect>` orderings — Event first, Effect second, State third across the entire public API. (An earlier round of this design used `<State, Effect, Event>` reading "result, side effect, input" — but the inconsistency with the other two types caused real confusion in practice and was rejected.)
 
 ### Round 4 — bin compat impact
 
@@ -86,14 +86,14 @@ Internal flow uses `extraBufferCapacity = 64` matching the previous testPresente
 @Composable
 fun <Event, Effect, UiState> buildPresenter(
     block: @Composable PresenterScope<Event, Effect>.() -> UiState,
-): Presentation<UiState, Effect, Event>
+): Presentation<Event, Effect, UiState>
 ```
 
 No external-flow overload. `Presentation` carries `send`. `PresenterScope` is unchanged (it still takes `Flow<Event>` from the constructor — supplied internally by `buildPresenter`).
 
 ## Decision
 
-Ship the single-overload form. `Presentation<State, Effect, Event>`, `send: (Event) -> Unit`. External-flow bridging is a documented one-liner using `LaunchedEffect`.
+Ship the single-overload form. `Presentation<Event, Effect, State>`, `send: (Event) -> Unit`. External-flow bridging is a documented one-liner using `LaunchedEffect`.
 
 ## Implementation plan
 

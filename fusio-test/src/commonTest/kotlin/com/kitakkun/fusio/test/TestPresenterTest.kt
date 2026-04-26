@@ -44,7 +44,7 @@ class TestPresenterTest {
     @Composable
     private fun counterPresenter(
         initial: Int,
-    ): Presentation<Int, CounterEffect, CounterEvent> = buildPresenter {
+    ): Presentation<CounterEvent, CounterEffect, Int> = buildPresenter {
         var count by remember { mutableStateOf(initial) }
         on<CounterEvent.Increment> { count += 1 }
         on<CounterEvent.Reset> {

@@ -84,7 +84,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 public fun <Event, State, Effect> testPresenter(
     context: CoroutineContext = EmptyCoroutineContext,
     recordStateHistory: Boolean = true,
-    presenter: @Composable () -> Presentation<State, Effect, Event>,
+    presenter: @Composable () -> Presentation<Event, Effect, State>,
     scenario: suspend PresenterScenario<Event, State, Effect>.() -> Unit,
 ): TestResult = runTest(context = UnconfinedTestDispatcher() + context) {
     val clock = BroadcastFrameClock()

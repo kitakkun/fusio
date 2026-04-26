@@ -17,7 +17,7 @@ data class MyState(val n: Int = 0)
 
 // `on<MyEvent>` covers every subtype via the supertype walk. No diagnostic.
 @Composable
-fun screenPresenter(): Presentation<MyState, MyEffect, MyEvent> = buildPresenter {
+fun screenPresenter(): Presentation<MyEvent, MyEffect, MyState> = buildPresenter {
     on<MyEvent> { }
     MyState()
 }

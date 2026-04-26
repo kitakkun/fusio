@@ -18,7 +18,7 @@ data class MyState(val n: Int = 0)
 
 // `on<MyEvent.Foo>` is the only handler — `Bar` is uncovered, expect a warning.
 @Composable
-fun screenPresenter(): Presentation<MyState, MyEffect, MyEvent> = <!MISSING_EVENT_HANDLER_WARNING!>buildPresenter {
+fun screenPresenter(): Presentation<MyEvent, MyEffect, MyState> = <!MISSING_EVENT_HANDLER_WARNING!>buildPresenter {
     on<MyEvent.Foo> { }
     MyState()
 }<!>

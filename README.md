@@ -16,7 +16,7 @@ The name isn't decorative. Every screen Fusio produces is literally a **fusion**
 - the children's effect flows back into the parent's single effect channel
 - the parent's event flow routed into each child's scope via declared mappings
 
-The library's core data type, `Presentation<State, Effect, Event>`, *is* that fusion: a state value, the effect stream the presenter produced alongside it, and a `send: (Event) -> Unit` entry point the UI uses to push input back in.
+The library's core data type, `Presentation<Event, Effect, State>`, *is* that fusion: a state value, the effect stream the presenter produced alongside it, and a `send: (Event) -> Unit` entry point the UI uses to push input back in. The type-argument order matches `buildPresenter<E, F, S>` and `PresenterScope<E, F>` — Event first, Effect second, State third — across the entire public API.
 
 ## The problem
 
@@ -69,7 +69,7 @@ a narrow, typed slice of the parent's flows.
 
 ## What you write
 
-- `buildPresenter { … }` — screen-level entry, returns `Presentation<State, Effect, Event>` (UI calls `presentation.send(event)` to drive input)
+- `buildPresenter { … }` — screen-level entry, returns `Presentation<Event, Effect, State>` (UI calls `presentation.send(event)` to drive input)
 - `on<Event> { … }` — typed handler reading from the current scope's event flow
 - `fuse { subPresenter() }` — the fusion point above
 - `@MapTo(ChildEvent::class)` on a *parent-event* sealed subtype — "route me into this child"
@@ -143,7 +143,7 @@ The screen-level presenter fuses them:
 
 ```kotlin
 @Composable
-fun myScreenPresenter(): Presentation<MyScreenUiState, MyScreenEffect, MyScreenEvent> =
+fun myScreenPresenter(): Presentation<MyScreenEvent, MyScreenEffect, MyScreenUiState> =
     buildPresenter {
         val tasks  = fuse { taskList() }
         val filter = fuse { filter() }
@@ -178,7 +178,7 @@ See `demo/` for the runnable version — launch with `cd demo && ../gradlew runJ
 Decomposition pays off twice. The first time is at the maintenance level
 covered above. The second is in tests.
 
-Because sub-presenters return plain `State` (not `Presentation<State, Effect, Event>`),
+Because sub-presenters return plain `State` (not `Presentation<Event, Effect, State>`),
 they're callable as ordinary `@Composable` functions — no wrapper, no synthetic
 scope, no mocks. Because parent events are typed into each child via `@MapTo`
 and effects lift out via `@MapFrom`, *only* the event input and effect output
