@@ -80,11 +80,12 @@ the per-seam plumbing. The children stay parameterless extensions on
 and the parent stays a composition step (no event channels to
 manufacture, no `dispatch` switch to maintain).
 
-### Why not just wrap child events into the parent's hierarchy?
+### Why not roll your own routing?
 
-A common alternative trick is to dodge the `dispatch` switch by making
-each child event type extend the parent's sealed hierarchy and
-filtering the parent flow by subtype:
+Two non-Fusio shortcuts dodge the `dispatch` switch above. Both have
+costs `@MapTo` doesn't.
+
+**Option A — child event extends the parent (inheritance).**
 
 ```kotlin
 sealed interface MyScreenEvent
@@ -103,38 +104,56 @@ fun myScreenPresenter(events: Flow<MyScreenEvent>): MyScreenUiState {
 }
 ```
 
-That removes the dispatch switch, but pays for the brevity with
-coupling that Fusio's `@MapTo` doesn't have:
+**Option B — parent wraps child events as its own subtypes (composition).**
 
-- **The child names the parent.** `TaskListEvent : MyScreenEvent`
-  makes `TaskListEvent` un-reusable from any other screen — a
-  settings screen that wants the same TaskList sub-presenter can't,
-  because `TaskListEvent` insists on being a `MyScreenEvent`. Fusio
-  leaves `TaskListEvent` as a standalone sealed type; the screen's
-  `@MapTo` declarations are what couple them.
-- **The UI sends implementation-named events.** Buttons in the screen
-  call `presentation.send(TaskListEvent.Add(title))`, leaking the
-  fact that "add a task" is implemented by a sub-presenter called
-  TaskList. Refactor the screen to inline the logic and every call
-  site changes. With Fusio the UI sends domain-named
-  `MyScreenEvent.AddTask(title)` and the `@MapTo` hides which
-  implementation actually handles it.
-- **The effect direction has no equivalent trick.** Inheritance lets
-  you skip the down-direction switch, but the up-direction (child →
-  parent effects) still needs callbacks-as-parameters or a per-child
-  effect-relay `LaunchedEffect`. Fusio handles both directions with
-  the same annotation pair.
-- **No compile-time exhaustiveness check.** Sealed inheritance gives
-  you "this event class belongs to this hierarchy" but doesn't
-  enforce that every parent subtype is actually handled by *some*
-  child. Fusio's `MISSING_EVENT_HANDLER` checker reports uncovered
-  subtypes at compile time.
-- **Property-shape mapping isn't free.** When the parent's UI-domain
-  event names differ from the child's implementation name
-  (e.g. parent's `RemoveTask(id)` vs child's `Remove(taskId)`),
-  inheritance forces them into the same class. Fusio's `@MapTo`
-  generates a per-subtype mapper that copies same-named fields, with
-  a FIR checker flagging mismatches.
+```kotlin
+sealed interface MyScreenEvent {
+    data class TaskList(val event: TaskListEvent) : MyScreenEvent
+    data class Filter(val event: FilterEvent)     : MyScreenEvent
+}
+
+@Composable
+fun myScreenPresenter(events: Flow<MyScreenEvent>): MyScreenUiState {
+    val tasks  = taskListPresenter(
+        events = events.filterIsInstance<MyScreenEvent.TaskList>().map { it.event },
+    )
+    val filter = filterPresenter(
+        events = events.filterIsInstance<MyScreenEvent.Filter>().map { it.event },
+    )
+    // …
+}
+```
+
+Both shorten the down direction. But:
+
+- **Both leak the sub-presenter identity to the UI.** Inheritance has
+  the UI send `TaskListEvent.Add(title)` directly. Composition has
+  it send `MyScreenEvent.TaskList(TaskListEvent.Add(title))` —
+  slightly better because the parent type wraps it, but the UI still
+  names the child. Refactor TaskList → SmartList and every UI call
+  site changes. Fusio's `@MapTo` lets the UI send domain names
+  (`MyScreenEvent.AddTask(title)`) and hides the implementation
+  routing.
+- **Inheritance couples the child to the parent.** `TaskListEvent :
+  MyScreenEvent` makes `TaskListEvent` un-reusable in any other
+  screen. Composition is decoupled here — the wrapper lives on the
+  parent — but the UI-leak above stays.
+- **Neither lets you rename across the seam.** When the parent's
+  domain name (`AddTask(title)`) differs from the child's
+  implementation name (`Add(title)`), inheritance forces them to be
+  the same class and composition forces the UI to know both names.
+  Fusio's per-property mapper renames at compile time, with a FIR
+  checker flagging field-shape mismatches.
+- **The effect (up) direction has no equivalent shortcut.** Both
+  tricks help the down direction only; the up direction still needs
+  callbacks-as-parameters or a per-child `LaunchedEffect` relay.
+  Fusio handles both directions with the same annotation pair.
+- **No exhaustiveness check that every parent subtype actually
+  reaches a child.** Sealed inheritance / sealed wrapping gives you
+  "this event class belongs to this hierarchy" but doesn't enforce
+  that `MyScreenEvent.AddTask` is actually handled by *some* child.
+  Fusio's `MISSING_EVENT_HANDLER` checker reports uncovered subtypes
+  at compile time.
 
 ## The fusion point
 
