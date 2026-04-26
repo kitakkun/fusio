@@ -13,27 +13,25 @@ class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
     override fun apply(target: Project) {
         // Auto-add runtime dependency. Version is baked from this plugin's
         // own build — consumers' `project.version` is unrelated to ours.
-        target.afterEvaluate {
-            // The configuration name that accepts "main" code dependencies
-            // depends on which Kotlin plugin flavour the consumer applied.
-            // KMP projects (including the Android KMP library variant, which
-            // applies `org.jetbrains.kotlin.multiplatform` under the hood)
-            // expose `commonMainImplementation`; plain `kotlin-jvm` /
-            // `kotlin-android` consumers don't have that configuration but
-            // DO have `implementation`. Picking the right one at apply time
-            // lets Fusio work on both layouts — relying on
-            // `commonMainImplementation` unconditionally crashes JVM-only
-            // consumers with UnknownConfigurationException before they
-            // write a single line of Fusio code.
-            val configName = if (target.plugins.hasPlugin(KMP_PLUGIN_ID)) {
-                "commonMainImplementation"
-            } else {
-                "implementation"
-            }
-            target.dependencies.add(
-                configName,
-                "com.kitakkun.fusio:fusio-runtime:$FUSIO_VERSION",
-            )
+        //
+        // The configuration name that accepts "main" code dependencies
+        // depends on which Kotlin plugin flavour the consumer applied.
+        // Each `withPlugin` callback fires when (and only when) the
+        // matching plugin is applied, regardless of whether Fusio's plugin
+        // is registered before or after it in the consumer's `plugins {}`
+        // block. This avoids the `afterEvaluate` ordering trap of needing
+        // every plugin to be present at evaluation time.
+        val coordinate = "com.kitakkun.fusio:fusio-runtime:$FUSIO_VERSION"
+        target.pluginManager.withPlugin(KMP_PLUGIN_ID) {
+            // KMP projects (including the Android KMP library variant)
+            // expose `commonMainImplementation` for shared-source deps.
+            target.dependencies.add("commonMainImplementation", coordinate)
+        }
+        target.pluginManager.withPlugin(KOTLIN_JVM_PLUGIN_ID) {
+            target.dependencies.add("implementation", coordinate)
+        }
+        target.pluginManager.withPlugin(KOTLIN_ANDROID_PLUGIN_ID) {
+            target.dependencies.add("implementation", coordinate)
         }
     }
 
@@ -76,6 +74,8 @@ class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
         const val FUSIO_PLUGIN_ID = "com.kitakkun.fusio"
         const val COMPOSE_PLUGIN_ID = "androidx.compose.compiler.plugins.kotlin"
         const val KMP_PLUGIN_ID = "org.jetbrains.kotlin.multiplatform"
+        const val KOTLIN_JVM_PLUGIN_ID = "org.jetbrains.kotlin.jvm"
+        const val KOTLIN_ANDROID_PLUGIN_ID = "org.jetbrains.kotlin.android"
 
         /**
          * Read from a `version.properties` resource baked by the
