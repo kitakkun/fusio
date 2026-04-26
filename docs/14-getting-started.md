@@ -51,9 +51,12 @@ fun myScreenPresenter(): MyScreenUiState {
         is MyScreenEvent.SelectFilter -> filterEvents.tryEmit(FilterEvent.Select(event.filter))
     }
 
-    // Up direction: each child takes a callback per effect subtype the
-    // parent cares about, and the children have to invoke them at the
-    // right moments.
+    // Up direction (one of several manual options — here, callbacks):
+    // each child takes a callback per effect subtype the parent cares
+    // about, and the children have to invoke them at the right moments.
+    // Alternatives (Flow-return, sealed inheritance, composition wrap)
+    // are covered in the "Why not roll your own routing?" subsection
+    // below — they share the same costs.
     var lastSnack by remember { mutableStateOf<String?>(null) }
     val tasks = taskListPresenter(
         events = taskListEvents,
@@ -144,10 +147,15 @@ Both shorten the down direction. But:
   the same class and composition forces the UI to know both names.
   Fusio's per-property mapper renames at compile time, with a FIR
   checker flagging field-shape mismatches.
-- **The effect (up) direction has no equivalent shortcut.** Both
-  tricks help the down direction only; the up direction still needs
-  callbacks-as-parameters or a per-child `LaunchedEffect` relay.
-  Fusio handles both directions with the same annotation pair.
+- **The effect (up) direction has the same options with the same
+  costs.** Both tricks apply symmetrically: with inheritance you can
+  declare `TaskListEffect : MyScreenEffect` and have each child
+  return its own `Flow<ChildEffect>` for the parent to `merge`; with
+  composition you wrap each child's effects in a parent subtype
+  (`MyScreenEffect.TaskList(val effect: TaskListEffect)`) and `map`
+  before merging. Same UI-leak problem, same rename problem, same
+  exhaustiveness gap. Fusio's `@MapFrom` mirrors `@MapTo` and dodges
+  all three.
 - **No exhaustiveness check that every parent subtype actually
   reaches a child.** Sealed inheritance / sealed wrapping gives you
   "this event class belongs to this hierarchy" but doesn't enforce
