@@ -2,6 +2,7 @@ package com.kitakkun.fusio.compiler
 
 import org.jetbrains.kotlin.diagnostics.KtDiagnosticFactoryToRendererMap
 import org.jetbrains.kotlin.diagnostics.KtDiagnosticsContainer
+import org.jetbrains.kotlin.diagnostics.SourceElementPositioningStrategies
 import org.jetbrains.kotlin.diagnostics.error1
 import org.jetbrains.kotlin.diagnostics.error2
 import org.jetbrains.kotlin.diagnostics.error3
@@ -24,9 +25,16 @@ object FusioErrors : KtDiagnosticsContainer() {
      * altogether when `none`). Two factories instead of a single
      * dynamically-severity one because Kotlin's diagnostic infrastructure
      * pins severity at factory construction.
+     *
+     * `NAME_IDENTIFIER` narrows highlighting to just the function-name
+     * token: on a sub-presenter declaration that's the function name; on a
+     * `buildPresenter(...)` call site the checker pre-narrows the source
+     * to the callee reference, which `NAME_IDENTIFIER` falls through to
+     * without further trimming. Without this, the diagnostic spans the
+     * entire lambda body or function declaration.
      */
-    val MISSING_EVENT_HANDLER_ERROR by error2<KtElement, String, String>()
-    val MISSING_EVENT_HANDLER_WARNING by warning2<KtElement, String, String>()
+    val MISSING_EVENT_HANDLER_ERROR by error2<KtElement, String, String>(SourceElementPositioningStrategies.NAME_IDENTIFIER)
+    val MISSING_EVENT_HANDLER_WARNING by warning2<KtElement, String, String>(SourceElementPositioningStrategies.NAME_IDENTIFIER)
 
     override fun getRendererFactory() = FusioErrorMessages
 }

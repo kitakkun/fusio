@@ -39,6 +39,12 @@ public class FusioJvmDiagnosticTestGenerated extends AbstractFusioJvmDiagnosticT
   }
 
   @Test
+  @TestMetadata("eventHandlerCoveredViaSiblingFuse.kt")
+  public void testEventHandlerCoveredViaSiblingFuse() {
+    runTest("fusio-compiler-plugin-tests/testData/diagnostics/eventHandlerCoveredViaSiblingFuse.kt");
+  }
+
+  @Test
   @TestMetadata("mapFromPropertyNameMismatch.kt")
   public void testMapFromPropertyNameMismatch() {
     runTest("fusio-compiler-plugin-tests/testData/diagnostics/mapFromPropertyNameMismatch.kt");

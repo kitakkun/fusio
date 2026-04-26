@@ -122,7 +122,13 @@ class FusioEventHandlerExhaustivenessChecker(
                 .firstOrNull() ?: return
             val body = lambda.anonymousFunction.body ?: return
 
-            checkExhaustiveness(eventType, body, expression.source)
+            // Narrow the highlight to the `buildPresenter` callee identifier
+            // rather than the entire `buildPresenter { ... }` expression
+            // (which spans the whole lambda body). The factory's
+            // `NAME_IDENTIFIER` strategy passes through `KtNameReferenceExpression`
+            // without further trimming.
+            val source = expression.calleeReference.source ?: expression.source
+            checkExhaustiveness(eventType, body, source)
         }
     }
 
