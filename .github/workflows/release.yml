@@ -28,26 +28,23 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          # Releases are infrequent and reuse main's already-warmed Gradle
-          # cache. Read-only so a release run can't accidentally overwrite
-          # main-branch cache entries with anything tag-specific.
-          #
-          # Note: only the Gradle dependency cache (`~/.gradle/caches/`) is
-          # restored here — checksums on every Maven artifact mean a poisoned
-          # entry would fail verification. The Kotlin/Native toolchain in
-          # `~/.konan/` is *deliberately not cached* in this workflow; see
-          # the comment below for the rationale.
+          # Read-only so a release run can't accidentally overwrite main's
+          # cache entries with anything tag-specific.
           cache-read-only: true
 
-      # Konan (Kotlin/Native compiler + platform libs) is intentionally
-      # downloaded fresh on every release. It's the binary that compiles the
-      # release artifacts; reusing a cached toolchain would mean trusting
-      # whatever bits happen to be in `~/.konan/` from the most recent main
-      # CI run. Maven Central artifacts are immutable once published, so
-      # we'd rather pay the 3-5 minute fresh-download cost than carry any
-      # risk of a stale or corrupted toolchain into a release we can't take
-      # back. ci.yml caches Konan because the trade-off there (cost vs.
-      # reproducibility-of-throwaway-PR-builds) tips the other way.
+      # Same Konan cache as ci.yml. The cache key pins the toolchain to the
+      # exact Kotlin version in `gradle/libs.versions.toml`, and GitHub
+      # Actions cache is scoped to this repo — anyone who could poison it
+      # could also push to main, so the trust boundary is the same as the
+      # source code itself. Fresh-downloading on every release would just
+      # re-fetch the same bytes JetBrains served to main's CI run.
+      - name: Cache Konan (Kotlin/Native toolchain + platform libs)
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            konan-${{ runner.os }}-
 
       - name: Extract version from tag
         id: version
