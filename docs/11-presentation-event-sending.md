@@ -41,7 +41,7 @@ Button(onClick = { presentation.send(MyScreenEvent.Click) }) { … }
 
 ### Round 3 — type-parameter cost
 
-`Presentation<State, Effect>` becomes `Presentation<State, Effect, Event>`. One more type parameter, but the read order ("result, side effect, input") is meaningful — Step 9's `presenter<E, F, S> { … }` factory uses the inverse order on the input side, but reading `Presentation<S, F, E>` left-to-right matches the consumer's mental model: "state first (what I render), effect (what fires), event (what I send back)".
+`Presentation<State, Effect>` becomes `Presentation<State, Effect, Event>`. One more type parameter, but the read order ("result, side effect, input") is meaningful — reading `Presentation<S, F, E>` left-to-right matches the consumer's mental model: "state first (what I render), effect (what fires), event (what I send back)".
 
 ### Round 4 — bin compat impact
 
@@ -115,4 +115,4 @@ Ship the single-overload form. `Presentation<State, Effect, Event>`, `send: (Eve
 ## Open questions
 
 - Should the buffer capacity be a `buildPresenter` parameter? Defer until a real workload demonstrates 64 isn't enough.
-- Does Step 10's `presenter<E, F, S> { … }` factory (sub-presenter ergonomics) still make sense as-is? Yes — sub-presenters don't return `Presentation`, so they're untouched by Step 11.
+- Does Step 10's sub-presenter ergonomics work intersect with this change? No — sub-presenters return `State`, not `Presentation`, so they're untouched by Step 11. (Step 10's `presenter { }` factory was later withdrawn for unrelated reasons; see docs/10.)

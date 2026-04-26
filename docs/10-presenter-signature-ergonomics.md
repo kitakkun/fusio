@@ -1,6 +1,6 @@
 # Step 10: Sub-presenter signature ergonomics (Design)
 
-Status: **design + Phase 1 (factory) landing.** Annotation-driven rewrite (Phase 2) is explicitly deferred.
+Status: **Phase 1 (factory) WITHDRAWN.** The `presenter<E, F, S> { … }` factory landed and was later removed — see "Withdrawal" at the bottom. Annotation-driven rewrite (Phase 2) remains deferred.
 
 ## Problem
 
@@ -143,3 +143,37 @@ Functionally identical to the extension-function form — both compile to the sa
 - How does the FIR rewrite interact with sub-presenters that `fuse` into other sub-presenters at multiple depths?
 
 These stay open until Phase 2 is actually justified by observed pain.
+
+## Withdrawal
+
+The `presenter<E, F, S> { … }` factory was removed shortly after landing. The
+realisation that pushed the decision: shipping it created **three ways to
+declare a sub-presenter** (extension function, factory, plus the still-only
+way to declare a root: `buildPresenter`), and the surface-level similarity
+between `presenter { }` and `buildPresenter { }` made the sub-vs-root
+distinction harder to see, not easier.
+
+Specifically, the call surface was:
+
+```
+buildPresenter { }              ← root presenter
+presenter<E, F, S> { }          ← sub-presenter (factory form)
+fun PresenterScope<E, F>.foo()  ← sub-presenter (extension function form)
+fuse { foo() }                  ← invoke a sub-presenter
+```
+
+A new reader had to know all four to navigate Fusio code. The factory was
+trying to slim down the extension-function signature, but the overall API
+got *broader*, not narrower.
+
+Decision: keep one canonical sub-presenter shape (extension function on
+`PresenterScope<E, F>`) and one canonical root shape (`buildPresenter`).
+Two shapes, one each. The signature heaviness is real but is the right
+problem to attack via Phase 2 (the FIR-driven `@Presenter(events, effects)`
+annotation), not via stylistic helpers that multiply the API surface.
+
+The factory implementation (`Presenter.kt`, the `presenter` function and the
+`PresenterBody` typealias) was deleted; the demo's `taskList` and `filter`
+were rewritten back to extension-function form. No runtime behaviour
+change — the IR transformer never distinguished factory-declared from
+extension-declared sub-presenters in the first place.

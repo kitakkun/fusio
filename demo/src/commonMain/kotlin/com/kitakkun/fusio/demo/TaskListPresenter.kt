@@ -1,13 +1,15 @@
 package com.kitakkun.fusio.demo
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.kitakkun.fusio.PresenterScope
 import com.kitakkun.fusio.on
-import com.kitakkun.fusio.presenter
 
-val taskList = presenter<TaskListEvent, TaskListEffect, TaskListState> {
+@Composable
+fun PresenterScope<TaskListEvent, TaskListEffect>.taskList(): TaskListState {
     // `nextId` is purely bookkeeping — the UI never sees it. Keeping it in
     // remember alongside `tasks` is a sub-presenter-local concern.
     var nextId by remember { mutableStateOf(1L) }
@@ -36,5 +38,5 @@ val taskList = presenter<TaskListEvent, TaskListEffect, TaskListState> {
         tasks = tasks.filterNot { it.id == event.id }
     }
 
-    TaskListState(tasks)
+    return TaskListState(tasks)
 }
