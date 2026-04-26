@@ -219,8 +219,7 @@ class FusioGradlePlugin : KotlinCompilerPluginSupportPlugin {
  * Internal to the gradle plugin; no relation to (or dependency on) the
  * `Version` type used inside `fusio-compiler-compat` at runtime.
  */
-internal data class KotlinPatch(val major: Int, val minor: Int, val patch: Int) :
-    Comparable<KotlinPatch> {
+internal data class KotlinPatch(val major: Int, val minor: Int, val patch: Int) : Comparable<KotlinPatch> {
     override fun compareTo(other: KotlinPatch): Int {
         if (major != other.major) return major.compareTo(other.major)
         if (minor != other.minor) return minor.compareTo(other.minor)
