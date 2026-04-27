@@ -39,6 +39,12 @@ public class FusioJvmBoxTestGenerated extends AbstractFusioJvmBoxTest {
   }
 
   @Test
+  @TestMetadata("multiSourceMapFrom.kt")
+  public void testMultiSourceMapFrom() {
+    runTest("fusio-compiler-plugin-tests/testData/box/multiSourceMapFrom.kt");
+  }
+
+  @Test
   @TestMetadata("nestedFuse.kt")
   public void testNestedFuse() {
     runTest("fusio-compiler-plugin-tests/testData/box/nestedFuse.kt");

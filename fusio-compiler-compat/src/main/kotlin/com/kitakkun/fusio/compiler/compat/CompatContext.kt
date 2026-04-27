@@ -47,6 +47,20 @@ interface CompatContext {
     fun FirAnnotation.kclassArg(name: Name, session: FirSession): ConeKotlinType?
 
     /**
+     * Reads a `vararg KClass<*>`-typed argument off a [FirAnnotation] —
+     * each `KClass` element is returned as a separate [ConeKotlinType].
+     * Used for `@MapFrom(vararg val source: KClass<*>)` where a single
+     * parent effect subtype can fan in multiple child effect sources.
+     *
+     * The argument's FIR shape is `FirVarargArgumentsExpression(arguments
+     * = [FirGetClassCall, ...])` regardless of whether the call site
+     * passed one element or many; this helper unwraps the wrapper and
+     * evaluates each [FirGetClassCall] element. A non-vararg single
+     * `KClass` argument also resolves through the fallback branch.
+     */
+    fun FirAnnotation.kclassesArg(name: Name, session: FirSession): List<ConeKotlinType>
+
+    /**
      * Writes the value argument at [index] on any IR function-access expression
      * (regular calls, constructor calls, delegating calls, enum entry calls).
      *

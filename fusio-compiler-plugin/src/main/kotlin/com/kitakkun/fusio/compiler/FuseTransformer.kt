@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.ir.expressions.IrClassReference
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrFunctionExpression
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
+import org.jetbrains.kotlin.ir.expressions.IrVararg
 import org.jetbrains.kotlin.ir.expressions.impl.IrBranchImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrFunctionExpressionImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
@@ -399,27 +400,42 @@ class FuseTransformer(
             val annotation = annotatedSubSymbol.owner.annotations.firstOrNull {
                 (it.symbol.owner.parent as? IrClass)?.classId == annotationClassId
             } ?: continue
-            val kclassRef = annotation.arguments.firstOrNull() as? IrClassReference ?: continue
-            val otherSymbol = kclassRef.classType.classOrNull ?: continue
 
-            // Siblings at the same parent level can @MapTo / @MapFrom different
-            // child trees (Favorite's subtypes vs Wallet's subtypes, for
-            // example). Skip annotations whose "other side" lives in a tree
-            // this fuse doesn't own — otherwise the generated when-
-            // lambda tries to return Wallet* from a Favorite?-typed branch
-            // and JVM checkcast-fails at runtime.
-            if (expectedOtherClass != null &&
-                !otherSymbol.owner.isSubclassOfOrEqual(expectedOtherClass)
-            ) {
-                continue
+            // The first annotation argument is either:
+            //   - a single `IrClassReference` (`@MapTo(target: KClass<*>)`) — one
+            //     mapping per annotated subclass, OR
+            //   - an `IrVararg` of `IrClassReference` elements
+            //     (`@MapFrom(vararg val source: KClass<*>)`) — one mapping per
+            //     element so a single parent subtype fans in multiple child
+            //     sources. Both shapes are normalised into the same Mapping list.
+            val kclassRefs: List<IrClassReference> = when (val firstArg = annotation.arguments.firstOrNull()) {
+                is IrClassReference -> listOf(firstArg)
+                is IrVararg -> firstArg.elements.filterIsInstance<IrClassReference>()
+                else -> continue
             }
 
-            val (fromSub, toSub) = if (reverseDirection) {
-                otherSymbol to annotatedSubSymbol
-            } else {
-                annotatedSubSymbol to otherSymbol
+            for (kclassRef in kclassRefs) {
+                val otherSymbol = kclassRef.classType.classOrNull ?: continue
+
+                // Siblings at the same parent level can @MapTo / @MapFrom different
+                // child trees (Favorite's subtypes vs Wallet's subtypes, for
+                // example). Skip annotations whose "other side" lives in a tree
+                // this fuse doesn't own — otherwise the generated when-
+                // lambda tries to return Wallet* from a Favorite?-typed branch
+                // and JVM checkcast-fails at runtime.
+                if (expectedOtherClass != null &&
+                    !otherSymbol.owner.isSubclassOfOrEqual(expectedOtherClass)
+                ) {
+                    continue
+                }
+
+                val (fromSub, toSub) = if (reverseDirection) {
+                    otherSymbol to annotatedSubSymbol
+                } else {
+                    annotatedSubSymbol to otherSymbol
+                }
+                add(Mapping(fromSub, toSub))
             }
-            add(Mapping(fromSub, toSub))
         }
     }
 
