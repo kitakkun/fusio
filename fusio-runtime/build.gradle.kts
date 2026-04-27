@@ -90,7 +90,7 @@ kotlin {
     // See fusio-annotations for the Android target rationale. Runtime
     // consumers on Android get the same `androidx.compose.runtime:runtime`
     // jar as JVM, just compiled against the Android bootclasspath.
-    androidLibrary {
+    android {
         namespace = "com.kitakkun.fusio.runtime"
         compileSdk = 36
         // Matches fusio-annotations' floor (Compose Multiplatform-supported 21).

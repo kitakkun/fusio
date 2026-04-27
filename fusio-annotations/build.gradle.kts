@@ -15,7 +15,7 @@ kotlin {
     // a target block nested inside `kotlin { }`. Single-variant, no
     // flavors, no Android resources — a pure KMP annotation / library
     // artifact, nothing else.
-    androidLibrary {
+    android {
         namespace = "com.kitakkun.fusio"
         compileSdk = 36
         // 21 is the Compose Multiplatform floor; Fusio's annotations are

@@ -21,7 +21,7 @@ junit-jupiter = "5.11.3"
 kotlinx-benchmark = "0.4.15"
 binary-compatibility-validator = "0.18.1"
 dokka = "2.2.0"
-agp = "9.0.1"
+agp = "9.1.1"
 # gradleup/shadow — 9.x is required for Gradle 9. See fusio-compiler-plugin
 # for usage.
 shadow = "9.4.1"

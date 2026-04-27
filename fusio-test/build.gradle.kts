@@ -14,7 +14,7 @@ kotlin {
 
     jvm()
 
-    androidLibrary {
+    android {
         namespace = "com.kitakkun.fusio.test"
         compileSdk = 36
         // Matches fusio-annotations / fusio-runtime (Compose Multiplatform floor).
