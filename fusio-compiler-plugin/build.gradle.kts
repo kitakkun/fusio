@@ -1,4 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.api.publish.maven.tasks.AbstractPublishToMaven
+import org.gradle.plugins.signing.Sign
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -176,4 +178,16 @@ publishing {
             artifactId = project.name
         }
     }
+}
+
+// `signShadowPublication` produces `<jar>.asc` that
+// `publishMavenPublicationToMavenCentralRepository` (and friends) consume,
+// but maven-publish's plumbing doesn't auto-wire the dependency on the
+// shadow side. Without this, Gradle 8+ fails the release with
+// "Task ':...:publishMavenPublicationToMavenCentralRepository' uses this
+// output of task ':...:signShadowPublication' without declaring an
+// explicit or implicit dependency". Hooking each AbstractPublishToMaven
+// task to depend on every Sign in this project resolves it generically.
+tasks.withType<AbstractPublishToMaven>().configureEach {
+    dependsOn(tasks.withType<Sign>())
 }
