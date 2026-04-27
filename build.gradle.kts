@@ -3,6 +3,17 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.compose.compiler) apply false
     alias(libs.plugins.compose.multiplatform) apply false
+    // Hoisted to the root with `apply false` so the plugin is registered in a
+    // single ClassLoaderScope. Otherwise sibling subprojects (e.g.
+    // `:fusio-annotations` and `:fusio-compiler-plugin`) each load vanniktech
+    // in their own scope, and Gradle rejects the shared
+    // `MavenCentralBuildService` provider with
+    //   "Cannot set the value of task '...:prepareMavenCentralPublishing'
+    //    property 'buildService' ... loaded with ... project-fusio-compiler-plugin
+    //    ... using a provider of type ... loaded with ... project-fusio-annotations".
+    // The `fusio.publish` convention plugin still applies the actual
+    // plugin per-module.
+    alias(libs.plugins.vanniktech.maven.publish) apply false
     alias(libs.plugins.binary.compatibility.validator)
     alias(libs.plugins.dokka)
     alias(libs.plugins.spotless)
