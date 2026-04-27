@@ -90,6 +90,16 @@ subprojects {
             dependsOn(rootProject.gradle.includedBuild("fusio-gradle-plugin").task(":publishToMavenLocal"))
         }
     }
+    // Same fan-out for the Central Portal upload. The release workflow
+    // invokes `./gradlew publishToMavenCentral`, which would otherwise
+    // skip the included build entirely and leave Maven Central without
+    // the `com.kitakkun.fusio` Gradle plugin — consumers then fail to
+    // resolve `id("com.kitakkun.fusio")` from pluginManagement.
+    plugins.withId("com.vanniktech.maven.publish") {
+        tasks.matching { it.name == "publishToMavenCentral" }.configureEach {
+            dependsOn(rootProject.gradle.includedBuild("fusio-gradle-plugin").task(":publishToMavenCentral"))
+        }
+    }
 }
 
 allprojects {
