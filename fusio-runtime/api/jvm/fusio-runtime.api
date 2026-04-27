@@ -18,6 +18,11 @@ public final class com/kitakkun/fusio/FuseKt {
 	public static final fun fuse (Lcom/kitakkun/fusio/PresenterScope;Lkotlin/jvm/functions/Function3;)Ljava/lang/Object;
 }
 
+public final class com/kitakkun/fusio/ObserversKt {
+	public static final fun OnEffect (Lcom/kitakkun/fusio/Presentation;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;I)V
+	public static final fun OnEventError (Lcom/kitakkun/fusio/Presentation;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;I)V
+}
+
 public final class com/kitakkun/fusio/Presentation {
 	public static final field $stable I
 	public fun <init> (Ljava/lang/Object;Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/flow/Flow;Lkotlin/jvm/functions/Function1;)V

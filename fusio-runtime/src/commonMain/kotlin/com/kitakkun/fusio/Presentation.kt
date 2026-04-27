@@ -26,13 +26,15 @@ import kotlinx.coroutines.flow.Flow
  *     Button(onClick = { presentation.send(MyEvent.Click) }) { Text("…") }
  *
  *     // Collect side effects
- *     LaunchedEffect(presentation.effectFlow) {
- *         presentation.effectFlow.collect { effect ->
- *             when (effect) { … }
- *         }
+ *     presentation.OnEffect { effect ->
+ *         when (effect) { … }
  *     }
  * }
  * ```
+ *
+ * `OnEffect` and the parallel `OnEventError` are thin Composable helpers
+ * over [LaunchedEffect] + [effectFlow] / [eventErrorFlow] — see [OnEffect]
+ * for details.
  *
  * To bridge an external `Flow<Event>` (URL deeplink, navigation, etc.) into
  * the presenter, forward it to [send]:
