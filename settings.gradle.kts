@@ -66,5 +66,12 @@ include(":fusio-compiler-compat:k230")
 include(":fusio-compiler-compat:k2320")
 include(":fusio-compiler-compat:k240_beta2")
 include(":benchmarks")
-include(":demo")
+// Demo split into three modules: `shared` is the KMP library holding the
+// presenter graph + Composable App(); `android` and `desktop` are
+// platform-specific app shells that depend on `shared`. The split sidesteps
+// AGP 9's incompatibility between `com.android.application` and
+// `org.jetbrains.kotlin.multiplatform` on the same module.
+include(":demo:shared")
+include(":demo:android")
+include(":demo:desktop")
 // fusio-gradle-plugin is registered as a pluginManagement includeBuild above.

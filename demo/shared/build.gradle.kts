@@ -1,25 +1,34 @@
+import com.kitakkun.fusio.gradle.EventHandlerExhaustiveSeverity
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.compose.compiler)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
     id("com.kitakkun.fusio")
 }
 
 kotlin {
-    jvm {
-        @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
-        binaries {
-            executable {
-                mainClass.set("com.kitakkun.fusio.demo.MainKt")
-            }
-        }
+    jvm()
+
+    // KMP-aware Android library plugin (AGP 9). The accompanying `android { }`
+    // block (rather than the now-deprecated `androidLibrary { }`) is the
+    // current API.
+    android {
+        namespace = "com.kitakkun.fusio.demo.shared"
+        compileSdk = 36
+        // Bumped above fusio-runtime / fusio-annotations' floor (21) because
+        // androidx.compose.animation:animation-core-android:1.10.5 declares
+        // minSdk=23. The library modules themselves can stay at 21 — only
+        // the demo Android app actually consumes Compose UI on Android.
+        minSdk = 23
     }
 
     sourceSets {
         commonMain {
             dependencies {
                 // Compose UI primitives. `compose.desktop.currentOs` lives in
-                // jvmMain because it resolves to an OS-specific Skia binding.
+                // demo:desktop because it resolves to an OS-specific Skia binding.
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material3)
@@ -31,15 +40,9 @@ kotlin {
                 implementation(project(":fusio-annotations"))
             }
         }
-        jvmMain {
-            dependencies {
-                implementation(compose.desktop.currentOs)
-            }
-        }
-        // Tests live on jvmTest only — the demo app is desktop-only, and
-        // covering `taskList` / `filter` / `myScreenPresenter` on JVM is
-        // enough to prove the fusio-test harness drives real-world presenter
-        // code (the whole point of this test source set).
+        // Tests live on jvmTest only — covering presenter logic on JVM is
+        // enough to prove the fusio-test harness drives real-world code
+        // regardless of platform target.
         jvmTest {
             dependencies {
                 implementation(project(":fusio-test"))
@@ -47,4 +50,8 @@ kotlin {
             }
         }
     }
+}
+
+fusio {
+    eventHandlerExhaustiveSeverity = EventHandlerExhaustiveSeverity.ERROR
 }

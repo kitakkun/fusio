@@ -33,6 +33,9 @@ vanniktech-publish = "0.34.0"
 # (`ktlint_code_style = intellij_idea` in .editorconfig).
 spotless = "7.0.4"
 ktlint = "1.6.0"
+# androidx.activity:activity-compose — Android entry point that hosts the
+# common `App()` Composable from the demo. Only consumed by demo:android.
+androidx-activity-compose = "1.10.1"
 
 [libraries]
 kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
@@ -76,6 +79,7 @@ kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-
 # build-logic's classpath so the `fusio.publish` precompiled script plugin
 # can apply it via `plugins { id(...) }`.
 vanniktech-maven-publish-gradle-plugin = { module = "com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin", version.ref = "vanniktech-publish" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -88,5 +92,6 @@ kotlin-allopen = { id = "org.jetbrains.kotlin.plugin.allopen", version.ref = "ko
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+android-application = { id = "com.android.application", version.ref = "agp" }
 vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-publish" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

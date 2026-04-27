@@ -3,6 +3,13 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.compose.compiler) apply false
     alias(libs.plugins.compose.multiplatform) apply false
+    // AGP plugins co-located here so KGP and AGP load on the same root
+    // classpath. Without this, applying `com.android.application` from a
+    // subproject after `kotlin-multiplatform` has already loaded fails to
+    // resolve `KotlinAndroidTarget` because the two plugin classloaders
+    // disagree on whether the (AGP-9-removed) `BaseVariant` type is reachable.
+    alias(libs.plugins.android.kotlin.multiplatform.library) apply false
+    alias(libs.plugins.android.application) apply false
     // Hoisted to the root with `apply false` so the plugin is registered in a
     // single ClassLoaderScope. Otherwise sibling subprojects (e.g.
     // `:fusio-annotations` and `:fusio-compiler-plugin`) each load vanniktech
@@ -131,7 +138,13 @@ apiValidation {
         "k2320",
         "k240_beta2",
         "benchmarks",
-        "demo",
+        // demo's three subprojects (`:demo:shared`, `:demo:android`,
+        // `:demo:desktop`) — Gradle reports them by simple project name.
+        // The shared module holds the demo's presenter graph; the others
+        // are platform shells. None ships a library API.
+        "shared",
+        "android",
+        "desktop",
     )
 
     // Dump klib ABI for the non-JVM targets too. Without this, only the
