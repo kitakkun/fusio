@@ -50,14 +50,20 @@ class FusioExhaustivenessChecker(compat: CompatContext) :
         val coveredByChildSealed = mutableMapOf<ClassId, MutableSet<ClassId>>()
         for (inheritor in inheritors) {
             val annotation = inheritor.getAnnotationByClassId(direction.annotationClassId, context.session) ?: continue
-            val otherType = annotation.kclassArg(direction.argumentName, context.session) ?: continue
-            val otherClassId = otherType.classId ?: continue
-            val otherClass = resolveClassById(otherClassId, context.session) ?: continue
-            val childSealedParent = findSealedParent(otherClass, context.session) ?: continue
+            // Use the plural reader so a `@MapFrom(A::class, B::class)` annotation
+            // contributes both `A` and `B` to the covered set; single-argument
+            // `@MapTo` / `@MapFrom` collapses to a 1-element list via the
+            // FirGetClassCall fallback in CompatContext.kclassesArg.
+            val otherTypes = annotation.kclassesArg(direction.argumentName, context.session)
+            for (otherType in otherTypes) {
+                val otherClassId = otherType.classId ?: continue
+                val otherClass = resolveClassById(otherClassId, context.session) ?: continue
+                val childSealedParent = findSealedParent(otherClass, context.session) ?: continue
 
-            coveredByChildSealed
-                .getOrPut(childSealedParent.symbol.classId) { mutableSetOf() }
-                .add(otherClassId)
+                coveredByChildSealed
+                    .getOrPut(childSealedParent.symbol.classId) { mutableSetOf() }
+                    .add(otherClassId)
+            }
         }
 
         for ((childSealedId, covered) in coveredByChildSealed) {

@@ -43,6 +43,12 @@ public class FusioK24JvmBoxTestGenerated extends AbstractFusioK24JvmBoxTest {
   }
 
   @Test
+  @TestMetadata("multiSourceMapFrom.kt")
+  public void testMultiSourceMapFrom() {
+    run("multiSourceMapFrom.kt");
+  }
+
+  @Test
   @TestMetadata("nestedFuse.kt")
   public void testNestedFuse() {
     run("nestedFuse.kt");

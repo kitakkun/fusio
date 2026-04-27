@@ -13,8 +13,13 @@ import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirSimpleFunctionChecker
 import org.jetbrains.kotlin.fir.declarations.FirNamedFunction
+import org.jetbrains.kotlin.fir.declarations.evaluateAs
+import org.jetbrains.kotlin.fir.declarations.findArgumentByName
 import org.jetbrains.kotlin.fir.declarations.getKClassArgument
+import org.jetbrains.kotlin.fir.declarations.getTargetType
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
+import org.jetbrains.kotlin.fir.expressions.FirGetClassCall
+import org.jetbrains.kotlin.fir.expressions.FirVarargArgumentsExpression
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
@@ -44,6 +49,27 @@ import org.jetbrains.kotlin.name.Name
  */
 class CompatContextImpl : CompatContext {
     override fun FirAnnotation.kclassArg(name: Name, session: FirSession): ConeKotlinType? = getKClassArgument(name, session)
+
+    override fun FirAnnotation.kclassesArg(name: Name, session: FirSession): List<ConeKotlinType> {
+        val arg = findArgumentByName(name) ?: return emptyList()
+        // For vararg annotation args FIR wraps the elements in either
+        // FirVarargArgumentsExpression (`@Foo(a, b)`) or FirCollectionLiteral
+        // (`@Foo([a, b])` array syntax); outside those wrappers the arg itself
+        // is a FirGetClassCall (single non-vararg argument).
+        val elements: List<org.jetbrains.kotlin.fir.expressions.FirExpression> = when (arg) {
+            is FirVarargArgumentsExpression -> arg.arguments
+            is org.jetbrains.kotlin.fir.expressions.FirCollectionLiteral -> arg.argumentList.arguments
+            else -> listOf(arg)
+        }
+        return elements.mapNotNull { element ->
+            // 2.4 stores annotation args as `FirGetClassCall` directly; 2.3
+            // wraps them in something `evaluateAs` unwraps. Try the direct
+            // cast first so the fast path works on both, fall back to
+            // evaluateAs for the wrapped 2.3 shape.
+            ((element as? FirGetClassCall) ?: element.evaluateAs<FirGetClassCall>(session))
+                ?.getTargetType()
+        }
+    }
 
     override fun IrFunctionAccessExpression.setArg(index: Int, expr: IrExpression) {
         arguments[index] = expr

@@ -415,7 +415,7 @@ FILE fqName:<root> fileName:/fuseRewrite.kt
     thisReceiver: VALUE_PARAMETER INSTANCE_RECEIVER kind:DispatchReceiver name:<this> type:<root>.ParentEffect
     CLASS CLASS name:Echo modality:FINAL visibility:public [data] superTypes:[<root>.ParentEffect]
       annotations:
-        MapFrom(source = CLASS_REFERENCE 'CLASS CLASS name:Reply modality:FINAL visibility:public [data] superTypes:[<root>.ChildEffect]' type=kotlin.reflect.KClass<<root>.ChildEffect.Reply>)
+        MapFrom(source = [CLASS_REFERENCE 'CLASS CLASS name:Reply modality:FINAL visibility:public [data] superTypes:[<root>.ChildEffect]' type=kotlin.reflect.KClass<<root>.ChildEffect.Reply>] type=kotlin.Array<out kotlin.reflect.KClass<*>> varargElementType=kotlin.reflect.KClass<*>)
         StabilityInferred(parameters = 1)
       thisReceiver: VALUE_PARAMETER INSTANCE_RECEIVER kind:DispatchReceiver name:<this> type:<root>.ParentEffect.Echo
       PROPERTY name:message visibility:public modality:FINAL [val]

@@ -41,31 +41,39 @@ class FusioMappingChecker(
 
         val annotation = declaration.getAnnotationByClassId(direction.annotationClassId, context.session) ?: return
 
-        val otherType = annotation.kclassArg(direction.argumentName, context.session)
-            ?: run {
-                reporter.reportOn(declaration.source, direction.invalidArgFactory, "Missing ${direction.argumentName.asString()} argument", context)
+        // `kclassesArg` collapses to a 1-element list for single-arg annotations
+        // (`@MapTo(target = X::class)`) and returns N elements for vararg
+        // annotations (`@MapFrom(A::class, B::class)`). Each element gets the
+        // same property-compatibility check against the annotated class — i.e.
+        // every fan-in source must structurally match the parent subtype.
+        val otherTypes = annotation.kclassesArg(direction.argumentName, context.session)
+        if (otherTypes.isEmpty()) {
+            reporter.reportOn(declaration.source, direction.invalidArgFactory, "Missing ${direction.argumentName.asString()} argument", context)
+            return
+        }
+
+        for (otherType in otherTypes) {
+            val otherClassId = otherType.classId ?: run {
+                reporter.reportOn(declaration.source, direction.invalidArgFactory, "${direction.argumentName.asString().replaceFirstChar { it.uppercase() }} must be a class reference", context)
                 return
             }
-        val otherClassId = otherType.classId ?: run {
-            reporter.reportOn(declaration.source, direction.invalidArgFactory, "${direction.argumentName.asString().replaceFirstChar { it.uppercase() }} must be a class reference", context)
-            return
-        }
 
-        val otherClass = resolveClassById(otherClassId, context.session)
-        if (otherClass == null) {
-            reporter.reportOn(declaration.source, direction.invalidArgFactory, "Cannot resolve ${direction.argumentName.asString()} class: $otherClassId", context)
-            return
-        }
+            val otherClass = resolveClassById(otherClassId, context.session)
+            if (otherClass == null) {
+                reporter.reportOn(declaration.source, direction.invalidArgFactory, "Cannot resolve ${direction.argumentName.asString()} class: $otherClassId", context)
+                return
+            }
 
-        val (sourceForCompat, targetForCompat) = direction.pickSourceTarget(declaration, otherClass)
-        validatePropertyCompatibility(
-            source = sourceForCompat,
-            target = targetForCompat,
-            session = context.session,
-            reporter = reporter,
-            context = context,
-            sourceElement = declaration.source,
-        )
+            val (sourceForCompat, targetForCompat) = direction.pickSourceTarget(declaration, otherClass)
+            validatePropertyCompatibility(
+                source = sourceForCompat,
+                target = targetForCompat,
+                session = context.session,
+                reporter = reporter,
+                context = context,
+                sourceElement = declaration.source,
+            )
+        }
     }
 }
 

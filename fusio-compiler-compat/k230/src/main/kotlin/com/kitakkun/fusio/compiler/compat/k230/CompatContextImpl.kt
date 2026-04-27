@@ -13,8 +13,13 @@ import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirSimpleFunctionChecker
 import org.jetbrains.kotlin.fir.declarations.FirSimpleFunction
+import org.jetbrains.kotlin.fir.declarations.evaluateAs
+import org.jetbrains.kotlin.fir.declarations.findArgumentByName
 import org.jetbrains.kotlin.fir.declarations.getKClassArgument
+import org.jetbrains.kotlin.fir.declarations.getTargetType
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
+import org.jetbrains.kotlin.fir.expressions.FirGetClassCall
+import org.jetbrains.kotlin.fir.expressions.FirVarargArgumentsExpression
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
@@ -46,6 +51,26 @@ import org.jetbrains.kotlin.name.Name
 @Suppress("DEPRECATION")
 class CompatContextImpl : CompatContext {
     override fun FirAnnotation.kclassArg(name: Name, session: FirSession): ConeKotlinType? = getKClassArgument(name, session)
+
+    override fun FirAnnotation.kclassesArg(name: Name, session: FirSession): List<ConeKotlinType> {
+        val arg = findArgumentByName(name) ?: return emptyList()
+        // See k2320's CompatContextImpl.kclassesArg for the FIR-shape rationale
+        // (FirVarargArgumentsExpression / FirCollectionLiteral / direct
+        // FirGetClassCall). Re-implemented here in k230 bytecode rather than
+        // delegated because k230's compileOnly compiler jar pins 2.3.0 — see
+        // CompatContextImpl docstring for the shared-impl footgun.
+        // 2.3.0 doesn't have `FirCollectionLiteral` — vararg call-site shape is
+        // always `FirVarargArgumentsExpression` here. The k2320 impl handles
+        // both because FirCollectionLiteral was added later in 2.3.x.
+        val elements: List<org.jetbrains.kotlin.fir.expressions.FirExpression> = when (arg) {
+            is FirVarargArgumentsExpression -> arg.arguments
+            else -> listOf(arg)
+        }
+        return elements.mapNotNull { element ->
+            ((element as? FirGetClassCall) ?: element.evaluateAs<FirGetClassCall>(session))
+                ?.getTargetType()
+        }
+    }
 
     override fun IrFunctionAccessExpression.setArg(index: Int, expr: IrExpression) {
         arguments[index] = expr

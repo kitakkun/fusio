@@ -205,7 +205,7 @@ sealed interface ChildEvent {
 }
 
 sealed interface ParentEffect {
-  @MapFrom(source = Reply::class)
+  @MapFrom(source = [Reply::class])
   @StabilityInferred(parameters = 1)
   data class Echo : ParentEffect {
     val message: String

@@ -7,10 +7,10 @@
 
 // Library unique name: <com.kitakkun.fusio:fusio-annotations>
 open annotation class com.kitakkun.fusio/MapFrom : kotlin/Annotation { // com.kitakkun.fusio/MapFrom|null[0]
-    constructor <init>(kotlin.reflect/KClass<*>) // com.kitakkun.fusio/MapFrom.<init>|<init>(kotlin.reflect.KClass<*>){}[0]
+    constructor <init>(kotlin/Array<out kotlin.reflect/KClass<*>>...) // com.kitakkun.fusio/MapFrom.<init>|<init>(kotlin.Array<out|kotlin.reflect.KClass<*>>...){}[0]
 
     final val source // com.kitakkun.fusio/MapFrom.source|{}source[0]
-        final fun <get-source>(): kotlin.reflect/KClass<*> // com.kitakkun.fusio/MapFrom.source.<get-source>|<get-source>(){}[0]
+        final fun <get-source>(): kotlin/Array<out kotlin.reflect/KClass<*>> // com.kitakkun.fusio/MapFrom.source.<get-source>|<get-source>(){}[0]
 }
 
 open annotation class com.kitakkun.fusio/MapTo : kotlin/Annotation { // com.kitakkun.fusio/MapTo|null[0]
